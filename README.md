@@ -1,4 +1,4 @@
-# ProjektZespolowy_DruzynaPierscienia
+# Projekt Zespołowy - Drużyna Pierścienia
 # Zespół:
 * Adam Salej
 * Bartłomiej Załuska
