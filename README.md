@@ -1,21 +1,3 @@
-<<<<<<< HEAD
-# React + Vite
-
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
-=======
 # Projekt Zespołowy - Drużyna Pierścienia
 ## Zespół:
 * Adam Salej - Backend
@@ -25,7 +7,30 @@ If you are developing a production application, we recommend using TypeScript wi
 
 ## Technologie
 ### Frontend:
-- JavaScript (Angular)
+- JavaScript (Angular lub React)
 ### Backend:
 - Python (FastAPI lub Django)
->>>>>>> 180e7b3f37725cb1169f1f2b54d4605aa3c2f446
+
+
+
+# JAK ODPALIĆ:
+### 1. Upewnij się, że Node.js oraz Git są zainstalowane
+### 2. Sklonuj repozytorium
+(w terminalu):
+```bash
+git clone https://github.com/asalejuwm/ProjektZespolowy_DruzynaPierscienia.git
+```
+### 3. Wejdź do folderu
+```bash
+cd ProjektZespolowy_DruzynaPierscienia
+```
+
+### 4. Zainstaluj biblioteki (wymaga Node.js)
+```bash
+npm install
+```
+
+### 5. Uruchom aplikację
+```bash
+npm run dev
+```
