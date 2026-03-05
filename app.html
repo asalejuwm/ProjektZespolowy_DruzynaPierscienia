@@ -1,0 +1,75 @@
+<button (click)="addColumn()">Add new list</button>
+
+<div class="example-container" *ngFor="let col of columns; let ci = index">
+ <div class="column-header">
+  <h2 *ngIf="editingColumn !== col" (dblclick)="startEditColumn(col)">
+    {{ col.title }}
+  </h2>
+
+  <input *ngIf="editingColumn === col"
+         type="text"
+         [value]="col.title"
+         (blur)="saveColumnTitle(col, $event.target.value)"
+         (keydown.enter)="saveColumnTitle(col, $event.target.value)"
+         autofocus
+         class="edit-input" />
+
+  <button class="delete-col-btn" (click)="removeColumn(ci)">✕</button>
+</div>
+
+  <div
+    cdkDropList
+    [id]="col.id"
+    [cdkDropListData]="col.items"
+    [cdkDropListConnectedTo]="connectedLists"
+    class="example-list"
+    (cdkDropListDropped)="drop($event)"
+    [class.over-limit]="isOverLimit(col)">
+    <div class="example-box" *ngFor="let item of col.items" cdkDrag>
+      {{ item }}
+    </div>
+  </div>
+
+  <div class="add-item">
+    <input #taskInput type="text" placeholder="New task..." />
+    <button (click)="addItem(col, taskInput.value); taskInput.value=''">
+      Add
+    </button>
+  </div>
+
+  <div class="example-box"
+     *ngFor="let item of col.items; let i = index"
+     >
+
+  <span *ngIf="!(editingTask?.col === col && editingTask?.index === i)"
+        (dblclick)="startEditTask(col, i)">
+    {{ item }}
+  </span>
+
+  <input *ngIf="editingTask?.col === col && editingTask?.index === i"
+         type="text"
+         [value]="item"
+         (blur)="saveTask(col, i, $event.target.value)"
+         (keydown.enter)="saveTask(col, i, $event.target.value)"
+         autofocus
+         class="edit-input" />
+
+  <button class="delete-btn" (click)="removeItem(col, i)">✕</button>
+</div>
+
+
+<div class="wip-limit">
+  <span>WIP limit:</span>
+  <input
+    type="number"
+    [value]="col.limit"
+    (change)="updateLimit(col, $event.target.value)"
+  />
+</div>
+  <div class="example-container" 
+     *ngFor="let col of columns"
+     [class.over-limit]="isOverLimit(col)">
+</div>
+
+
+
