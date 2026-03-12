@@ -1,0 +1,6 @@
+db.sqlite3
+venv/
+backend_project/__pycache__/
+kanban/__pycache__/
+
+
