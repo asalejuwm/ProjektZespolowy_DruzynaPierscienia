@@ -79,9 +79,22 @@ def add_column(request):
 @csrf_exempt
 def delete_column(request, column_id):
     if request.method == 'DELETE':
-        Column.objects.filter(id=column_id).delete()
-        return JsonResponse({"status": "deleted"})
-    return HttpResponseNotAllowed(['POST'])
+        try:
+            column = Column.objects.get(id=column_id)
+
+            target_column = Column.objects.exclude(id=column_id).first()
+
+            if target_column:
+                Task.objects.filter(column=column).update(column=target_column)
+
+            column.delete()
+
+            return JsonResponse({"status": "deleted"})
+        
+        except Column.DoesNotExist:
+            return JsonResponse({"error": "Column not found"}, status=404)
+
+    return HttpResponseNotAllowed(['DELETE'])
 
 @csrf_exempt
 def update_column(request, column_id):
