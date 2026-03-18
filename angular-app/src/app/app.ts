@@ -143,7 +143,7 @@ saveTask(col: any, index: number, value: string) {
       return;
     }
 
-    this.api.addColumn({ title: title }).subscribe({
+    this.api.addColumn({ title: title, limit: 5 }).subscribe({
       next: (response) => {
         console.log("Kolumna dodana pomyślnie", response);
         this.loadBoard(); 

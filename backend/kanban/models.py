@@ -2,7 +2,7 @@ from django.db import models
 
 class Column(models.Model):
     title = models.CharField(max_length=100, unique=True)
-    limit = models.IntegerField(default=3)
+    limit = models.IntegerField(default=5)
     order = models.IntegerField(default=0)
 
     def __str__(self):

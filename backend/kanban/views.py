@@ -2,6 +2,7 @@ import json
 from django.http import JsonResponse, HttpResponseNotAllowed
 from django.views.decorators.csrf import csrf_exempt
 from .models import Column, Task
+from django.db.models import Max
 
 # --- TASKI ---
 
@@ -79,10 +80,21 @@ def add_column(request):
                 {"error": f'Kolumna "{title}" już istnieje'},
                 status=400
             )
-        
-        new_col = Column.objects.create(title=data['title'])
 
-        return JsonResponse({"id": new_col.id, "title": new_col.title}, status=201)
+        max_order = Column.objects.aggregate(Max('order'))['order__max'] or 0
+        
+        new_col = Column.objects.create(
+            title=data['title'], 
+            limit=data.get('limit', 5), 
+            order=max_order + 1
+        )
+
+        return JsonResponse({
+            "id": new_col.id, 
+            "title": new_col.title, 
+            "order": new_col.order,
+            "limit": new_col.limit
+        }, status=201)
     
     return HttpResponseNotAllowed(['POST'])
 

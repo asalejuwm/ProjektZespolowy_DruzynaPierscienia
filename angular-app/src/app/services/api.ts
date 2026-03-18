@@ -36,7 +36,7 @@ export class ApiService {
 
   // --- KOLUMNY ---
 
-  addColumn(data: { title: string }): Observable<any> {
+  addColumn(data: { title: string, limit: number }): Observable<any> {
     return this.http.post(`${this.baseUrl}/columns/add/`, data);
   }
 
