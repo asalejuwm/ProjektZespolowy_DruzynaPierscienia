@@ -1,73 +1,78 @@
-<button (click)="addColumn()">Add new list</button>
+<div class="page-background">
+  <div cdkDropListGroup class="board-wrapper">
 
-<div cdkDropListGroup class="board-wrapper board">
+    <div cdkDropList 
+        cdkDropListOrientation="horizontal" 
+        (cdkDropListDropped)="dropColumn($event)" 
+        class="columns-container">
 
-  <div cdkDropList 
-       cdkDropListOrientation="horizontal" 
-       (cdkDropListDropped)="dropColumn($event)" 
-       class="columns-container">
+      <div class="example-container" 
+          *ngFor="let col of columns; let ci = index" 
+          cdkDrag>
 
-    <div class="example-container" 
-         *ngFor="let col of columns; let ci = index" 
-         cdkDrag>
+        <div class="column-header" cdkDragHandle>
+          <h2 *ngIf="editingColumn !== col" (dblclick)="startEditColumn(col)">
+            {{ col.title }}
+          </h2>
 
-      <div class="column-header" cdkDragHandle>
-        <h2 *ngIf="editingColumn !== col" (dblclick)="startEditColumn(col)">
-          {{ col.title }}
-        </h2>
+          <input *ngIf="editingColumn === col"
+                type="text"
+                [value]="col.title"
+                (blur)="saveColumnTitle(col, $any($event.target).value)"
+                (keydown.enter)="saveColumnTitle(col, $any($event.target).value)"
+                autofocus
+                class="edit-input" />
 
-        <input *ngIf="editingColumn === col"
-               type="text"
-               [value]="col.title"
-               (blur)="saveColumnTitle(col, $any($event.target).value)"
-               (keydown.enter)="saveColumnTitle(col, $any($event.target).value)"
-               autofocus
-               class="edit-input" />
+          <button class="delete-col-btn" (click)="removeColumn(col.id)">✕</button>
+        </div>
 
-        <button class="delete-col-btn" (click)="removeColumn(col.id)">✕</button>
-      </div>
+        <div cdkDropList
+            [id]="col.id.toString()"
+            [cdkDropListData]="col.items"
+            [cdkDropListConnectedTo]="connectedLists"
+            class="example-list"
+            (cdkDropListDropped)="drop($event)"
+            [class.over-limit]="isOverLimit(col)">
 
-      <div cdkDropList
-           [id]="col.id.toString()"
-           [cdkDropListData]="col.items"
-           [cdkDropListConnectedTo]="connectedLists"
-           class="example-list"
-           (cdkDropListDropped)="drop($event)"
-           [class.over-limit]="isOverLimit(col)">
+          <div class="example-box"
+              *ngFor="let item of col.items; let i = index"
+              cdkDrag>
 
-        <div class="example-box"
-             *ngFor="let item of col.items; let i = index"
-             cdkDrag>
+            <span *ngIf="!(editingTask?.col === col && editingTask?.index === i)"
+                  (dblclick)="startEditTask(col, i)">
+              {{ item.content }}
+            </span>
 
-          <span *ngIf="!(editingTask?.col === col && editingTask?.index === i)"
-                (dblclick)="startEditTask(col, i)">
-            {{ item.content }}
-          </span>
+            <input *ngIf="editingTask?.col === col && editingTask?.index === i"
+                  type="text"
+                  [value]="item.content"
+                  (blur)="saveTask(col, i, $any($event.target).value)"
+                  (keydown.enter)="saveTask(col, i, $any($event.target).value)"
+                  autofocus
+                  class="edit-input" />
 
-          <input *ngIf="editingTask?.col === col && editingTask?.index === i"
-                 type="text"
-                 [value]="item.content"
-                 (blur)="saveTask(col, i, $any($event.target).value)"
-                 (keydown.enter)="saveTask(col, i, $any($event.target).value)"
-                 autofocus
-                 class="edit-input" />
-
-          <div class="task-actions">
-            <button class="delete-btn" (click)="removeItem(col, i)">✕</button>
+            <div class="task-actions">
+              <button class="delete-btn" (click)="removeItem(col, i)">✕</button>
+            </div>
           </div>
         </div>
+
+        <div class="add-item">
+          <input #taskInput type="text" placeholder="New task..." />
+          <button (click)="addItem(col, taskInput.value); taskInput.value=''">
+            Add
+          </button>
+        </div>
+
+        <div class="wip-limit">
+          <span>WIP limit:</span>
+          <input type="number" [value]="col.limit" (change)="updateLimit(col, $any($event.target).value)" />
+        </div>
+
       </div>
 
-      <div class="add-item">
-        <input #taskInput type="text" placeholder="New task..." />
-        <button (click)="addItem(col, taskInput.value); taskInput.value=''">
-          Add
-        </button>
-      </div>
-
-      <div class="wip-limit">
-        <span>WIP limit:</span>
-        <input type="number" [value]="col.limit" (change)="updateLimit(col, $any($event.target).value)" />
+      <div class="add-column-wrapper">
+        <button class="add-column-btn" (click)="addColumn()">Add new list</button>
       </div>
 
     </div>
