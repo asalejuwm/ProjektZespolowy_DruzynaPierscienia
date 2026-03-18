@@ -11,7 +11,7 @@
           cdkDrag>
 
         <div class="column-header" cdkDragHandle>
-          <h2 *ngIf="editingColumn !== col" (dblclick)="startEditColumn(col)">
+          <h2 *ngIf="editingColumn !== col" (dblclick)="!isImmutable(col) && startEditColumn(col)">
             {{ col.title }}
           </h2>
 
@@ -23,7 +23,7 @@
                 autofocus
                 class="edit-input" />
 
-          <button class="delete-col-btn" (click)="removeColumn(col.id)">✕</button>
+          <button *ngIf="!isImmutable(col)"class="delete-col-btn" (click)="removeColumn(col.id)">✕</button>
         </div>
 
         <div cdkDropList

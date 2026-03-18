@@ -72,8 +72,18 @@ def move_task(request, task_id):
 def add_column(request):
     if request.method == 'POST':
         data = json.loads(request.body)
+        title = data['title'].strip()
+
+        if Column.objects.filter(title__iexact=title).exists():
+            return JsonResponse(
+                {"error": f'Kolumna "{title}" już istnieje'},
+                status=400
+            )
+        
         new_col = Column.objects.create(title=data['title'])
+
         return JsonResponse({"id": new_col.id, "title": new_col.title}, status=201)
+    
     return HttpResponseNotAllowed(['POST'])
 
 @csrf_exempt

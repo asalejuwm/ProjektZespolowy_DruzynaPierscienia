@@ -1,7 +1,7 @@
 from django.db import models
 
 class Column(models.Model):
-    title = models.CharField(max_length=100)
+    title = models.CharField(max_length=100, unique=True)
     limit = models.IntegerField(default=3)
     order = models.IntegerField(default=0)
 

@@ -27,6 +27,12 @@ export class App implements OnInit {
 editingColumn: any = null;
 editingTask: { col: any, index: number } | null = null;
 
+IMMUTABLE_COLUMNS = ['To do', 'Done'];
+
+isImmutable(col: any): boolean {
+  return this.IMMUTABLE_COLUMNS.includes(col.title);
+}
+
 // --- Funkcje pomocnicze ---
 
 isOverLimit(col: any) {
@@ -132,6 +138,11 @@ saveTask(col: any, index: number, value: string) {
     const title = prompt("Nazwa nowej kolumny:");
     if (!title) return;
   
+    if (this.columns.some(col => col.title.toLowerCase() === title.toLowerCase())) {
+      alert('Kolumna o takiej nazwie już istnieje!');
+      return;
+    }
+
     this.api.addColumn({ title: title }).subscribe({
       next: (response) => {
         console.log("Kolumna dodana pomyślnie", response);
