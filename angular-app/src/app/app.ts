@@ -18,12 +18,11 @@ import { ApiService } from './services/api';
   styleUrls: ['./app.css']
 })
 export class App implements OnInit {
-  // 1. Zaczynamy od pustej tablicy 
   columns: any[] = [];
 
   constructor(private api: ApiService, private cdr: ChangeDetectorRef) {}
 
-  // --- Zmienne do obsługi edycji i limitów ---
+  // --- Variables for handling editing and limits  ---
 editingColumn: any = null;
 editingTask: { col: any, index: number } | null = null;
 
@@ -33,28 +32,57 @@ isImmutable(col: any): boolean {
   return this.IMMUTABLE_COLUMNS.includes(col.title);
 }
 
-// --- Funkcje pomocnicze ---
+// --- Auxiliary functions ---
 
 isOverLimit(col: any) {
-  // Jeśli limit jest <= 0, uznajemy, że limitu nie ma 
   if (col.limit <= 0) return false; 
   return col.items && col.items.length > col.limit;
 }
 
 startEditColumn(col: any) {
   this.editingColumn = col;
+  
+  setTimeout(() => {
+    const input = document.querySelector('.edit-input') as HTMLInputElement;
+    if (input) {
+      input.focus();
+      input.select(); 
+    }
+  }, 0);
 }
 
 saveColumnTitle(col: any, value: string) {
+  if (this.editingColumn !== col) return;
+
   const newTitle = value.trim();
-  if (newTitle) {
-    this.api.updateColumn(col.id, { title: newTitle }).subscribe(() => {
+
+  if (!newTitle || newTitle === col.title) {
+    this.editingColumn = null;
+    return;
+  }
+
+  const isDuplicate = this.columns.some(c => 
+    c.id !== col.id && c.title.toLowerCase() === newTitle.toLowerCase()
+  );
+
+  if (isDuplicate) {
+    this.editingColumn = null; 
+    alert(`Column "${newTitle}" already exists!`);
+    return;
+  }
+
+  this.api.updateColumn(col.id, { title: newTitle }).subscribe({
+    next: () => {
       col.title = newTitle;
       this.editingColumn = null;
-    });
-  } else {
-    this.editingColumn = null;
-  }
+      this.loadBoard();
+    },
+    error: (err) => {
+      console.error('Error:', err);
+      this.editingColumn = null;
+      this.loadBoard();
+    }
+  });
 }
 
 startEditTask(col: any, index: number) {
@@ -68,11 +96,11 @@ saveTask(col: any, index: number, value: string) {
   if (newValue && newValue !== task.content) {
     this.api.updateTask(task.id, { content: newValue }).subscribe({
       next: (response) => {
-        console.log('Zadanie zaktualizowane:', response);
+        console.log('Task updated:', response);
         this.loadBoard();
       },
       error: (err) => {
-        console.error('Błąd podczas aktualizacji zadania:', err);
+        console.error('Task update error: ', err);
       }
     });
   }
@@ -81,7 +109,7 @@ saveTask(col: any, index: number, value: string) {
 }
 
   ngOnInit(): void {
-    console.log("Inicjalizacja aplikacji...");
+    console.log("Initializing application...");
     this.loadBoard();
   }
 
@@ -90,9 +118,9 @@ saveTask(col: any, index: number, value: string) {
       next: (data) => {
         this.columns = data;
         this.cdr.detectChanges();
-        console.log("Dane załadowane i detekcja wymuszona:", data);
+        console.log("Data loaded and detection forced:", data);
       },
-      error: (err) => console.error("Błąd:", err)
+      error: (err) => console.error("Error:", err)
     });
   }
 
@@ -125,41 +153,41 @@ saveTask(col: any, index: number, value: string) {
 
   removeItem(col: any, index: number) {
     const item = col.items[index];
-    if (!confirm(`Czy na pewno chcesz usunąć zadanie: "${item.content}"?`)) return;
+    if (!confirm(`Are you sure you want to remove task: "${item.content}"?`)) return;
 
     this.api.deleteTask(item.id).subscribe(() => {
       this.loadBoard();
     });
   }
 
-  // --- LOGIKA KOLUMN ---
+  // --- COLUMN LOGIC ---
 
   addColumn() {
-    const title = prompt("Nazwa nowej kolumny:");
+    const title = prompt("New column name:");
     if (!title) return;
   
     if (this.columns.some(col => col.title.toLowerCase() === title.toLowerCase())) {
-      alert('Kolumna o takiej nazwie już istnieje!');
+      alert('This column already exists!');
       return;
     }
 
     this.api.addColumn({ title: title, limit: 5 }).subscribe({
       next: (response) => {
-        console.log("Kolumna dodana pomyślnie", response);
+        console.log("Column added successfully", response);
         this.loadBoard(); 
       },
-      error: (err) => console.error("Błąd dodawania kolumny", err)
+      error: (err) => console.error("Error adding column", err)
     });
   }
 
   removeColumn(colId: number) {
-    if (confirm("Czy na pewno usunąć kolumnę?")) {
+    if (confirm("Are you sure you want to delete the column?")) {
       this.api.deleteColumn(colId).subscribe({
         next: () => {
           this.loadBoard(); 
         },
         error: (err) => {
-          console.error("Nie udało się usunąć kolumny:", err);
+          console.error("Couldn't delete column:", err);
         }
       });
     }

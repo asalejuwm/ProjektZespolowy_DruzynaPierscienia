@@ -10,7 +10,7 @@ export class ApiService {
 
   constructor(private http: HttpClient) {}
 
-  // --- TASKI ---
+  // --- TASKS ---
   getTasks(): Observable<any[]> {
     return this.http.get<any[]>(`${this.baseUrl}/tasks/`);
   }
@@ -19,10 +19,10 @@ export class ApiService {
     return this.http.post(`${this.baseUrl}/tasks/add/`, data);
   }
 
-  updateTaskPosition(taskId: number, newColumnId: string, order: number): Observable<any> {
+  updateTaskPosition(taskId: number, columnId: string, position: number) {
     return this.http.patch(`${this.baseUrl}/tasks/${taskId}/move/`, {
-      column_id: newColumnId,
-      order: order
+      column_id: columnId,
+      position: position
     });
   }
 
@@ -34,7 +34,7 @@ export class ApiService {
     return this.http.patch(`${this.baseUrl}/tasks/${taskId}/update/`, data);
   }
 
-  // --- KOLUMNY ---
+  // --- COLUMNS ---
 
   addColumn(data: { title: string, limit: number }): Observable<any> {
     return this.http.post(`${this.baseUrl}/columns/add/`, data);

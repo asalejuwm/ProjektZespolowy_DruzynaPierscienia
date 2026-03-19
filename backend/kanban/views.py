@@ -4,7 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import Column, Task
 from django.db.models import Max
 
-# --- TASKI ---
+# --- TASKS ---
 
 def tasks(request):
     columns = Column.objects.all().order_by('order')
@@ -22,10 +22,17 @@ def tasks(request):
 def add_task(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-        col = Column.objects.get(id=data['column_id'])
-        task = Task.objects.create(content=data['content'], column=col)
+        col_id = data['column_id']
+        col = Column.objects.get(id=col_id)
+        
+        max_order = Task.objects.filter(column=col).aggregate(Max('order'))['order__max'] or 0
+        
+        task = Task.objects.create(
+            content=data['content'], 
+            column=col,
+            order=max_order + 1 
+        )
         return JsonResponse({"id": task.id, "content": task.content}, status=201)
-    # Obsługiwanie innych metod, np. GET w przeglądarce
     return HttpResponseNotAllowed(['POST'])
 
 @csrf_exempt
@@ -34,9 +41,9 @@ def delete_task(request, task_id):
         try:
             task = Task.objects.get(id=task_id)
             task.delete()
-            return JsonResponse({"message": "Zadanie usunięte"}, status=200)
+            return JsonResponse({"message": "Task deleted"}, status=200)
         except Task.DoesNotExist:
-            return JsonResponse({"error": "Zadanie nie istnieje"}, status=404)
+            return JsonResponse({"error": "Task does not exist"}, status=404)
     
     return HttpResponseNotAllowed(['DELETE'])
 
@@ -61,13 +68,24 @@ def update_task(request, task_id):
 def move_task(request, task_id):
     if request.method == 'PATCH':
         data = json.loads(request.body)
-        task = Task.objects.get(id=task_id)
-        task.column = Column.objects.get(id=data['column_id'])
-        task.save()
-        return JsonResponse({"status": "ok"})
-    return HttpResponseNotAllowed(['POST'])
+        new_column_id = data.get('column_id')
+        new_index = data.get('position', 0)
 
-# --- KOLUMNY ---
+        task = Task.objects.get(id=task_id)
+        new_col = Column.objects.get(id=new_column_id)
+
+        other_tasks = list(Task.objects.filter(column=new_col).exclude(id=task_id).order_by('order'))
+
+        other_tasks.insert(new_index, task)
+        for i, t in enumerate(other_tasks):
+            t.order = i
+            t.column = new_col 
+            t.save()
+
+        return JsonResponse({"status": "ok"})
+    return HttpResponseNotAllowed(['PATCH'])
+
+# --- COLUMNS ---
 
 @csrf_exempt
 def add_column(request):
@@ -77,7 +95,7 @@ def add_column(request):
 
         if Column.objects.filter(title__iexact=title).exists():
             return JsonResponse(
-                {"error": f'Kolumna "{title}" już istnieje'},
+                {"error": f'Column "{title}" already exists'},
                 status=400
             )
 

@@ -16,12 +16,14 @@
           </h2>
 
           <input *ngIf="editingColumn === col"
-                type="text"
-                [value]="col.title"
-                (blur)="saveColumnTitle(col, $any($event.target).value)"
-                (keydown.enter)="saveColumnTitle(col, $any($event.target).value)"
-                autofocus
-                class="edit-input" />
+              #columnInput
+              type="text"
+              [value]="col.title"
+              (blur)="saveColumnTitle(col, columnInput.value)"
+              (keydown.enter)="columnInput.blur()"
+              (keydown.escape)="editingColumn = null"
+              (mousedown)="$event.stopPropagation()" 
+              class="edit-input" />
 
           <button *ngIf="!isImmutable(col)"class="delete-col-btn" (click)="removeColumn(col.id)">✕</button>
         </div>
