@@ -10,7 +10,9 @@
           *ngFor="let col of columns; let ci = index" 
           cdkDrag>
 
-        <div class="column-header" cdkDragHandle>
+        <div class="column-header" 
+        cdkDragHandle
+        [class.over-limit]="isOverLimit(col)">
           <h2 *ngIf="editingColumn !== col" (dblclick)="!isImmutable(col) && startEditColumn(col)">
             {{ col.title }}
           </h2>
