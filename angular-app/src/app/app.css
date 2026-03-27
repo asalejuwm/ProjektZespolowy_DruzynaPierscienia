@@ -6,33 +6,57 @@ body {
 }
 
 .page-background {
-  background: #e9f2ff;
   min-height: 100vh;
-  padding: 20px;
 }
 
-/* --- TABELA --- */
+/* --- NOWY UKŁAD SIATKI (GRID) --- */
 
-.columns-container {
-  display: table;
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.example-container {
-  display: table-cell;
-  vertical-align: top;
+.board-wrapper {
+  display: flex;
+  flex-direction: column;
   background: white;
   border: 1px solid #d0d7e2;
-  padding: 0;
-  border-radius: 0;
+  border-radius: 8px;
+  overflow-x: auto; /* Przewijanie jeśli kolumn jest dużo */
+}
+
+/* Wspólny styl dla rzędów */
+.columns-header-row, .swimlane-row {
+  display: flex;
+  width: fit-content; /* Zapewnia, że rzędy mają tę samą szerokość co suma kolumn */
+}
+
+/* Styl dla etykiet bocznych (Osoba) */
+.swimlane-label-spacer, .swimlane-side-label {
+  width: 120px;
+  min-width: 120px;
+  padding: 15px;
+  background: #f1f5f9;
+  border-right: 2px solid #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+/* NAGŁÓWEK TABELI */
+.columns-header-row {
+  background: #c7ddff;
+  border-bottom: 2px solid #cbd5e1;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* KONTEJNERY KOLUMN I KOMÓRKI (Klucz do równej siatki) */
+.column-header-container, .grid-cell {
+  width: 280px; /* Stała szerokość każdej kolumny */
+  min-width: 280px;
+  border-right: 1px solid #e2e8f0;
 }
 
 .column-header {
-  background: #c7ddff;
-  border-bottom: 1px solid #d0d7e2;
   padding: 10px;
-  text-align: center;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -40,149 +64,123 @@ body {
 
 .column-header h2 {
   margin: 0;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
-  cursor: pointer;
 }
 
-.delete-col-btn {
-  background: transparent;
-  border: none;
-  color: #d9534f;
-  font-size: 18px;
-  cursor: pointer;
-  transition: 0.2s;
-}
+/* --- LISTA ZADAŃ I KOMÓRKI --- */
 
-.delete-col-btn:hover {
-  color: #b52b27;
+.swimlane-row {
+  border-bottom: 1px solid #cbd5e1;
 }
-
-/* --- LISTA ZADAŃ --- */
 
 .example-list {
-  min-height: 200px;
-  padding: 0;
+  min-height: 150px; /* Wysokość komórki wiersza */
+  padding: 10px;
   background: white;
+  transition: background 0.2s;
 }
 
 .example-list.over-limit {
-  border: 2px solid #ff4d4d !important;
   background: #ffe5e5 !important;
 }
 
-.example-container .column-header.over-limit {
+.column-header.over-limit {
   background-color: #ff4d4d;
+  color: white;
 }
 
+/* --- KARTY ZADAŃ (BOXES) --- */
 
 .example-box {
-  border-bottom: 1px solid #e5e7eb;
-  padding: 10px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  padding: 12px;
+  margin-bottom: 8px;
+  border-radius: 6px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   cursor: grab;
-  background: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 .example-box:hover {
   background: #f7faff;
+  border-color: #4a90e2;
 }
 
-.task-actions .delete-btn {
-  background: transparent;
-  border: none;
-  color: #d9534f;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-.task-actions .delete-btn:hover {
-  color: #b52b27;
-}
-
-/* --- INPUTY --- */
+/* --- INPUTY I DODAWANIE --- */
 
 .edit-input {
   width: 100%;
-  padding: 8px 10px;
-  border-radius: 6px;
+  padding: 5px;
+  border-radius: 4px;
   border: 1px solid #ccc;
-  font-size: 14px;
 }
 
-/* --- DODAWANIE ZADAŃ --- */
-
-.add-item {
-  padding: 10px;
-  border-top: 1px solid #e5e7eb;
+.add-item-mini {
   display: flex;
-  gap: 8px;
+  gap: 5px;
+  margin-top: 5px;
+  opacity: 0.5;
+  transition: opacity 0.3s;
 }
 
-.add-item input {
+.add-item-mini:hover {
+  opacity: 1;
+}
+
+.add-item-mini input {
   flex: 1;
-  padding: 8px 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
+  font-size: 12px;
+  padding: 4px;
+  border: 1px dashed #ccc;
 }
 
-.add-item button {
-  padding: 8px 14px;
+.add-item-mini button {
   background: #4a90e2;
   color: white;
   border: none;
-  border-radius: 6px;
+  padding: 0 8px;
+  border-radius: 4px;
   cursor: pointer;
 }
 
-.add-item button:hover {
-  background: #357ab8;
+/* --- POZOSTAŁE --- */
+
+.wip-limit-display {
+  font-size: 11px;
+  padding: 0 10px 10px;
+  color: #64748b;
 }
 
-/* --- LIMIT WIP --- */
-
-.wip-limit {
-  padding: 10px;
-  border-top: 1px solid #e5e7eb;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
+.wip-limit-display input {
+  width: 40px;
+  border: none;
+  background: transparent;
+  font-weight: bold;
 }
-
-.wip-limit input {
-  width: 60px;
-  padding: 6px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-}
-
-/* --- DODAWANIE KOLUMN --- */
 
 .add-column-wrapper {
-  display: table-cell;
-  vertical-align: top;
-  width: 200px;
-  padding-left: 10px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
 }
 
-button.add-column-btn {
+.add-column-btn {
   background: #4a90e2;
   color: white;
   border: none;
-  padding: 10px 18px;
-  font-size: 15px;
-  font-weight: 600;
-  border-radius: 8px;
+  padding: 8px 15px;
+  border-radius: 6px;
   cursor: pointer;
-  width: 100%;
+  white-space: nowrap;
 }
 
-button.add-column-btn:hover {
-  background: #357ab8;
+.delete-col-btn, .delete-btn {
+  background: transparent;
+  border: none;
+  color: #d9534f;
+  cursor: pointer;
 }
-
-
-

@@ -1,51 +1,78 @@
 import json
 from django.http import JsonResponse, HttpResponseNotAllowed
 from django.views.decorators.csrf import csrf_exempt
-from .models import Column, Task
+from .models import Column, Task, Swimlane
 from django.db.models import Max
 
-# --- TASKS ---
+# --- GŁÓWNY WIDOK (Pobieranie danych) ---
 
 def tasks(request):
-    columns = Column.objects.all().order_by('order')
-    data = []
-    for col in columns:
-        data.append({
-            "id": col.id,
-            "title": col.title,
-            "limit": col.limit,
-            "items": list(col.tasks.all().order_by('order').values('id', 'content'))
-        })
-    return JsonResponse(data, safe=False)
+    """
+    Zwraca strukturę potrzebną dla siatki Kanban:
+    {
+        "columns": [...],
+        "swimlanes": [...],
+        "tasks": [...]
+    }
+    """
+    cols = Column.objects.all().order_by('order')
+    swims = Swimlane.objects.all().order_by('order')
+    all_tasks = Task.objects.all().order_by('order')
+
+    return JsonResponse({
+        "columns": list(cols.values('id', 'title', 'limit', 'order')),
+        "swimlanes": list(swims.values('id', 'name', 'order')),
+        "tasks": list(all_tasks.values('id', 'content', 'column_id', 'swimlane_id', 'order'))
+    }, safe=False)
+
+# --- OPERACJE NA ZADANIACH ---
 
 @csrf_exempt
 def add_task(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-        col_id = data['column_id']
-        col = Column.objects.get(id=col_id)
+        col = Column.objects.get(id=data['column_id'])
+        swim = Swimlane.objects.get(id=data['swimlane_id'])
         
-        max_order = Task.objects.filter(column=col).aggregate(Max('order'))['order__max'] or 0
+        # Obliczamy kolejność wewnątrz konkretnej komórki (przecięcie Kolumna x Osoba)
+        max_order = Task.objects.filter(column=col, swimlane=swim).aggregate(Max('order'))['order__max'] or 0
         
         task = Task.objects.create(
             content=data['content'], 
             column=col,
+            swimlane=swim,
             order=max_order + 1 
         )
         return JsonResponse({"id": task.id, "content": task.content}, status=201)
     return HttpResponseNotAllowed(['POST'])
 
 @csrf_exempt
-def delete_task(request, task_id):
-    if request.method == 'DELETE':
-        try:
-            task = Task.objects.get(id=task_id)
-            task.delete()
-            return JsonResponse({"message": "Task deleted"}, status=200)
-        except Task.DoesNotExist:
-            return JsonResponse({"error": "Task does not exist"}, status=404)
-    
-    return HttpResponseNotAllowed(['DELETE'])
+def move_task(request, task_id):
+    if request.method == 'PATCH':
+        data = json.loads(request.body)
+        new_column_id = data.get('column_id')
+        new_swimlane_id = data.get('swimlane_id')
+        new_index = data.get('position', 0)
+
+        task = Task.objects.get(id=task_id)
+        new_col = Column.objects.get(id=new_column_id)
+        new_swim = Swimlane.objects.get(id=new_swimlane_id)
+
+        # Pobieramy zadania z docelowej komórki, żeby przeliczyć ich kolejność (order)
+        other_tasks = list(Task.objects.filter(column=new_col, swimlane=new_swim).exclude(id=task_id).order_by('order'))
+
+        # Wstawiamy nasze zadanie na wybraną pozycję
+        other_tasks.insert(new_index, task)
+        
+        # Zapisujemy nową kolejność dla wszystkich zadań w tej komórce
+        for i, t in enumerate(other_tasks):
+            t.order = i
+            t.column = new_col
+            t.swimlane = new_swim
+            t.save()
+
+        return JsonResponse({"status": "ok"})
+    return HttpResponseNotAllowed(['PATCH'])
 
 @csrf_exempt
 def update_task(request, task_id):
@@ -61,31 +88,20 @@ def update_task(request, task_id):
             return JsonResponse({"status": "updated", "content": task.content})
         except Task.DoesNotExist:
             return JsonResponse({"error": "Task not found"}, status=404)
-            
     return HttpResponseNotAllowed(['PATCH'])
 
 @csrf_exempt
-def move_task(request, task_id):
-    if request.method == 'PATCH':
-        data = json.loads(request.body)
-        new_column_id = data.get('column_id')
-        new_index = data.get('position', 0)
+def delete_task(request, task_id):
+    if request.method == 'DELETE':
+        try:
+            task = Task.objects.get(id=task_id)
+            task.delete()
+            return JsonResponse({"message": "Task deleted"}, status=200)
+        except Task.DoesNotExist:
+            return JsonResponse({"error": "Task does not exist"}, status=404)
+    return HttpResponseNotAllowed(['DELETE'])
 
-        task = Task.objects.get(id=task_id)
-        new_col = Column.objects.get(id=new_column_id)
-
-        other_tasks = list(Task.objects.filter(column=new_col).exclude(id=task_id).order_by('order'))
-
-        other_tasks.insert(new_index, task)
-        for i, t in enumerate(other_tasks):
-            t.order = i
-            t.column = new_col 
-            t.save()
-
-        return JsonResponse({"status": "ok"})
-    return HttpResponseNotAllowed(['PATCH'])
-
-# --- COLUMNS ---
+# --- OPERACJE NA KOLUMNACH ---
 
 @csrf_exempt
 def add_column(request):
@@ -94,10 +110,7 @@ def add_column(request):
         title = data['title'].strip()
 
         if Column.objects.filter(title__iexact=title).exists():
-            return JsonResponse(
-                {"error": f'Column "{title}" already exists'},
-                status=400
-            )
+            return JsonResponse({"error": f'Column "{title}" already exists'}, status=400)
 
         max_order = Column.objects.aggregate(Max('order'))['order__max'] or 0
         
@@ -113,7 +126,6 @@ def add_column(request):
             "order": new_col.order,
             "limit": new_col.limit
         }, status=201)
-    
     return HttpResponseNotAllowed(['POST'])
 
 @csrf_exempt
@@ -121,19 +133,15 @@ def delete_column(request, column_id):
     if request.method == 'DELETE':
         try:
             column = Column.objects.get(id=column_id)
-
+            # Przenosimy zadania do innej kolumny przed usunięciem (opcjonalnie)
             target_column = Column.objects.exclude(id=column_id).first()
-
             if target_column:
                 Task.objects.filter(column=column).update(column=target_column)
-
+            
             column.delete()
-
             return JsonResponse({"status": "deleted"})
-        
         except Column.DoesNotExist:
             return JsonResponse({"error": "Column not found"}, status=404)
-
     return HttpResponseNotAllowed(['DELETE'])
 
 @csrf_exempt
@@ -147,7 +155,7 @@ def update_column(request, column_id):
             col.title = data['title']
         col.save()
         return JsonResponse({"status": "updated"})
-    return HttpResponseNotAllowed(['POST'])
+    return HttpResponseNotAllowed(['PATCH'])
 
 @csrf_exempt
 def update_column_order(request):
@@ -156,3 +164,18 @@ def update_column_order(request):
         for item in data:
             Column.objects.filter(id=item['id']).update(order=item['order'])
         return JsonResponse({"status": "order updated"})
+    return HttpResponseNotAllowed(['POST'])
+
+# --- DODATKOWE: OSOBY (SWIMLANES) ---
+
+@csrf_exempt
+def add_swimlane(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        max_order = Swimlane.objects.aggregate(Max('order'))['order__max'] or 0
+        new_swim = Swimlane.objects.create(
+            name=data['name'],
+            order=max_order + 1
+        )
+        return JsonResponse({"id": new_swim.id, "name": new_swim.name}, status=201)
+    return HttpResponseNotAllowed(['POST'])

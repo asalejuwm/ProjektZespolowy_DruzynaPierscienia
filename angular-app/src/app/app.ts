@@ -19,196 +19,146 @@ import { ApiService } from './services/api';
 })
 export class App implements OnInit {
   columns: any[] = [];
+  swimlanes: any[] = []; // NOWE: lista osób/wierszy
+  allTasks: any[] = [];  // NOWE: płaska lista wszystkich zadań
 
   constructor(private api: ApiService, private cdr: ChangeDetectorRef) {}
 
-  // --- Variables for handling editing and limits  ---
-editingColumn: any = null;
-editingTask: { col: any, index: number } | null = null;
-
-IMMUTABLE_COLUMNS = ['To do', 'Done'];
-
-isImmutable(col: any): boolean {
-  return this.IMMUTABLE_COLUMNS.includes(col.title);
-}
-
-// --- Auxiliary functions ---
-
-isOverLimit(col: any) {
-  if (col.limit <= 0) return false; 
-  return col.items && col.items.length > col.limit;
-}
-
-startEditColumn(col: any) {
-  this.editingColumn = col;
-  
-  setTimeout(() => {
-    const input = document.querySelector('.edit-input') as HTMLInputElement;
-    if (input) {
-      input.focus();
-      input.select(); 
-    }
-  }, 0);
-}
-
-saveColumnTitle(col: any, value: string) {
-  if (this.editingColumn !== col) return;
-
-  const newTitle = value.trim();
-
-  if (!newTitle || newTitle === col.title) {
-    this.editingColumn = null;
-    return;
-  }
-
-  const isDuplicate = this.columns.some(c => 
-    c.id !== col.id && c.title.toLowerCase() === newTitle.toLowerCase()
-  );
-
-  if (isDuplicate) {
-    this.editingColumn = null; 
-    alert(`Column "${newTitle}" already exists!`);
-    return;
-  }
-
-  this.api.updateColumn(col.id, { title: newTitle }).subscribe({
-    next: () => {
-      col.title = newTitle;
-      this.editingColumn = null;
-      this.loadBoard();
-    },
-    error: (err) => {
-      console.error('Error:', err);
-      this.editingColumn = null;
-      this.loadBoard();
-    }
-  });
-}
-
-startEditTask(col: any, index: number) {
-  this.editingTask = { col, index };
-}
-
-saveTask(col: any, index: number, value: string) {
-  const newValue = value.trim();
-  const task = col.items[index];
-
-  if (newValue && newValue !== task.content) {
-    this.api.updateTask(task.id, { content: newValue }).subscribe({
-      next: (response) => {
-        console.log('Task updated:', response);
-        this.loadBoard();
-      },
-      error: (err) => {
-        console.error('Task update error: ', err);
-      }
-    });
-  }
-
-  this.editingTask = null;
-}
+  editingColumn: any = null;
+  editingTask: { taskId: number } | null = null; // Zmiana: teraz bazujemy na ID zadania
+  IMMUTABLE_COLUMNS = ['To do', 'Done'];
 
   ngOnInit(): void {
-    console.log("Initializing application...");
     this.loadBoard();
   }
 
   loadBoard() {
     this.api.getTasks().subscribe({
-      next: (data) => {
-        this.columns = data;
+      next: (data: any) => {
+        // Zakładamy, że backend zwraca teraz obiekt: { columns: [], swimlanes: [], tasks: [] }
+        this.columns = data.columns || [];
+        this.swimlanes = data.swimlanes || [];
+        this.allTasks = data.tasks || [];
         this.cdr.detectChanges();
-        console.log("Data loaded and detection forced:", data);
       },
-      error: (err) => console.error("Error:", err)
+      error: (err) => console.error("Error loading board:", err)
     });
   }
 
-  drop(event: CdkDragDrop<any[]>) {
+  // --- LOGIKA SIATKI (GRID) ---
+
+  // Pobiera zadania tylko dla konkretnej komórki (np. "Ania" w "In Progress")
+  getTasksForCell(colId: number, swimId: number) {
+    return this.allTasks
+      .filter(t => t.column_id === colId && t.swimlane_id === swimId)
+      .sort((a, b) => a.order - b.order);
+  }
+
+  // Tworzy unikalne ID dla każdej listy w siatce (potrzebne dla Drag & Drop)
+  getCellId(colId: number, swimId: number): string {
+    return `cell-${colId}-${swimId}`;
+  }
+
+  // Zwraca listę wszystkich ID komórek, żeby zadania mogły "latać" między nimi
+  get allCellIds(): string[] {
+    const ids: string[] = [];
+    this.columns.forEach(c => {
+      this.swimlanes.forEach(s => ids.push(this.getCellId(c.id, s.id)));
+    });
+    return ids;
+  }
+
+  // --- AKCJE ZADAŃ ---
+
+  drop(event: CdkDragDrop<any[]>, targetColId: number, targetSwimId: number) {
+    const task = event.item.data; // Zadanie, które trzymamy
+    const newIndex = event.currentIndex;
+
     if (event.previousContainer === event.container) {
-      moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
+      moveItemInArray(event.container.data, event.previousIndex, newIndex);
     } else {
       transferArrayItem(
         event.previousContainer.data,
         event.container.data,
         event.previousIndex,
-        event.currentIndex
+        newIndex
       );
     }
 
-    const task = event.container.data[event.currentIndex];
-    const newColumnId = event.container.id;
-
-    this.api.updateTaskPosition(task.id, newColumnId, event.currentIndex).subscribe();
+    // Informujemy backend o nowym położeniu: Kolumna, Wiersz i Pozycja w liście
+    this.api.updateTaskPosition(task.id, targetColId, targetSwimId, newIndex).subscribe({
+      next: () => this.loadBoard()
+    });
   }
 
-  addItem(col: any, text: string) {
+  addItem(colId: number, swimId: number, text: string) {
     const value = text.trim();
     if (!value) return;
 
-    this.api.addTask({ content: value, column_id: col.id }).subscribe(() => {
-      this.loadBoard();
-    });
+    this.api.addTask({ 
+      content: value, 
+      column_id: colId, 
+      swimlane_id: swimId 
+    }).subscribe(() => this.loadBoard());
   }
 
-  removeItem(col: any, index: number) {
-    const item = col.items[index];
-    if (!confirm(`Are you sure you want to remove task: "${item.content}"?`)) return;
-
-    this.api.deleteTask(item.id).subscribe(() => {
-      this.loadBoard();
-    });
+  removeItem(taskId: number) {
+    if (!confirm(`Are you sure you want to remove this task?`)) return;
+    this.api.deleteTask(taskId).subscribe(() => this.loadBoard());
   }
 
-  // --- COLUMN LOGIC ---
+  // --- LOGIKA EDYCJI I LIMITÓW (Zaktualizowana) ---
+
+  isImmutable(col: any): boolean {
+    return this.IMMUTABLE_COLUMNS.includes(col.title);
+  }
+
+  isOverLimit(col: any) {
+    if (col.limit <= 0) return false;
+    // Liczymy zadania we wszystkich wierszach danej kolumny
+    const count = this.allTasks.filter(t => t.column_id === col.id).length;
+    return count > col.limit;
+  }
+
+  startEditColumn(col: any) {
+    this.editingColumn = col;
+    setTimeout(() => {
+      const input = document.querySelector('.edit-input') as HTMLInputElement;
+      if (input) { input.focus(); input.select(); }
+    }, 0);
+  }
+
+  saveColumnTitle(col: any, value: string) {
+    if (this.editingColumn !== col) return;
+    const newTitle = value.trim();
+    if (newTitle && newTitle !== col.title) {
+      this.api.updateColumn(col.id, { title: newTitle }).subscribe(() => this.loadBoard());
+    }
+    this.editingColumn = null;
+  }
+
+  // --- COLUMN CRUD ---
 
   addColumn() {
     const title = prompt("New column name:");
     if (!title) return;
-  
-    if (this.columns.some(col => col.title.toLowerCase() === title.toLowerCase())) {
-      alert('This column already exists!');
-      return;
-    }
-
-    this.api.addColumn({ title: title, limit: 5 }).subscribe({
-      next: (response) => {
-        console.log("Column added successfully", response);
-        this.loadBoard(); 
-      },
-      error: (err) => console.error("Error adding column", err)
-    });
+    this.api.addColumn({ title, limit: 5 }).subscribe(() => this.loadBoard());
   }
 
   removeColumn(colId: number) {
-    if (confirm("Are you sure you want to delete the column?")) {
-      this.api.deleteColumn(colId).subscribe({
-        next: () => {
-          this.loadBoard(); 
-        },
-        error: (err) => {
-          console.error("Couldn't delete column:", err);
-        }
-      });
+    if (confirm("Delete column?")) {
+      this.api.deleteColumn(colId).subscribe(() => this.loadBoard());
     }
   }
 
   updateLimit(col: any, value: string) {
     const num = value === '∞' || value === '' ? -1 : Number(value);
-    this.api.updateColumn(col.id, { limit: num }).subscribe(() => {
-      this.loadBoard();
-    });
+    this.api.updateColumn(col.id, { limit: num }).subscribe(() => this.loadBoard());
   }
 
   dropColumn(event: CdkDragDrop<any[]>) {
     moveItemInArray(this.columns, event.previousIndex, event.currentIndex);
-  
     const newOrder = this.columns.map((col, index) => ({ id: col.id, order: index }));
-    
     this.api.updateColumnOrder(newOrder).subscribe();
-  }
-
-  get connectedLists() {
-    return this.columns.map(c => c.id.toString());
   }
 }
