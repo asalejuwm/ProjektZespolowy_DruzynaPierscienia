@@ -113,12 +113,23 @@ export class App implements OnInit {
     return this.IMMUTABLE_COLUMNS.includes(col.title);
   }
 
-  isOverLimit(col: any) {
-    if (col.limit <= 0) return false;
-    // Liczymy zadania we wszystkich wierszach danej kolumny
-    const count = this.allTasks.filter(t => t.column_id === col.id).length;
-    return count > col.limit;
-  }
+  isOverLimit(col: any): boolean {
+  if (!col || !this.allTasks || !this.swimlanes) return false;
+
+  const limit = Number(col.limit);
+  if (isNaN(limit) || limit <= 0) return false;
+
+  // Pobierz listę ID aktywnych wierszy
+  const activeSwimlaneIds = this.swimlanes.map(s => String(s.id));
+
+  // Licz tylko zadania, które należą do tej kolumny ORAZ do jednego z widocznych wierszy
+  const count = this.allTasks.filter(t => 
+    String(t.column_id) === String(col.id) && 
+    activeSwimlaneIds.includes(String(t.swimlane_id))
+  ).length;
+
+  return count > limit;
+}
 
   startEditColumn(col: any) {
     this.editingColumn = col;
@@ -152,7 +163,7 @@ export class App implements OnInit {
   }
 
   updateLimit(col: any, value: string) {
-    const num = value === '∞' || value === '' ? -1 : Number(value);
+    const num = value === '∞' || value === '' ? -1 :Math.max(0, Number(value));
     this.api.updateColumn(col.id, { limit: num }).subscribe(() => this.loadBoard());
   }
 
