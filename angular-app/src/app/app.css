@@ -147,6 +147,23 @@ body {
   cursor: pointer;
 }
 
+.add-swimlane-footer-row {
+  display: flex;
+  width: fit-content;
+  border-top: 2px solid #cbd5e1; /* Oddzielenie od ostatniego wiersza */
+  background: #f8fafc;
+}
+
+.add-action-cell {
+  background: #f1f5f9;
+  padding: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+
+
 /* --- POZOSTAŁE --- */
 
 .wip-limit-display {
@@ -183,4 +200,10 @@ body {
   border: none;
   color: #d9534f;
   cursor: pointer;
+}
+
+.disabled-cell {
+  background: #f8fafc;
+  opacity: 0.5;
+  border-right: 1px solid #e2e8f0;
 }

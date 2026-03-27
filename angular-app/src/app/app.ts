@@ -172,4 +172,18 @@ export class App implements OnInit {
     const newOrder = this.columns.map((col, index) => ({ id: col.id, order: index }));
     this.api.updateColumnOrder(newOrder).subscribe();
   }
+
+  // ROWS
+
+  addSwimlane() {
+  const name = prompt("New row name:");
+  if (!name) return;
+  this.api.addSwimlane({ name }).subscribe({
+    next: () => {
+      this.loadBoard(); // Odświeża dane z backendu
+    },
+    error: (err) => console.error("Error while adding row:", err)
+  });
+}
+
 }

@@ -38,6 +38,7 @@
 
       <div class="add-column-wrapper">
         <button class="add-column-btn" (click)="addColumn()">+ List</button>
+            
       </div>
     </div>
 
@@ -75,6 +76,13 @@
         </div>
       </div>
     </div>
-
+    
+    <div class="add-swimlane-footer-row">
+      <div class="swimlane-side-label add-action-cell">
+        <button class="add-column-btn" (click)="addSwimlane()">+ Person</button>
+      </div>
+      <div class="grid-cell disabled-cell" *ngFor="let col of columns"></div>
+    </div>
+    
   </div>
 </div>
