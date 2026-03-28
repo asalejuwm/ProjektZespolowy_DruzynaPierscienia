@@ -184,6 +184,12 @@ export class App implements OnInit {
     },
     error: (err) => console.error("Error while adding row:", err)
   });
-}
+  }
+
+  removeSwimlane(swimId: number) {
+    if (confirm("Czy na pewno chcesz usunąć ten wiersz? Wszystkie zadania w nim zostaną usunięte.")) {
+      this.api.deleteSwimlane(swimId).subscribe(() => this.loadBoard());
+    }
+  }
 
 }

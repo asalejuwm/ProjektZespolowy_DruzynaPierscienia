@@ -46,6 +46,7 @@
       
       <div class="swimlane-side-label">
         {{ swim.name }}
+        <button class="delete-btn" (click)="removeSwimlane(swim.id)">✕</button>
       </div>
 
       <div class="grid-cell" *ngFor="let col of columns">

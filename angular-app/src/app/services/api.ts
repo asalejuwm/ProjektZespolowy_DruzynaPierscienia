@@ -61,4 +61,8 @@ export class ApiService {
   addSwimlane(data: { name: string }): Observable<any> {
     return this.http.post(`${this.baseUrl}/swimlanes/add/`, data);
   }
+
+  deleteSwimlane(swimlaneId: number): Observable<any> {
+  return this.http.delete(`${this.baseUrl}/swimlanes/${swimlaneId}/delete/`);
+  }
 }

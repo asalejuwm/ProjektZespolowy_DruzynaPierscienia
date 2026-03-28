@@ -179,3 +179,14 @@ def add_swimlane(request):
         )
         return JsonResponse({"id": new_swim.id, "name": new_swim.name}, status=201)
     return HttpResponseNotAllowed(['POST'])
+
+@csrf_exempt
+def delete_swimlane(request, swimlane_id):
+    if request.method == 'DELETE':
+        try:
+            swim = Swimlane.objects.get(id=swimlane_id)
+            swim.delete()
+            return JsonResponse({"status": "deleted"})
+        except Swimlane.DoesNotExist:
+            return JsonResponse({"error": "Swimlane not found"}, status=404)
+    return HttpResponseNotAllowed(['DELETE'])
