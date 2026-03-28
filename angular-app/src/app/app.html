@@ -44,8 +44,16 @@
 
     <div class="swimlane-row" *ngFor="let swim of swimlanes">
       
-      <div class="swimlane-side-label">
-        {{ swim.name }}
+      <div class="swimlane-side-label" [class.over-limit]="isSwimlaneOverLimit(swim)">
+        <div class="swimlane-info">
+          <span class="swimlane-name">{{ swim.name }}</span>
+          <div class="swimlane-wip">
+            Limit: <input type="number"
+              [value]="swim.limit"
+              (change)="updateSwimlaneLimit(swim, $any($event.target).value)"
+              class="wip-input-mini">
+            </div>
+          </div>
         <button class="delete-btn" (click)="removeSwimlane(swim.id)">✕</button>
       </div>
 

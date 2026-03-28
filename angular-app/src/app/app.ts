@@ -192,4 +192,15 @@ export class App implements OnInit {
     }
   }
 
+  isSwimlaneOverLimit(swim: any): boolean {
+    if (swim.limit <= 0) return false;
+    const count = this.allTasks.filter(t => t.swimlane_id === swim.id).length;
+    return count > swim.limit;
+  }
+
+  updateSwimlaneLimit(swim: any, value: string) {
+    const num = value === '' ? -1 : Math.max(0, Number(value));
+    this.api.updateSwimlane(swim.id, { limit: num }).subscribe(() => this.loadBoard());
+  }
+
 }

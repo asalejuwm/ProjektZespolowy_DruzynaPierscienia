@@ -15,6 +15,7 @@ class Task(models.Model):
 
 class Swimlane(models.Model):
     name = models.CharField(max_length=100)
+    limit = models.IntegerField(default=5)
     order = models.IntegerField(default=0)
 
     class Meta:

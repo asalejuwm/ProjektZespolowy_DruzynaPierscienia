@@ -21,7 +21,7 @@ def tasks(request):
 
     return JsonResponse({
         "columns": list(cols.values('id', 'title', 'limit', 'order')),
-        "swimlanes": list(swims.values('id', 'name', 'order')),
+        "swimlanes": list(swims.values('id', 'name', 'limit', 'order')),
         "tasks": list(all_tasks.values('id', 'content', 'column_id', 'swimlane_id', 'order'))
     }, safe=False)
 
@@ -190,3 +190,21 @@ def delete_swimlane(request, swimlane_id):
         except Swimlane.DoesNotExist:
             return JsonResponse({"error": "Swimlane not found"}, status=404)
     return HttpResponseNotAllowed(['DELETE'])
+
+@csrf_exempt
+def update_swimlane(request, swimlane_id):
+    if request.method == 'PATCH':
+        try:
+            data = json.loads(request.body)
+            swim = Swimlane.objects.get(id=swimlane_id)
+            
+            if 'limit' in data:
+                swim.limit = data['limit']
+            if 'name' in data:
+                swim.name = data['name']
+                
+            swim.save()
+            return JsonResponse({"status": "updated"})
+        except Swimlane.DoesNotExist:
+            return JsonResponse({"error": "Swimlane not found"}, status=404)
+    return HttpResponseNotAllowed(['PATCH'])

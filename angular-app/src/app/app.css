@@ -162,8 +162,6 @@ body {
   align-items: center;
 }
 
-
-
 /* --- POZOSTAŁE --- */
 
 .wip-limit-display {
@@ -207,3 +205,47 @@ body {
   opacity: 0.5;
   border-right: 1px solid #e2e8f0;
 }
+
+.over-limit {
+  background-color: #fee2e2 !important;
+  color: #b91c1c !important;
+  border: 1px solid #f87171;
+}
+
+.swimlane-side-label {
+  background: #c7ddff;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  min-height: 100px;
+}
+
+.swimlane-info {
+  text-align: center;
+}
+
+.delete-swim-btn {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: none;
+  border: none;
+  color: #ff4d4d;
+  cursor: pointer;
+  font-weight: bold;
+  opacity: 0.3;
+  transition: opacity 0.2s;
+}
+
+.swimlane-side-label:hover .delete-swim-btn {
+  opacity: 1;
+}
+
+.wip-input-mini {
+  width: 40px;
+  padding: 0 10px 10px;
+  color: #64748b;
+}
+
