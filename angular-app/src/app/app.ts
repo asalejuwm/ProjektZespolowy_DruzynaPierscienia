@@ -5,10 +5,11 @@ import {
   moveItemInArray,
   transferArrayItem,
 } from '@angular/cdk/drag-drop';
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, NgZone} from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ApiService } from './services/api';
+import { take } from 'rxjs';
 
 @Component({
   selector: 'app-root',
@@ -22,7 +23,7 @@ export class App implements OnInit {
   swimlanes: any[] = []; // NOWE: lista osób/wierszy
   allTasks: any[] = [];  // NOWE: płaska lista wszystkich zadań
 
-  constructor(private api: ApiService, private cdr: ChangeDetectorRef) {}
+  constructor(private api: ApiService, private cdr: ChangeDetectorRef, private zone: NgZone) { }
 
   editingColumn: any = null;
   editingTask: { taskId: number } | null = null; // Zmiana: teraz bazujemy na ID zadania
@@ -33,14 +34,16 @@ export class App implements OnInit {
   }
 
   loadBoard() {
-    this.api.getTasks().subscribe({
+    this.api.getTasks().pipe(take(1)).subscribe({
       next: (data: any) => {
+        this.zone.run(() => {
         // Zakładamy, że backend zwraca teraz obiekt: { columns: [], swimlanes: [], tasks: [] }
         this.columns = data.columns || [];
         this.swimlanes = data.swimlanes || [];
         this.allTasks = data.tasks || [];
         this.cdr.detectChanges();
-      },
+      });
+    },
       error: (err) => console.error("Error loading board:", err)
     });
   }
@@ -86,7 +89,7 @@ export class App implements OnInit {
     }
 
     // Informujemy backend o nowym położeniu: Kolumna, Wiersz i Pozycja w liście
-    this.api.updateTaskPosition(task.id, targetColId, targetSwimId, newIndex).subscribe({
+    this.api.updateTaskPosition(task.id, targetColId, targetSwimId, newIndex).pipe(take(1)).subscribe({
       next: () => this.loadBoard()
     });
   }
@@ -95,16 +98,16 @@ export class App implements OnInit {
     const value = text.trim();
     if (!value) return;
 
-    this.api.addTask({ 
-      content: value, 
-      column_id: colId, 
-      swimlane_id: swimId 
+    this.api.addTask({
+      content: value,
+      column_id: colId,
+      swimlane_id: swimId
     }).subscribe(() => this.loadBoard());
   }
 
   removeItem(taskId: number) {
     if (!confirm(`Are you sure you want to remove this task?`)) return;
-    this.api.deleteTask(taskId).subscribe(() => this.loadBoard());
+    this.api.deleteTask(taskId).pipe(take(1)).subscribe(() => this.loadBoard());
   }
 
   // --- LOGIKA EDYCJI I LIMITÓW (Zaktualizowana) ---
@@ -114,22 +117,22 @@ export class App implements OnInit {
   }
 
   isOverLimit(col: any): boolean {
-  if (!col || !this.allTasks || !this.swimlanes) return false;
+    if (!col || !this.allTasks || !this.swimlanes) return false;
 
-  const limit = Number(col.limit);
-  if (isNaN(limit) || limit <= 0) return false;
+    const limit = Number(col.limit);
+    if (isNaN(limit) || limit <= 0) return false;
 
-  // Pobierz listę ID aktywnych wierszy
-  const activeSwimlaneIds = this.swimlanes.map(s => String(s.id));
+    // Pobierz listę ID aktywnych wierszy
+    const activeSwimlaneIds = this.swimlanes.map(s => String(s.id));
 
-  // Licz tylko zadania, które należą do tej kolumny ORAZ do jednego z widocznych wierszy
-  const count = this.allTasks.filter(t => 
-    String(t.column_id) === String(col.id) && 
-    activeSwimlaneIds.includes(String(t.swimlane_id))
-  ).length;
+    // Licz tylko zadania, które należą do tej kolumny ORAZ do jednego z widocznych wierszy
+    const count = this.allTasks.filter(t =>
+      String(t.column_id) === String(col.id) &&
+      activeSwimlaneIds.includes(String(t.swimlane_id))
+    ).length;
 
-  return count > limit;
-}
+    return count > limit;
+  }
 
   startEditColumn(col: any) {
     this.editingColumn = col;
@@ -143,7 +146,11 @@ export class App implements OnInit {
     if (this.editingColumn !== col) return;
     const newTitle = value.trim();
     if (newTitle && newTitle !== col.title) {
-      this.api.updateColumn(col.id, { title: newTitle }).subscribe(() => this.loadBoard());
+      this.api.updateColumn(col.id, { title: newTitle }).pipe(take(1)).subscribe(() => {
+        col.title = newTitle; // Aktualizacja lokalna
+        this.cdr.detectChanges(); // <--- DODAJ TO
+        this.loadBoard();
+      });
     }
     this.editingColumn = null;
   }
@@ -153,42 +160,57 @@ export class App implements OnInit {
   addColumn() {
     const title = prompt("New column name:");
     if (!title) return;
-    this.api.addColumn({ title, limit: 5 }).subscribe(() => this.loadBoard());
+    this.api.addColumn({ title, limit: 5 }).pipe(take(1)).subscribe(() => this.loadBoard());
   }
 
   removeColumn(colId: number) {
     if (confirm("Delete column?")) {
-      this.api.deleteColumn(colId).subscribe(() => this.loadBoard());
+      this.api.deleteColumn(colId).pipe(take(1)).subscribe(() => this.loadBoard());
     }
   }
 
-  updateLimit(col: any, value: string) {
-    const num = value === '∞' || value === '' ? -1 :Math.max(0, Number(value));
-    this.api.updateColumn(col.id, { limit: num }).subscribe(() => this.loadBoard());
-  }
+  updateLimit(col: any, limit: any) {
+  let newLimit = parseInt(limit, 10);
+  if (isNaN(newLimit)) return;
+  
+  // Blokada wartości ujemnych
+  if (newLimit < 0) newLimit = 0;
+
+  this.api.updateColumn(col.id, { limit: newLimit })
+    .pipe(take(1))
+    .subscribe({
+      next: () => {
+        this.zone.run(() => {
+          col.limit = newLimit;
+          this.cdr.detectChanges();
+        });
+      },
+      error: (err) => console.error(err)
+    });
+}
 
   dropColumn(event: CdkDragDrop<any[]>) {
     moveItemInArray(this.columns, event.previousIndex, event.currentIndex);
     const newOrder = this.columns.map((col, index) => ({ id: col.id, order: index }));
-    this.api.updateColumnOrder(newOrder).subscribe();
+    this.api.updateColumnOrder(newOrder).pipe(take(1)).subscribe();
   }
 
   // ROWS
 
   addSwimlane() {
-  const name = prompt("New row name:");
-  if (!name) return;
-  this.api.addSwimlane({ name }).subscribe({
-    next: () => {
-      this.loadBoard(); // Odświeża dane z backendu
-    },
-    error: (err) => console.error("Error while adding row:", err)
-  });
+    const name = prompt("New row name:");
+    if (!name) return;
+    this.api.addSwimlane({ name }).pipe(take(1)).subscribe({
+      next: () => {
+        this.loadBoard(); // Odświeża dane z backendu
+      },
+      error: (err) => console.error("Error while adding row:", err)
+    });
   }
 
   removeSwimlane(swimId: number) {
     if (confirm("Czy na pewno chcesz usunąć ten wiersz? Wszystkie zadania w nim zostaną usunięte.")) {
-      this.api.deleteSwimlane(swimId).subscribe(() => this.loadBoard());
+      this.api.deleteSwimlane(swimId).pipe(take(1)).subscribe(() => this.loadBoard());
     }
   }
 
@@ -198,9 +220,52 @@ export class App implements OnInit {
     return count > swim.limit;
   }
 
-  updateSwimlaneLimit(swim: any, value: string) {
-    const num = value === '' ? -1 : Math.max(0, Number(value));
-    this.api.updateSwimlane(swim.id, { limit: num }).subscribe(() => this.loadBoard());
+  updateSwimlaneLimit(swim: any, limit: any) {
+  let newLimit = parseInt(limit, 10);
+  if (isNaN(newLimit)) return;
+
+  // Blokada wartości ujemnych
+  if (newLimit < 0) newLimit = 0;
+
+  this.api.updateSwimlane(swim.id, { limit: newLimit })
+    .pipe(take(1))
+    .subscribe({
+      next: () => {
+        this.zone.run(() => {
+          swim.limit = newLimit;
+          this.cdr.detectChanges();
+        });
+      },
+      error: (err) => console.error(err)
+    });
+}
+
+  updateSwimlaneName(swim: any) {
+    this.api.updateSwimlane(swim.id, { name: swim.name }).pipe(take(1)).subscribe({
+      next: () => console.log('Nazwa zaktualizowana'),
+      error: (err) => console.error(err)
+    });
   }
+
+  activeEditMenu: { type: string, id: number } | null = null;
+
+  toggleEditMenu(type: 'column' | 'swimlane', id: number, event: Event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    console.log(`Próba otwarcia menu dla: ${type}, ID: ${id}`);
+
+    if (this.activeEditMenu?.id === id && this.activeEditMenu?.type === type) {
+      this.activeEditMenu = null;
+    } else {
+      this.activeEditMenu = { type, id };
+    }
+  }
+
+  closeEditMenu() {
+    this.activeEditMenu = null;
+  }
+
+
 
 }

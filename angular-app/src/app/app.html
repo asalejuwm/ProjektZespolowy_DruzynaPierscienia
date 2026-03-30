@@ -1,97 +1,101 @@
 <div class="page-background">
   <div cdkDropListGroup class="board-wrapper">
+
+    <div class="columns-header-row">
+      <div class="swimlane-label-spacer"></div>
+
+      <div class="column-header-container" *ngFor="let col of columns">
+        <div class="column-header" [class.over-limit]="isOverLimit(col)">
+  <h2>{{ col.title }}</h2>
+  
+  <div class="header-actions">
+    <button *ngIf="!isImmutable(col)" 
+            class="icon-btn" 
+            (click)="toggleEditMenu('column', col.id, $event)">
+      ⚙️
+    </button>
     
-    <div cdkDropList 
-         cdkDropListOrientation="horizontal" 
-         (cdkDropListDropped)="dropColumn($event)" 
-         class="columns-header-row">
-      
-      <div class="swimlane-label-spacer">Osoba</div>
+    <button *ngIf="!isImmutable(col)" 
+            class="icon-btn delete" 
+            (click)="removeColumn(col.id)">
+      ✕
+    </button>
+  </div>
 
-      <div class="column-header-container" 
-           *ngFor="let col of columns" 
-           cdkDrag>
-        
-        <div class="column-header" 
-             cdkDragHandle
-             [class.over-limit]="isOverLimit(col)">
-          
-          <h2 *ngIf="editingColumn !== col" (dblclick)="!isImmutable(col) && startEditColumn(col)">
-            {{ col.title }}
-          </h2>
+  <div class="edit-backdrop" *ngIf="activeEditMenu?.type === 'column' && activeEditMenu?.id === col.id" (click)="closeEditMenu()"></div>
 
-          <input *ngIf="editingColumn === col"
-                 #columnInput
-                 type="text"
-                 [value]="col.title"
-                 (blur)="saveColumnTitle(col, columnInput.value)"
-                 (keydown.enter)="columnInput.blur()"
-                 class="edit-input" />
-
-          <button *ngIf="!isImmutable(col)" class="delete-col-btn" (click)="removeColumn(col.id)">✕</button>
-        </div>
-        
-        <div class="wip-limit-display">
-          Limit: <input type="number" [value]="col.limit" (change)="updateLimit(col, $any($event.target).value)" />
-        </div>
+  <div class="edit-popover" *ngIf="activeEditMenu?.type === 'column' && activeEditMenu?.id === col.id">
+    <h4>Edit column</h4>
+    <label>Name:</label>
+    <input #editColName [value]="col.title">
+    <label>WIP Limit:</label>
+    <input type="number" #editColLimit [value]="col.limit">
+    <div class="popover-footer">
+      <button class="save-btn" (click)="saveColumnTitle(col, editColName.value); updateLimit(col, editColLimit.value); closeEditMenu()">Save</button>
+      <button class="close-popover" (click)="closeEditMenu()">Cancel</button>
+    </div>
+  </div>
+</div>
+        <div class="wip-limit-display">Limit: <strong>{{ col.limit }}</strong></div>
       </div>
 
       <div class="add-column-wrapper">
         <button class="add-column-btn" (click)="addColumn()">+ List</button>
-            
       </div>
     </div>
 
     <div class="swimlane-row" *ngFor="let swim of swimlanes">
       
       <div class="swimlane-side-label" [class.over-limit]="isSwimlaneOverLimit(swim)">
-        <div class="swimlane-info">
-          <span class="swimlane-name">{{ swim.name }}</span>
-          <div class="swimlane-wip">
-            Limit: <input type="number"
-              [value]="swim.limit"
-              (change)="updateSwimlaneLimit(swim, $any($event.target).value)"
-              class="wip-input-mini">
-            </div>
+        <span class="swimlane-name">{{ swim.name }}</span>
+        <div class="wip-limit-display">Limit: <strong>{{ swim.limit }}</strong></div>
+
+        <div class="header-actions">
+          <button class="icon-btn" (click)="toggleEditMenu('swimlane', swim.id, $event)">⚙️</button>
+          <button class="delete-swim-btn" (click)="removeSwimlane(swim.id)">✕</button>
+        </div>
+
+        <div class="edit-backdrop" *ngIf="activeEditMenu?.type === 'swimlane' && activeEditMenu?.id === swim.id" (click)="closeEditMenu()"></div>
+
+        <div class="edit-popover" *ngIf="activeEditMenu?.type === 'swimlane' && activeEditMenu?.id === swim.id">
+          <h4>Edit row</h4>
+          <label>Name:</label>
+          <input #editSwimName [value]="swim.name">
+          <label>WIP Limit:</label>
+          <input type="number" #editSwimLimit [value]="swim.limit">
+          <div class="popover-footer">
+            <button class="save-btn" (click)="swim.name = editSwimName.value; updateSwimlaneName(swim); updateSwimlaneLimit(swim, editSwimLimit.value); closeEditMenu()">Save</button>
+            <button class="close-popover" (click)="closeEditMenu()">Cancel</button>
           </div>
-        <button class="delete-btn" (click)="removeSwimlane(swim.id)">✕</button>
+        </div>
       </div>
 
       <div class="grid-cell" *ngFor="let col of columns">
-        <div cdkDropList
-             [id]="getCellId(col.id, swim.id)"
+        <div cdkDropList [id]="getCellId(col.id, swim.id)" 
              [cdkDropListData]="getTasksForCell(col.id, swim.id)"
-             [cdkDropListConnectedTo]="allCellIds"
+             [cdkDropListConnectedTo]="allCellIds" 
              class="example-list"
              (cdkDropListDropped)="drop($event, col.id, swim.id)">
 
-          <div class="example-box"
-               *ngFor="let task of getTasksForCell(col.id, swim.id)"
-               cdkDrag 
-               [cdkDragData]="task">
-
+          <div class="example-box" *ngFor="let task of getTasksForCell(col.id, swim.id)" cdkDrag [cdkDragData]="task">
             <span>{{ task.content }}</span>
-
-            <div class="task-actions">
-              <button class="delete-btn" (click)="removeItem(task.id)">✕</button>
-            </div>
+            <button class="delete-btn" (click)="removeItem(task.id)">✕</button>
           </div>
 
           <div class="add-item-mini">
             <input #taskIn type="text" placeholder="..." (keydown.enter)="addItem(col.id, swim.id, taskIn.value); taskIn.value=''"/>
             <button (click)="addItem(col.id, swim.id, taskIn.value); taskIn.value=''">+</button>
           </div>
-          
         </div>
       </div>
     </div>
-    
+
     <div class="add-swimlane-footer-row">
       <div class="swimlane-side-label add-action-cell">
-        <button class="add-column-btn" (click)="addSwimlane()">+ Person</button>
+        <button class="add-column-btn" (click)="addSwimlane()">+ Row</button>
       </div>
       <div class="grid-cell disabled-cell" *ngFor="let col of columns"></div>
     </div>
-    
+
   </div>
 </div>

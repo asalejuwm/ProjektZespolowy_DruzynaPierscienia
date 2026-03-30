@@ -1,3 +1,4 @@
+/* --- OGÓLNE --- */
 body {
   font-family: "Inter", sans-serif;
   background: #e9f2ff;
@@ -9,34 +10,20 @@ body {
   min-height: 100vh;
 }
 
-/* --- NOWY UKŁAD SIATKI (GRID) --- */
-
+/* --- UKŁAD SIATKI (GRID) --- */
 .board-wrapper {
   display: flex;
   flex-direction: column;
   background: white;
   border: 1px solid #d0d7e2;
   border-radius: 8px;
-  overflow-x: auto; /* Przewijanie jeśli kolumn jest dużo */
+  overflow-x: auto;
 }
 
-/* Wspólny styl dla rzędów */
 .columns-header-row, .swimlane-row {
   display: flex;
-  width: fit-content; /* Zapewnia, że rzędy mają tę samą szerokość co suma kolumn */
-}
-
-/* Styl dla etykiet bocznych (Osoba) */
-.swimlane-label-spacer, .swimlane-side-label {
-  width: 120px;
-  min-width: 120px;
-  padding: 15px;
-  background: #f1f5f9;
-  border-right: 2px solid #cbd5e1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
+  width: fit-content;
+  overflow: visible !important;
 }
 
 /* NAGŁÓWEK TABELI */
@@ -48,11 +35,31 @@ body {
   z-index: 10;
 }
 
-/* KONTEJNERY KOLUMN I KOMÓRKI (Klucz do równej siatki) */
+/* ETYKIETY BOCZNE (Spacer i Row Labels) */
+.swimlane-label-spacer, .swimlane-side-label {
+  width: 140px;
+  min-width: 140px;
+  padding: 15px;
+  background: #f1f5f9;
+  border-right: 2px solid #cbd5e1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  /* font-weight: bold; <--- USUNIĘTE: nie chcemy bolda na wszystkim w bocznej sekcji */
+  position: relative;
+}
+
+.swimlane-row {
+  border-bottom: 1px solid #cbd5e1;
+}
+
+/* KOLUMNY I KOMÓRKI */
 .column-header-container, .grid-cell {
-  width: 280px; /* Stała szerokość każdej kolumny */
+  width: 280px;
   min-width: 280px;
   border-right: 1px solid #e2e8f0;
+  position: relative;
 }
 
 .column-header {
@@ -65,33 +72,18 @@ body {
 .column-header h2 {
   margin: 0;
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700; /* Konsekwentny mocny bold dla nagłówków */
 }
 
 /* --- LISTA ZADAŃ I KOMÓRKI --- */
-
-.swimlane-row {
-  border-bottom: 1px solid #cbd5e1;
-}
-
 .example-list {
-  min-height: 150px; /* Wysokość komórki wiersza */
+  min-height: 150px;
   padding: 10px;
   background: white;
   transition: background 0.2s;
 }
 
-.example-list.over-limit {
-  background: #ffe5e5 !important;
-}
-
-.column-header.over-limit {
-  background-color: #ff4d4d;
-  color: white;
-}
-
 /* --- KARTY ZADAŃ (BOXES) --- */
-
 .example-box {
   background: white;
   border: 1px solid #e5e7eb;
@@ -110,15 +102,128 @@ body {
   border-color: #4a90e2;
 }
 
-/* --- INPUTY I DODAWANIE --- */
-
-.edit-input {
-  width: 100%;
-  padding: 5px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
+/* --- AKCJE I PRZYCISKI --- */
+.header-actions {
+  display: flex;
+  gap: 5px;
 }
 
+.icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background 0.2s;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+}
+
+.icon-btn:hover { background: rgba(0,0,0,0.1); }
+
+/* Ujednolicony czerwony dla wszystkich przycisków usuwania */
+.icon-btn.delete, 
+.delete-btn, 
+.delete-swim-btn { 
+  color: #d9534f !important; 
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.delete-swim-btn {
+  font-size: 14px;
+  padding: 4px;
+  opacity: 0.6; /* Lekko przygaszony domyślnie, żeby nie raził */
+  transition: opacity 0.2s;
+}
+
+.delete-swim-btn:hover {
+  opacity: 1;
+}
+
+/* Tło blokujące resztę ekranu */
+.edit-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.4); /* Przyciemnienie */
+  z-index: 999;
+}
+
+/* --- MENU EDYCJI (POPOVER) --- */
+.edit-popover {
+  position: fixed; /* Zmiana z absolute na fixed */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%); /* Idealne centrowanie */
+  background: white !important;
+  border: none !important; /* Usuwamy zbędne ramki */
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3) !important;
+  padding: 25px; /* Trochę więcej oddechu */
+  border-radius: 12px;
+  z-index: 1000 !important;
+  width: 300px; /* Nieco szersze dla wygody */
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.edit-popover h4 {
+  margin: 0;
+  font-size: 18px;
+  color: #1e293b;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 10px;
+  margin-bottom: 5px;
+}
+
+.edit-popover label {
+  font-size: 11px;
+  color: #64748b;
+  text-transform: uppercase;
+  font-weight: 500; /* Subtelniejszy tekst zamiast bolda */
+}
+
+.edit-popover input {
+  padding: 6px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  font-size: 13px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.popover-footer {
+  display: flex;
+  gap: 8px;
+  margin-top: 5px;
+}
+
+.save-btn {
+  background: #4a90e2;
+  color: white;
+  border: none;
+  padding: 7px;
+  border-radius: 4px;
+  cursor: pointer;
+  flex: 1;
+  font-weight: 600;
+}
+
+.close-popover {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  padding: 7px;
+  border-radius: 4px;
+  cursor: pointer;
+  flex: 1;
+}
+
+/* --- DODAWANIE --- */
 .add-item-mini {
   display: flex;
   gap: 5px;
@@ -127,9 +232,7 @@ body {
   transition: opacity 0.3s;
 }
 
-.add-item-mini:hover {
-  opacity: 1;
-}
+.add-item-mini:hover { opacity: 1; }
 
 .add-item-mini input {
   flex: 1;
@@ -147,11 +250,11 @@ body {
   cursor: pointer;
 }
 
-.add-swimlane-footer-row {
+/* PRZYCISKI GŁÓWNE (List / Row) */
+.add-column-wrapper {
+  padding: 10px;
   display: flex;
-  width: fit-content;
-  border-top: 2px solid #cbd5e1; /* Oddzielenie od ostatniego wiersza */
-  background: #f8fafc;
+  align-items: center;
 }
 
 .add-action-cell {
@@ -159,27 +262,6 @@ body {
   padding: 10px;
   display: flex;
   justify-content: center;
-  align-items: center;
-}
-
-/* --- POZOSTAŁE --- */
-
-.wip-limit-display {
-  font-size: 11px;
-  padding: 0 10px 10px;
-  color: #64748b;
-}
-
-.wip-limit-display input {
-  width: 40px;
-  border: none;
-  background: transparent;
-  font-weight: bold;
-}
-
-.add-column-wrapper {
-  padding: 10px;
-  display: flex;
   align-items: center;
 }
 
@@ -191,61 +273,49 @@ body {
   border-radius: 6px;
   cursor: pointer;
   white-space: nowrap;
+  font-weight: 600; /* Delikatny bold na przycisku */
 }
 
-.delete-col-btn, .delete-btn {
-  background: transparent;
-  border: none;
-  color: #d9534f;
-  cursor: pointer;
+.add-column-btn:hover {
+  background: #357abd;
 }
 
-.disabled-cell {
+.add-swimlane-footer-row {
+  display: flex;
+  width: fit-content;
+  border-top: 2px solid #cbd5e1;
   background: #f8fafc;
-  opacity: 0.5;
-  border-right: 1px solid #e2e8f0;
 }
 
+/* --- NAZWY WIERSZY --- */
+.swimlane-name {
+  font-size: 14px;
+  font-weight: 700; /* Bold dla nazwy wiersza, żeby pasował do nagłówków kolumn */
+}
+
+/* --- LIMIT WIP DISPLAY --- */
+.wip-limit-display {
+  font-size: 12px;
+  color: #64748b;
+  padding: 5px 10px;
+}
+
+.wip-limit-display strong {
+  color: #1e293b;
+  font-weight: 700;
+}
+
+/* --- STANY (OVER LIMIT) --- */
 .over-limit {
   background-color: #fee2e2 !important;
   color: #b91c1c !important;
-  border: 1px solid #f87171;
 }
 
-.swimlane-side-label {
-  background: #c7ddff;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
-  position: relative;
-  min-height: 100px;
-}
+.example-list.over-limit { background-color: #fff1f1 !important; }
+.disabled-cell { background: #f8fafc; opacity: 0.5; border-right: 1px solid #e2e8f0; }
 
-.swimlane-info {
-  text-align: center;
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
-
-.delete-swim-btn {
-  position: absolute;
-  top: 5px;
-  right: 5px;
-  background: none;
-  border: none;
-  color: #ff4d4d;
-  cursor: pointer;
-  font-weight: bold;
-  opacity: 0.3;
-  transition: opacity 0.2s;
-}
-
-.swimlane-side-label:hover .delete-swim-btn {
-  opacity: 1;
-}
-
-.wip-input-mini {
-  width: 40px;
-  padding: 0 10px 10px;
-  color: #64748b;
-}
-
