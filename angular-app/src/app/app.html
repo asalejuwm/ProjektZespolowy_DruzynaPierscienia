@@ -79,7 +79,25 @@
 
           <div class="example-box" *ngFor="let task of getTasksForCell(col.id, swim.id)" cdkDrag [cdkDragData]="task">
             <span>{{ task.content }}</span>
-            <button class="delete-btn" (click)="removeItem(task.id)">✕</button>
+
+            <div class="header-actions">
+              <button class="icon-btn" (click)="toggleEditMenu('task', task.id, $event)">⚙️</button>
+              <button class="delete-btn" (click)="removeItem(task.id)">✕</button>
+            </div>
+
+            <div *ngIf="activeEditMenu?.type === 'task' && activeEditMenu?.id === task.id">
+              <div class="edit-backdrop" (click)="closeEditMenu()"></div>
+              <div class="edit-popover">
+                <h4>Edit task</h4>
+                <label>Task content:</label>
+                <input #editTaskContent [value]="task.content" (keydown.enter)="saveTaskContent(task, editTaskContent.value)">
+      
+                <div class="popover-footer">
+                  <button class="save-btn" (click)="saveTaskContent(task, editTaskContent.value)">Save</button>
+                  <button class="close-popover" (click)="closeEditMenu()">Cancel</button>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="add-item-mini">
