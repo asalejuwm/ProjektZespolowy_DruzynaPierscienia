@@ -22,6 +22,7 @@ export class App implements OnInit {
   columns: any[] = [];
   swimlanes: any[] = []; // NOWE: lista osób/wierszy
   allTasks: any[] = [];  // NOWE: płaska lista wszystkich zadań
+  allUsers: any[] = [];
 
   constructor(private api: ApiService, private cdr: ChangeDetectorRef, private zone: NgZone) { }
 
@@ -41,6 +42,7 @@ export class App implements OnInit {
         this.columns = data.columns || [];
         this.swimlanes = data.swimlanes || [];
         this.allTasks = data.tasks || [];
+        this.allUsers = data.users || [];
         this.cdr.detectChanges();
       });
     },
@@ -256,7 +258,7 @@ export class App implements OnInit {
 
   activeEditMenu: { type: string, id: number } | null = null;
 
-  toggleEditMenu(type: 'column' | 'swimlane' | 'task', id: number, event: Event) {
+  toggleEditMenu(type: 'column' | 'swimlane' | 'task' |'task_users',id: number, event: Event) {
     event.preventDefault();
     event.stopPropagation();
 
@@ -290,5 +292,74 @@ export class App implements OnInit {
       },
       error: (err) => console.error("Error updating task:", err)
     });
+  }
+  
+  // Users
+
+  getUserName(userId: number): string {
+    const user = this.allUsers.find(u => u.id === userId);
+    return user ? user.username : 'Nieznany';
+  }
+
+  getUserInitials(userId: number) {
+    const user = this.allUsers.find(u => u.id === userId);
+    return user ? user.username.substring(0, 2).toUpperCase() : '??';
+  }
+
+  getUserColor(userId: number): string {
+    const colors = ['#4a90e2', '#48bb78', '#ed8936', '#9f7aea', '#f56565', '#f6ad55'];
+    return colors[userId % colors.length];
+  }
+
+  toggleUserAssignment(task: any, userId: number) {
+  if (!task.assignee_ids) {
+      task.assignee_ids = [];
+    }
+
+    const index = task.assignee_ids.indexOf(userId);
+    if (index > -1) {
+      task.assignee_ids.splice(index, 1);
+    } else {
+      task.assignee_ids.push(userId);
+    }
+  }
+
+
+
+  createUser(username: string) {
+    if (!username.trim()) return;
+    this.api.addUser({ username }).pipe(take(1)).subscribe({
+      next: (newUser) => {
+        this.allUsers.push(newUser);
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error("Error creating user:", err)
+    });
+  }
+
+
+
+onUserDropped(event: any, task: any) {
+    const user = event.item.data;
+
+    if (user && user.id) {
+      if (!task.assignee_ids) {
+        task.assignee_ids = [];
+      }
+
+      if (!task.assignee_ids.includes(user.id)) {
+        const newAssignees = [...task.assignee_ids, user.id];
+        this.api.updateTask(task.id, { assignee_ids: newAssignees })
+          .pipe(take(1))
+          .subscribe({
+            next: () => {
+              task.assignee_ids = newAssignees;
+              this.cdr.detectChanges();
+              console.log(`Przypisano użytkownika ${user.username} do zadania`);
+            },
+            error: (err) => console.error("Błąd podczas przypisywania:", err)
+          });
+      }
+    }
   }
 }

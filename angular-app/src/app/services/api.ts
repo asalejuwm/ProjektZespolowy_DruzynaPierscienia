@@ -70,5 +70,11 @@ export class ApiService {
     return this.http.patch(`${this.baseUrl}/swimlanes/${swimId}/update/`, data);
   }
 
-  
+  toggleTaskUser(taskId: number, userId: number): Observable<any> {
+    return this.http.post(`${this.baseUrl}/tasks/${taskId}/toggle-user/`, { user_id: userId });
+  }
+
+  addUser(data: { username: string }): Observable<any> {
+    return this.http.post(`${this.baseUrl}/users/add/`, data);
+  }
 }

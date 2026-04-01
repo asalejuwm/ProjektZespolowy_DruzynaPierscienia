@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 
 class Column(models.Model):
     title = models.CharField(max_length=100, unique=True)
@@ -7,11 +8,6 @@ class Column(models.Model):
 
     def __str__(self):
         return self.title
-
-class Task(models.Model):
-    content = models.TextField()
-    column = models.ForeignKey(Column, related_name='tasks', on_delete=models.CASCADE)
-    order = models.IntegerField(default=0)
 
 class Swimlane(models.Model):
     name = models.CharField(max_length=100)
@@ -26,6 +22,7 @@ class Task(models.Model):
     column = models.ForeignKey(Column, on_delete=models.CASCADE, related_name='tasks')
     swimlane = models.ForeignKey(Swimlane, on_delete=models.CASCADE, related_name='tasks', null=True, blank=True)
     order = models.IntegerField(default=0)
+    assignees = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name='assigned_tasks')
 
     def __str__(self):
         return self.content

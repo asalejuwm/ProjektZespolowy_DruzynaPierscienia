@@ -3,6 +3,7 @@ from django.http import JsonResponse, HttpResponseNotAllowed
 from django.views.decorators.csrf import csrf_exempt
 from .models import Column, Task, Swimlane
 from django.db.models import Max
+from django.contrib.auth.models import User
 
 # --- GŁÓWNY WIDOK (Pobieranie danych) ---
 
@@ -18,11 +19,24 @@ def tasks(request):
     cols = Column.objects.all().order_by('order')
     swims = Swimlane.objects.all().order_by('order')
     all_tasks = Task.objects.all().order_by('order')
+    users = User.objects.all().values('id', 'username')
+
+    task_data = []
+    for t in all_tasks:
+        task_data.append({
+            'id': t.id,
+            'content': t.content,
+            'column_id': t.column_id,
+            'swimlane_id': t.swimlane_id,
+            'order': t.order,
+            'assignee_ids': list(t.assignees.values_list('id', flat=True))
+        })
 
     return JsonResponse({
         "columns": list(cols.values('id', 'title', 'limit', 'order')),
         "swimlanes": list(swims.values('id', 'name', 'limit', 'order')),
-        "tasks": list(all_tasks.values('id', 'content', 'column_id', 'swimlane_id', 'order'))
+        "tasks": task_data,
+        "users": list(users) 
     }, safe=False)
 
 # --- OPERACJE NA ZADANIACH ---
@@ -216,3 +230,10 @@ def update_swimlane(request, swimlane_id):
         except Swimlane.DoesNotExist:
             return JsonResponse({"error": "Swimlane not found"}, status=404)
     return HttpResponseNotAllowed(['PATCH'])
+
+@csrf_exempt
+def add_user(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        user = User.objects.create_user(username=data['username'], password='password123')
+        return JsonResponse({"id": user.id, "username": user.username})
