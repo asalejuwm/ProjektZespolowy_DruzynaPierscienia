@@ -8,14 +8,6 @@ from django.contrib.auth.models import User
 # --- GŁÓWNY WIDOK (Pobieranie danych) ---
 
 def tasks(request):
-    """
-    Zwraca strukturę potrzebną dla siatki Kanban:
-    {
-        "columns": [...],
-        "swimlanes": [...],
-        "tasks": [...]
-    }
-    """
     cols = Column.objects.all().order_by('order')
     swims = Swimlane.objects.all().order_by('order')
     all_tasks = Task.objects.all().order_by('order')
@@ -33,7 +25,7 @@ def tasks(request):
         })
 
     return JsonResponse({
-        "columns": list(cols.values('id', 'title', 'limit', 'order')),
+        "columns": list(cols.values('id', 'title', 'limit', 'order', 'header_color', 'bg_color')),
         "swimlanes": list(swims.values('id', 'name', 'limit', 'order')),
         "tasks": task_data,
         "users": list(users) 
@@ -131,14 +123,18 @@ def add_column(request):
         new_col = Column.objects.create(
             title=data['title'], 
             limit=data.get('limit', 5), 
-            order=max_order + 1
+            order=max_order + 1,
+            header_color=data.get('header_color', '#c7ddff'),
+            bg_color=data.get('bg_color', '#ffffff')
         )
 
         return JsonResponse({
             "id": new_col.id, 
             "title": new_col.title, 
             "order": new_col.order,
-            "limit": new_col.limit
+            "limit": new_col.limit,
+            "header_color": new_col.header_color,
+            "bg_color": new_col.bg_color
         }, status=201)
     return HttpResponseNotAllowed(['POST'])
 
@@ -161,14 +157,23 @@ def delete_column(request, column_id):
 @csrf_exempt
 def update_column(request, column_id):
     if request.method == 'PATCH':
-        data = json.loads(request.body)
-        col = Column.objects.get(id=column_id)
-        if 'limit' in data:
-            col.limit = data['limit']
-        if 'title' in data:
-            col.title = data['title']
-        col.save()
-        return JsonResponse({"status": "updated"})
+        try:
+            data = json.loads(request.body)
+            col = Column.objects.get(id=column_id)
+            
+            if 'limit' in data:
+                col.limit = data['limit']
+            if 'title' in data:
+                col.title = data['title']
+            if 'header_color' in data:     # NOWE
+                col.header_color = data['header_color']
+            if 'bg_color' in data:         # NOWE
+                col.bg_color = data['bg_color']
+                
+            col.save()
+            return JsonResponse({"status": "updated"})
+        except Column.DoesNotExist:
+            return JsonResponse({"error": "Column not found"}, status=404)
     return HttpResponseNotAllowed(['PATCH'])
 
 @csrf_exempt

@@ -41,7 +41,7 @@ export class ApiService {
 
   // --- COLUMNS ---
 
-  addColumn(data: { title: string, limit: number }): Observable<any> {
+  addColumn(data: { title: string, limit: number,header_color?: string, bg_color?: string }): Observable<any> {
     return this.http.post(`${this.baseUrl}/columns/add/`, data);
   }
 

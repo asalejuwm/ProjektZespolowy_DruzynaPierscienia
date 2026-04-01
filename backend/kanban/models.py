@@ -5,6 +5,8 @@ class Column(models.Model):
     title = models.CharField(max_length=100, unique=True)
     limit = models.IntegerField(default=5)
     order = models.IntegerField(default=0)
+    header_color = models.CharField(max_length=7, default='#c7ddff')
+    bg_color = models.CharField(max_length=7, default='#ffffff')
 
     def __str__(self):
         return self.title

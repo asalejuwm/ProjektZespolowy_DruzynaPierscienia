@@ -115,7 +115,7 @@ export class App implements OnInit {
   // --- LOGIKA EDYCJI I LIMITÓW (Zaktualizowana) ---
 
   isImmutable(col: any): boolean {
-    return this.IMMUTABLE_COLUMNS.includes(col.title);
+    return this.IMMUTABLE_COLUMNS.includes(col.title?.trim());
   }
 
   isOverLimit(col: any): boolean {
@@ -144,18 +144,32 @@ export class App implements OnInit {
     }, 0);
   }
 
-  saveColumnTitle(col: any, value: string) {
-    if (this.editingColumn !== col) return;
-    const newTitle = value.trim();
-    if (newTitle && newTitle !== col.title) {
-      this.api.updateColumn(col.id, { title: newTitle }).pipe(take(1)).subscribe(() => {
-        col.title = newTitle; // Aktualizacja lokalna
-        this.cdr.detectChanges(); // <--- DODAJ TO
-        this.loadBoard();
+  saveColumn(col: any, data: { title: string, limit: any, header_color: string, bg_color: string }) {
+      const newLimit = parseInt(data.limit, 10) || 0;
+      
+      const payload = {
+        title: data.title.trim(),
+        limit: newLimit,
+        header_color: data.header_color, // Uwaga: dostosuj nazwy pól do swojego backendu
+        bg_color: data.bg_color
+      };
+
+      this.api.updateColumn(col.id, payload).pipe(take(1)).subscribe({
+        next: () => {
+          this.zone.run(() => {
+            // Aktualizacja lokalna
+            col.title = payload.title;
+            col.limit = payload.limit;
+            col.header_color = payload.header_color;
+            col.bg_color = payload.bg_color;
+            
+            this.cdr.detectChanges();
+            this.loadBoard(); // Odświeżenie danych
+          });
+        },
+        error: (err) => console.error("Error updating column:", err)
       });
     }
-    this.editingColumn = null;
-  }
 
   // --- COLUMN CRUD ---
 
@@ -257,6 +271,18 @@ export class App implements OnInit {
   }
 
   activeEditMenu: { type: string, id: number } | null = null;
+
+  getActiveColumn() {
+    return this.columns.find(c => c.id === this.activeEditMenu?.id);
+  }
+
+  getActiveSwimlane() {
+    return this.swimlanes.find(s => s.id === this.activeEditMenu?.id);
+  }
+
+  getActiveTask() {
+    return this.allTasks.find(t => t.id === this.activeEditMenu?.id);
+  }
 
   toggleEditMenu(type: 'column' | 'swimlane' | 'task' |'task_users',id: number, event: Event) {
     event.preventDefault();

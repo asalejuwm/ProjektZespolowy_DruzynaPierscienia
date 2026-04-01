@@ -21,27 +21,18 @@
   </div>
 
   <div cdkDropListGroup class="board-wrapper">
+    
     <div class="columns-header-row">
       <div class="swimlane-label-spacer"></div>
 
-      <div class="column-header-container" *ngFor="let col of columns">
+      <div class="column-header-container" 
+           *ngFor="let col of columns" 
+           [style.background-color]="col.header_color || '#c7ddff'">
         <div class="column-header" [class.over-limit]="isOverLimit(col)">
           <h2>{{ col.title }}</h2>
           <div class="header-actions">
-            <button *ngIf="!isImmutable(col)" class="icon-btn" (click)="toggleEditMenu('column', col.id, $event)">⚙️</button>
+            <button class="icon-btn" (click)="toggleEditMenu('column', col.id, $event)">⚙️</button>
             <button *ngIf="!isImmutable(col)" class="icon-btn delete" (click)="removeColumn(col.id)">✕</button>
-          </div>
-
-          <div class="edit-popover" *ngIf="activeEditMenu?.type === 'column' && activeEditMenu?.id === col.id">
-            <h4>Edit column</h4>
-            <label>Name:</label>
-            <input #editColName [value]="col.title">
-            <label>WIP Limit:</label>
-            <input type="number" #editColLimit [value]="col.limit">
-            <div class="popover-footer">
-              <button class="save-btn" (click)="saveColumnTitle(col, editColName.value); updateLimit(col, editColLimit.value); closeEditMenu()">Save</button>
-              <button class="close-popover" (click)="closeEditMenu()">Cancel</button>
-            </div>
           </div>
         </div>
         <div class="wip-limit-display">Limit: <strong>{{ col.limit }}</strong></div>
@@ -53,6 +44,7 @@
     </div>
 
     <div class="swimlane-row" *ngFor="let swim of swimlanes">
+      
       <div class="swimlane-side-label" [class.over-limit]="isSwimlaneOverLimit(swim)">
         <span class="swimlane-name">{{ swim.name }}</span>
         <div class="wip-limit-display">Limit: <strong>{{ swim.limit }}</strong></div>
@@ -61,26 +53,18 @@
           <button class="icon-btn" (click)="toggleEditMenu('swimlane', swim.id, $event)">⚙️</button>
           <button class="delete-swim-btn" (click)="removeSwimlane(swim.id)">✕</button>
         </div>
-
-        <div class="edit-popover" *ngIf="activeEditMenu?.type === 'swimlane' && activeEditMenu?.id === swim.id">
-          <h4>Edit row</h4>
-          <label>Name:</label>
-          <input #editSwimName [value]="swim.name">
-          <label>WIP Limit:</label>
-          <input type="number" #editSwimLimit [value]="swim.limit">
-          <div class="popover-footer">
-            <button class="save-btn" (click)="swim.name = editSwimName.value; updateSwimlaneName(swim); updateSwimlaneLimit(swim, editSwimLimit.value); closeEditMenu()">Save</button>
-            <button class="close-popover" (click)="closeEditMenu()">Cancel</button>
-          </div>
-        </div>
       </div>
 
-      <div class="grid-cell" *ngFor="let col of columns">
+      <div class="grid-cell" 
+           *ngFor="let col of columns" 
+           [style.background-color]="col.bg_color || '#ffffff'">
+        
         <div cdkDropList 
              [id]="getCellId(col.id, swim.id)" 
              [cdkDropListData]="getTasksForCell(col.id, swim.id)"
              [cdkDropListConnectedTo]="allCellIds" 
              class="example-list"
+             [style.background]="'transparent'"
              (cdkDropListDropped)="drop($event, col.id, swim.id)">
 
           <div class="example-box" 
@@ -111,34 +95,9 @@
               </div>
               <button class="add-assignee-btn" (click)="toggleEditMenu('task_users', task.id, $event)">+</button>
             </div>
-
-            <div class="edit-popover user-selector" *ngIf="activeEditMenu?.type === 'task_users' && activeEditMenu?.id === task.id">
-              <div class="user-list-dropdown">
-                <h4>Assign Users</h4>
-                <div *ngFor="let user of allUsers" 
-                     class="user-option" 
-                     (click)="toggleUserAssignment(task, user.id)"
-                     [class.selected]="(task.assignee_ids || []).includes(user.id)">
-                  <span class="checkbox-indicator">{{ (task.assignee_ids || []).includes(user.id) ? '✓' : '' }}</span>
-                  {{ user.username }}
-                </div>
-                <div class="popover-footer">
-                  <button class="close-popover" (click)="closeEditMenu()">Done</button>
-                </div>
-              </div>
-            </div>
-
-            <div class="edit-popover" *ngIf="activeEditMenu?.type === 'task' && activeEditMenu?.id === task.id">
-              <h4>Edit task</h4>
-              <label>Task content:</label>
-              <input #editTaskContent [value]="task.content" (keydown.enter)="saveTaskContent(task, editTaskContent.value)">
-              <div class="popover-footer">
-                <button class="save-btn" (click)="saveTaskContent(task, editTaskContent.value)">Save</button>
-                <button class="close-popover" (click)="closeEditMenu()">Cancel</button>
-              </div>
-            </div>
-
-          </div> <div class="add-item-mini">
+          </div> 
+          
+          <div class="add-item-mini">
             <input #taskIn type="text" placeholder="..." (keydown.enter)="addItem(col.id, swim.id, taskIn.value); taskIn.value=''"/>
             <button (click)="addItem(col.id, swim.id, taskIn.value); taskIn.value=''">+</button>
           </div>
@@ -158,4 +117,78 @@
 
 <div class="edit-backdrop" *ngIf="activeEditMenu" (click)="closeEditMenu()"></div>
 
+<ng-container *ngIf="activeEditMenu">
+  
+  <div class="edit-popover" *ngIf="activeEditMenu.type === 'column' && getActiveColumn() as col">
+    <h4 *ngIf="!isImmutable(col)">Edit column</h4>
+    <h4 *ngIf="isImmutable(col)">Edit colors</h4> 
+    
+    <label>Name:</label>
+    <input #editColName 
+           [value]="col.title" 
+           [disabled]="isImmutable(col)"
+           [class.disabled-input]="isImmutable(col)">
+    
+    <label>WIP Limit:</label>
+    <input type="number" #editColLimit 
+           [value]="col.limit"
+           [disabled]="isImmutable(col)"
+           [class.disabled-input]="isImmutable(col)">
 
+    <div style="display: flex; gap: 10px; margin-top: 5px;">
+      <div style="flex: 1;">
+        <label>Header Color:</label>
+        <input type="color" #editColHeader [value]="col.header_color || '#c7ddff'">
+      </div>
+      <div style="flex: 1;">
+        <label>Column BG:</label>
+        <input type="color" #editColBg [value]="col.bg_color || '#ffffff'">
+      </div>
+    </div>
+
+    <div class="popover-footer">
+      <button class="save-btn" (click)="saveColumn(col, { title: editColName.value, limit: editColLimit.value, header_color: editColHeader.value, bg_color: editColBg.value }); closeEditMenu()">Save</button>
+      <button class="close-popover" (click)="closeEditMenu()">Cancel</button>
+    </div>
+  </div>
+
+  <div class="edit-popover" *ngIf="activeEditMenu.type === 'swimlane' && getActiveSwimlane() as swim">
+    <h4>Edit row</h4>
+    <label>Name:</label>
+    <input #editSwimName [value]="swim.name">
+    <label>WIP Limit:</label>
+    <input type="number" #editSwimLimit [value]="swim.limit">
+
+    <div class="popover-footer">
+      <button class="save-btn" (click)="swim.name = editSwimName.value; updateSwimlaneName(swim); updateSwimlaneLimit(swim, editSwimLimit.value); closeEditMenu()">Save</button>
+      <button class="close-popover" (click)="closeEditMenu()">Cancel</button>
+    </div>
+  </div>
+
+  <div class="edit-popover" *ngIf="activeEditMenu.type === 'task' && getActiveTask() as task">
+    <h4>Edit task</h4>
+    <label>Task content:</label>
+    <input #editTaskContent [value]="task.content" (keydown.enter)="saveTaskContent(task, editTaskContent.value)">
+    <div class="popover-footer">
+      <button class="save-btn" (click)="saveTaskContent(task, editTaskContent.value)">Save</button>
+      <button class="close-popover" (click)="closeEditMenu()">Cancel</button>
+    </div>
+  </div>
+
+  <div class="edit-popover user-selector" *ngIf="activeEditMenu.type === 'task_users' && getActiveTask() as task">
+    <div class="user-list-dropdown" style="position: static; box-shadow: none; padding: 0; border: none;">
+      <h4>Assign Users</h4>
+      <div *ngFor="let user of allUsers" 
+           class="user-option" 
+           (click)="toggleUserAssignment(task, user.id)"
+           [class.selected]="(task.assignee_ids || []).includes(user.id)">
+        <span class="checkbox-indicator">{{ (task.assignee_ids || []).includes(user.id) ? '✓' : '' }}</span>
+        {{ user.username }}
+      </div>
+      <div class="popover-footer">
+        <button class="close-popover" (click)="closeEditMenu()">Done</button>
+      </div>
+    </div>
+  </div>
+
+</ng-container>
