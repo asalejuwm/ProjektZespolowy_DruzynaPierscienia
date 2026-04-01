@@ -184,9 +184,17 @@ def add_swimlane(request):
 def delete_swimlane(request, swimlane_id):
     if request.method == 'DELETE':
         try:
-            swim = Swimlane.objects.get(id=swimlane_id)
-            swim.delete()
-            return JsonResponse({"status": "deleted"})
+            swim_to_delete = Swimlane.objects.get(id=swimlane_id)
+            
+            target_swimlane = Swimlane.objects.exclude(id=swimlane_id).order_by('order').first()
+
+            if target_swimlane:
+                Task.objects.filter(swimlane=swim_to_delete).update(swimlane=target_swimlane)
+                
+                swim_to_delete.delete()
+                return JsonResponse({"status": "deleted_and_moved"})
+            else:
+                return JsonResponse({"error": "The last row cannot be deleted"}, status=400)
         except Swimlane.DoesNotExist:
             return JsonResponse({"error": "Swimlane not found"}, status=404)
     return HttpResponseNotAllowed(['DELETE'])

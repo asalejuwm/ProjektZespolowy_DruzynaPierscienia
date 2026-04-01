@@ -209,10 +209,17 @@ export class App implements OnInit {
   }
 
   removeSwimlane(swimId: number) {
-    if (confirm("Czy na pewno chcesz usunąć ten wiersz? Wszystkie zadania w nim zostaną usunięte.")) {
-      this.api.deleteSwimlane(swimId).pipe(take(1)).subscribe(() => this.loadBoard());
-    }
+  if (confirm("Are you sure you want to delete this row? The tasks will be moved to the first available row.")) {
+    this.api.deleteSwimlane(swimId).subscribe({
+      next: () => {
+        this.loadBoard(); 
+      },
+      error: (err) => {
+        alert(err.error?.error || "An error occurred while deleting.");
+      }
+    });
   }
+}
 
   isSwimlaneOverLimit(swim: any): boolean {
     if (swim.limit <= 0) return false;
