@@ -209,7 +209,7 @@ export class App implements OnInit {
   }
 
   removeSwimlane(swimId: number) {
-  if (confirm("Are you sure you want to delete this row? The tasks will be moved to the first available row.")) {
+    if (confirm("Are you sure you want to delete this row? The tasks will be moved to the first available row.")) {
     this.api.deleteSwimlane(swimId).subscribe({
       next: () => {
         this.loadBoard(); 
@@ -256,7 +256,7 @@ export class App implements OnInit {
 
   activeEditMenu: { type: string, id: number } | null = null;
 
-  toggleEditMenu(type: 'column' | 'swimlane', id: number, event: Event) {
+  toggleEditMenu(type: 'column' | 'swimlane' | 'task', id: number, event: Event) {
     event.preventDefault();
     event.stopPropagation();
 
@@ -273,6 +273,22 @@ export class App implements OnInit {
     this.activeEditMenu = null;
   }
 
+  saveTaskContent(task: any, newContent: string) {
+  const content = newContent.trim();
+  if (!content || content === task.content) {
+    this.closeEditMenu();
+    return;
+  }
 
-
+  this.api.updateTask(task.id, { content: content })
+    .pipe(take(1))
+    .subscribe({
+      next: () => {
+        task.content = content;
+        this.closeEditMenu();
+        this.cdr.detectChanges(); // Odśwież widok lokalnie
+      },
+      error: (err) => console.error("Error updating task:", err)
+    });
+  }
 }
