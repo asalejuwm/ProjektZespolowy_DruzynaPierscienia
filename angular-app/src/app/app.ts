@@ -5,7 +5,7 @@ import {
   moveItemInArray,
   transferArrayItem,
 } from '@angular/cdk/drag-drop';
-import { Component, OnInit, ChangeDetectorRef, NgZone} from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, NgZone } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ApiService } from './services/api';
@@ -38,14 +38,14 @@ export class App implements OnInit {
     this.api.getTasks().pipe(take(1)).subscribe({
       next: (data: any) => {
         this.zone.run(() => {
-        // Zakładamy, że backend zwraca teraz obiekt: { columns: [], swimlanes: [], tasks: [] }
-        this.columns = data.columns || [];
-        this.swimlanes = data.swimlanes || [];
-        this.allTasks = data.tasks || [];
-        this.allUsers = data.users || [];
-        this.cdr.detectChanges();
-      });
-    },
+          // Zakładamy, że backend zwraca teraz obiekt: { columns: [], swimlanes: [], tasks: [] }
+          this.columns = data.columns || [];
+          this.swimlanes = data.swimlanes || [];
+          this.allTasks = data.tasks || [];
+          this.allUsers = data.users || [];
+          this.cdr.detectChanges();
+        });
+      },
       error: (err) => console.error("Error loading board:", err)
     });
   }
@@ -145,31 +145,35 @@ export class App implements OnInit {
   }
 
   saveColumn(col: any, data: { title: string, limit: any, header_color: string, bg_color: string }) {
-      const newLimit = parseInt(data.limit, 10) || 0;
-      
-      const payload = {
-        title: data.title.trim(),
-        limit: newLimit,
-        header_color: data.header_color, // Uwaga: dostosuj nazwy pól do swojego backendu
-        bg_color: data.bg_color
-      };
-
-      this.api.updateColumn(col.id, payload).pipe(take(1)).subscribe({
-        next: () => {
-          this.zone.run(() => {
-            // Aktualizacja lokalna
-            col.title = payload.title;
-            col.limit = payload.limit;
-            col.header_color = payload.header_color;
-            col.bg_color = payload.bg_color;
-            
-            this.cdr.detectChanges();
-            this.loadBoard(); // Odświeżenie danych
-          });
-        },
-        error: (err) => console.error("Error updating column:", err)
-      });
+    // Parsujemy, a potem sprawdzamy czy nie jest NaN lub mniejsze od 0
+    let parsedLimit = parseInt(data.limit, 10);
+    if (isNaN(parsedLimit) || parsedLimit < 0) {
+      parsedLimit = 0;
     }
+  
+    const payload = {
+      title: data.title.trim(),
+      limit: parsedLimit, // Używamy zweryfikowanej liczby
+      header_color: data.header_color,
+      bg_color: data.bg_color
+    };
+  
+    this.api.updateColumn(col.id, payload).pipe(take(1)).subscribe({
+      next: () => {
+        this.zone.run(() => {
+          // Aktualizacja lokalna
+          col.title = payload.title;
+          col.limit = payload.limit;
+          col.header_color = payload.header_color;
+          col.bg_color = payload.bg_color;
+  
+          this.cdr.detectChanges();
+          this.loadBoard(); // Odświeżenie danych
+        });
+      },
+      error: (err) => console.error("Error updating column:", err)
+    });
+  }
 
   // --- COLUMN CRUD ---
 
@@ -186,29 +190,50 @@ export class App implements OnInit {
   }
 
   updateLimit(col: any, limit: any) {
-  let newLimit = parseInt(limit, 10);
-  if (isNaN(newLimit)) return;
-  
-  // Blokada wartości ujemnych
-  if (newLimit < 0) newLimit = 0;
+    let newLimit = parseInt(limit, 10);
+    if (isNaN(newLimit)) return;
 
-  this.api.updateColumn(col.id, { limit: newLimit })
-    .pipe(take(1))
-    .subscribe({
-      next: () => {
-        this.zone.run(() => {
-          col.limit = newLimit;
-          this.cdr.detectChanges();
-        });
-      },
-      error: (err) => console.error(err)
-    });
-}
+    // Blokada wartości ujemnych
+    if (newLimit < 0) newLimit = 0;
+
+    this.api.updateColumn(col.id, { limit: newLimit })
+      .pipe(take(1))
+      .subscribe({
+        next: () => {
+          this.zone.run(() => {
+            col.limit = newLimit;
+            this.cdr.detectChanges();
+          });
+        },
+        error: (err) => console.error(err)
+      });
+  }
 
   dropColumn(event: CdkDragDrop<any[]>) {
     moveItemInArray(this.columns, event.previousIndex, event.currentIndex);
     const newOrder = this.columns.map((col, index) => ({ id: col.id, order: index }));
     this.api.updateColumnOrder(newOrder).pipe(take(1)).subscribe();
+  }
+
+
+
+  getContrastColor(hexColor: string): string {
+    if (!hexColor) return '#1e293b'; // Domyślny ciemny tekst
+
+    // Usuń '#' jeśli jest obecny
+    const hex = hexColor.replace('#', '');
+
+    // Konwersja HEX na RGB
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+
+    // Obliczanie jasności (standard YIQ)
+    // Formula: (R*299 + G*587 + B*114) / 1000
+    const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+
+    // Jeśli jasność >= 128, dajemy ciemny tekst, w przeciwnym razie biały
+    return (yiq >= 128) ? '#1e293b' : '#ffffff';
   }
 
   // ROWS
@@ -226,16 +251,16 @@ export class App implements OnInit {
 
   removeSwimlane(swimId: number) {
     if (confirm("Are you sure you want to delete this row? The tasks will be moved to the first available row.")) {
-    this.api.deleteSwimlane(swimId).subscribe({
-      next: () => {
-        this.loadBoard(); 
-      },
-      error: (err) => {
-        alert(err.error?.error || "An error occurred while deleting.");
-      }
-    });
+      this.api.deleteSwimlane(swimId).subscribe({
+        next: () => {
+          this.loadBoard();
+        },
+        error: (err) => {
+          alert(err.error?.error || "An error occurred while deleting.");
+        }
+      });
+    }
   }
-}
 
   isSwimlaneOverLimit(swim: any): boolean {
     if (swim.limit <= 0) return false;
@@ -244,24 +269,24 @@ export class App implements OnInit {
   }
 
   updateSwimlaneLimit(swim: any, limit: any) {
-  let newLimit = parseInt(limit, 10);
-  if (isNaN(newLimit)) return;
+    let newLimit = parseInt(limit, 10);
+    if (isNaN(newLimit)) return;
 
-  // Blokada wartości ujemnych
-  if (newLimit < 0) newLimit = 0;
+    // Blokada wartości ujemnych
+    if (newLimit < 0) newLimit = 0;
 
-  this.api.updateSwimlane(swim.id, { limit: newLimit })
-    .pipe(take(1))
-    .subscribe({
-      next: () => {
-        this.zone.run(() => {
-          swim.limit = newLimit;
-          this.cdr.detectChanges();
-        });
-      },
-      error: (err) => console.error(err)
-    });
-}
+    this.api.updateSwimlane(swim.id, { limit: newLimit })
+      .pipe(take(1))
+      .subscribe({
+        next: () => {
+          this.zone.run(() => {
+            swim.limit = newLimit;
+            this.cdr.detectChanges();
+          });
+        },
+        error: (err) => console.error(err)
+      });
+  }
 
   updateSwimlaneName(swim: any) {
     this.api.updateSwimlane(swim.id, { name: swim.name }).pipe(take(1)).subscribe({
@@ -284,7 +309,7 @@ export class App implements OnInit {
     return this.allTasks.find(t => t.id === this.activeEditMenu?.id);
   }
 
-  toggleEditMenu(type: 'column' | 'swimlane' | 'task' |'task_users',id: number, event: Event) {
+  toggleEditMenu(type: 'column' | 'swimlane' | 'task' | 'task_users', id: number, event: Event) {
     event.preventDefault();
     event.stopPropagation();
 
@@ -302,24 +327,24 @@ export class App implements OnInit {
   }
 
   saveTaskContent(task: any, newContent: string) {
-  const content = newContent.trim();
-  if (!content || content === task.content) {
-    this.closeEditMenu();
-    return;
+    const content = newContent.trim();
+    if (!content || content === task.content) {
+      this.closeEditMenu();
+      return;
+    }
+
+    this.api.updateTask(task.id, { content: content })
+      .pipe(take(1))
+      .subscribe({
+        next: () => {
+          task.content = content;
+          this.closeEditMenu();
+          this.cdr.detectChanges(); // Odśwież widok lokalnie
+        },
+        error: (err) => console.error("Error updating task:", err)
+      });
   }
 
-  this.api.updateTask(task.id, { content: content })
-    .pipe(take(1))
-    .subscribe({
-      next: () => {
-        task.content = content;
-        this.closeEditMenu();
-        this.cdr.detectChanges(); // Odśwież widok lokalnie
-      },
-      error: (err) => console.error("Error updating task:", err)
-    });
-  }
-  
   // Users
 
   getUserName(userId: number): string {
@@ -338,7 +363,7 @@ export class App implements OnInit {
   }
 
   toggleUserAssignment(task: any, userId: number) {
-  if (!task.assignee_ids) {
+    if (!task.assignee_ids) {
       task.assignee_ids = [];
     }
 
@@ -365,7 +390,7 @@ export class App implements OnInit {
 
 
 
-onUserDropped(event: any, task: any) {
+  onUserDropped(event: any, task: any) {
     const user = event.item.data;
 
     if (user && user.id) {

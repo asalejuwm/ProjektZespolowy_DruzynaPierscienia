@@ -15,6 +15,7 @@ class Swimlane(models.Model):
     name = models.CharField(max_length=100)
     limit = models.IntegerField(default=5)
     order = models.IntegerField(default=0)
+    color = models.CharField(max_length=7, default='#f1f5f9') # Dodaj to
 
     class Meta:
         ordering = ['order']

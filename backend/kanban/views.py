@@ -26,7 +26,7 @@ def tasks(request):
 
     return JsonResponse({
         "columns": list(cols.values('id', 'title', 'limit', 'order', 'header_color', 'bg_color')),
-        "swimlanes": list(swims.values('id', 'name', 'limit', 'order')),
+        "swimlanes": list(swims.values('id', 'name', 'limit', 'order', 'color')),
         "tasks": task_data,
         "users": list(users) 
     }, safe=False)

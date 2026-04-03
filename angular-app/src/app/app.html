@@ -1,41 +1,48 @@
 <div class="page-background">
   <div class="users-toolbar">
     <div class="user-pill-container">
-      <div *ngFor="let user of allUsers" 
-           class="user-avatar-draggable" 
-           cdkDrag 
-           [cdkDragData]="user">
+      <div *ngFor="let user of allUsers" class="user-avatar-draggable" cdkDrag [cdkDragData]="user">
         {{ getUserInitials(user.id) }}
         <span class="user-tooltip">{{ user.username }}</span>
-        
+
         <div *cdkDragPreview class="user-avatar-preview" [style.background-color]="getUserColor(user.id)">
           {{ getUserInitials(user.id) }}
         </div>
       </div>
 
       <div class="add-user-inline">
-        <input #uIn type="text" placeholder="New user..." (keydown.enter)="createUser(uIn.value); uIn.value=''"/>
+        <input #uIn type="text" placeholder="New user..." (keydown.enter)="createUser(uIn.value); uIn.value=''" />
         <button (click)="createUser(uIn.value); uIn.value=''">+</button>
       </div>
     </div>
   </div>
 
   <div cdkDropListGroup class="board-wrapper">
-    
-    <div class="columns-header-row">
+
+    <div class="columns-header-row" cdkDropList cdkDropListOrientation="horizontal"
+      (cdkDropListDropped)="dropColumn($event)">
+
       <div class="swimlane-label-spacer"></div>
 
-      <div class="column-header-container" 
-           *ngFor="let col of columns" 
-           [style.background-color]="col.header_color || '#c7ddff'">
+      <div class="column-header-container" *ngFor="let col of columns" cdkDrag [cdkDragData]="col"
+        [style.background-color]="col.header_color || '#c7ddff'"
+        [style.color]="getContrastColor(col.header_color || '#c7ddff')">
+
+        <div class="column-header-placeholder" *cdkDragPlaceholder></div>
+
         <div class="column-header" [class.over-limit]="isOverLimit(col)">
-          <h2>{{ col.title }}</h2>
+          <h2 [style.color]="'inherit'">{{ col.title }}</h2>
           <div class="header-actions">
-            <button class="icon-btn" (click)="toggleEditMenu('column', col.id, $event)">⚙️</button>
-            <button *ngIf="!isImmutable(col)" class="icon-btn delete" (click)="removeColumn(col.id)">✕</button>
+            <button class="icon-btn" [style.color]="'inherit'"
+              (click)="toggleEditMenu('column', col.id, $event)">⚙️</button>
+
+            <button *ngIf="!isImmutable(col)" class="icon-btn delete-btn-protected"
+              (click)="removeColumn(col.id)">✕</button>
           </div>
         </div>
-        <div class="wip-limit-display">Limit: <strong>{{ col.limit }}</strong></div>
+        <div class="wip-limit-display" [style.color]="'inherit'">
+          Limit: <strong [style.color]="'inherit'">{{ col.limit }}</strong>
+        </div>
       </div>
 
       <div class="add-column-wrapper">
@@ -44,37 +51,33 @@
     </div>
 
     <div class="swimlane-row" *ngFor="let swim of swimlanes">
-      
-      <div class="swimlane-side-label" [class.over-limit]="isSwimlaneOverLimit(swim)">
-        <span class="swimlane-name">{{ swim.name }}</span>
-        <div class="wip-limit-display">Limit: <strong>{{ swim.limit }}</strong></div>
+
+      <div class="swimlane-side-label" [class.over-limit]="isSwimlaneOverLimit(swim)"
+        [style.background-color]="swim.color || '#f1f5f9'" [style.color]="getContrastColor(swim.color || '#f1f5f9')">
+
+        <span class="swimlane-name" [style.color]="'inherit'">{{ swim.name }}</span>
+        <div class="wip-limit-display" [style.color]="'inherit'">
+          Limit: <strong [style.color]="'inherit'">{{ swim.limit }}</strong>
+        </div>
 
         <div class="header-actions">
-          <button class="icon-btn" (click)="toggleEditMenu('swimlane', swim.id, $event)">⚙️</button>
-          <button class="delete-swim-btn" (click)="removeSwimlane(swim.id)">✕</button>
+          <button class="icon-btn" [style.color]="'inherit'"
+            (click)="toggleEditMenu('swimlane', swim.id, $event)">⚙️</button>
+
+          <button *ngIf="swimlanes.length > 1" class="delete-btn-protected" (click)="removeSwimlane(swim.id)">✕</button>
         </div>
       </div>
 
-      <div class="grid-cell" 
-           *ngFor="let col of columns" 
-           [style.background-color]="col.bg_color || '#ffffff'">
-        
-        <div cdkDropList 
-             [id]="getCellId(col.id, swim.id)" 
-             [cdkDropListData]="getTasksForCell(col.id, swim.id)"
-             [cdkDropListConnectedTo]="allCellIds" 
-             class="example-list"
-             [style.background]="'transparent'"
-             (cdkDropListDropped)="drop($event, col.id, swim.id)">
+      <div class="grid-cell" *ngFor="let col of columns" [style.background-color]="col.bg_color"
+        [style.color]="getContrastColor(col.bg_color)">
 
-          <div class="example-box" 
-               *ngFor="let task of getTasksForCell(col.id, swim.id)" 
-               cdkDrag 
-               [cdkDragData]="task"
-               cdkDropList
-               [cdkDropListData]="task"
-               [cdkDropListSortingDisabled]="true"
-               (cdkDropListDropped)="onUserDropped($event, task)">
+        <div cdkDropList [id]="getCellId(col.id, swim.id)" [cdkDropListData]="getTasksForCell(col.id, swim.id)"
+          [cdkDropListConnectedTo]="allCellIds" class="example-list" [style.background]="'transparent'"
+          (cdkDropListDropped)="drop($event, col.id, swim.id)">
+
+          <div class="example-box" *ngFor="let task of getTasksForCell(col.id, swim.id)" cdkDrag [cdkDragData]="task"
+            cdkDropList [cdkDropListData]="task" [cdkDropListSortingDisabled]="true"
+            (cdkDropListDropped)="onUserDropped($event, task)">
 
             <div class="task-header">
               <span class="task-main-text">{{ task.content }}</span>
@@ -86,19 +89,18 @@
 
             <div class="task-footer">
               <div class="assignee-badges">
-                <div *ngFor="let userId of task.assignee_ids" 
-                     class="user-avatar-mini" 
-                     [title]="getUserName(userId)"
-                     [style.background-color]="getUserColor(userId)">
+                <div *ngFor="let userId of task.assignee_ids" class="user-avatar-mini" [title]="getUserName(userId)"
+                  [style.background-color]="getUserColor(userId)">
                   {{ getUserInitials(userId) }}
                 </div>
               </div>
               <button class="add-assignee-btn" (click)="toggleEditMenu('task_users', task.id, $event)">+</button>
             </div>
-          </div> 
-          
+          </div>
+
           <div class="add-item-mini">
-            <input #taskIn type="text" placeholder="..." (keydown.enter)="addItem(col.id, swim.id, taskIn.value); taskIn.value=''"/>
+            <input #taskIn type="text" placeholder="..."
+              (keydown.enter)="addItem(col.id, swim.id, taskIn.value); taskIn.value=''" />
             <button (click)="addItem(col.id, swim.id, taskIn.value); taskIn.value=''">+</button>
           </div>
         </div>
@@ -118,22 +120,17 @@
 <div class="edit-backdrop" *ngIf="activeEditMenu" (click)="closeEditMenu()"></div>
 
 <ng-container *ngIf="activeEditMenu">
-  
+
   <div class="edit-popover" *ngIf="activeEditMenu.type === 'column' && getActiveColumn() as col">
     <h4 *ngIf="!isImmutable(col)">Edit column</h4>
-    <h4 *ngIf="isImmutable(col)">Edit colors</h4> 
-    
+    <h4 *ngIf="isImmutable(col)">Edit colors</h4>
+
     <label>Name:</label>
-    <input #editColName 
-           [value]="col.title" 
-           [disabled]="isImmutable(col)"
-           [class.disabled-input]="isImmutable(col)">
-    
+    <input #editColName [value]="col.title" [disabled]="isImmutable(col)" [class.disabled-input]="isImmutable(col)">
+
     <label>WIP Limit:</label>
-    <input type="number" #editColLimit 
-           [value]="col.limit"
-           [disabled]="isImmutable(col)"
-           [class.disabled-input]="isImmutable(col)">
+    <input type="number" min="0" #editColLimit [value]="col.limit" [disabled]="isImmutable(col)"
+      [class.disabled-input]="isImmutable(col)">
 
     <div style="display: flex; gap: 10px; margin-top: 5px;">
       <div style="flex: 1;">
@@ -147,7 +144,8 @@
     </div>
 
     <div class="popover-footer">
-      <button class="save-btn" (click)="saveColumn(col, { title: editColName.value, limit: editColLimit.value, header_color: editColHeader.value, bg_color: editColBg.value }); closeEditMenu()">Save</button>
+      <button class="save-btn"
+        (click)="saveColumn(col, { title: editColName.value, limit: editColLimit.value, header_color: editColHeader.value, bg_color: editColBg.value }); closeEditMenu()">Save</button>
       <button class="close-popover" (click)="closeEditMenu()">Cancel</button>
     </div>
   </div>
@@ -160,7 +158,8 @@
     <input type="number" #editSwimLimit [value]="swim.limit">
 
     <div class="popover-footer">
-      <button class="save-btn" (click)="swim.name = editSwimName.value; updateSwimlaneName(swim); updateSwimlaneLimit(swim, editSwimLimit.value); closeEditMenu()">Save</button>
+      <button class="save-btn"
+        (click)="swim.name = editSwimName.value; updateSwimlaneName(swim); updateSwimlaneLimit(swim, editSwimLimit.value); closeEditMenu()">Save</button>
       <button class="close-popover" (click)="closeEditMenu()">Cancel</button>
     </div>
   </div>
@@ -178,10 +177,8 @@
   <div class="edit-popover user-selector" *ngIf="activeEditMenu.type === 'task_users' && getActiveTask() as task">
     <div class="user-list-dropdown" style="position: static; box-shadow: none; padding: 0; border: none;">
       <h4>Assign Users</h4>
-      <div *ngFor="let user of allUsers" 
-           class="user-option" 
-           (click)="toggleUserAssignment(task, user.id)"
-           [class.selected]="(task.assignee_ids || []).includes(user.id)">
+      <div *ngFor="let user of allUsers" class="user-option" (click)="toggleUserAssignment(task, user.id)"
+        [class.selected]="(task.assignee_ids || []).includes(user.id)">
         <span class="checkbox-indicator">{{ (task.assignee_ids || []).includes(user.id) ? '✓' : '' }}</span>
         {{ user.username }}
       </div>
