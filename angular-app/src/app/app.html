@@ -1,15 +1,11 @@
 <div class="page-background">
   <div class="users-toolbar">
     <div class="user-pill-container">
-      <div *ngFor="let user of allUsers" 
-          class="user-option" 
-          [class.selected]="(task.assignee_ids || []).includes(user.id)"
-          [class.disabled]="!canUserAcceptTask(user.id) && !(task.assignee_ids || []).includes(user.id)"
-          (click)="toggleUserAssignment(task, user.id)">
-  
-        <span class="checkbox-indicator">{{ (task.assignee_ids || []).includes(user.id) ? '☑' : '☐' }}</span>
-        {{ user.username }} 
-        <small>({{ getUserTaskCount(user.id) }}/{{ user.task_limit }})</small>
+      <div *ngFor="let user of allUsers" class="user-avatar-draggable" 
+          [class.at-limit]="getUserTaskCount(user.id) >= 3"
+          cdkDrag [cdkDragData]="user">
+        {{ getUserInitials(user.id) }}
+        <span class="task-badge">{{ getUserTaskCount(user.id) }}/3</span>
       </div>
 
       <div class="add-user-inline">

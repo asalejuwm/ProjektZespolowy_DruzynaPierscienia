@@ -518,13 +518,3 @@ input::-webkit-inner-spin-button {
   opacity: 0.8;
 }
 
-.user-option.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  background-color: #f3f4f6;
-  pointer-events: none;
-}
-
-.user-option.disabled:hover {
-  background-color: #f3f4f6;
-}
