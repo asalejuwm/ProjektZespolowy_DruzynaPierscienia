@@ -29,3 +29,7 @@ class Task(models.Model):
 
     def __str__(self):
         return self.content
+    
+class UserProfile(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, db_index=True, on_delete=models.CASCADE)
+    task_limit = models.IntegerField(default=3)

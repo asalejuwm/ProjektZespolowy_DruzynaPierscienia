@@ -501,3 +501,30 @@ input::-webkit-inner-spin-button {
   width: 100%;
   height: 100%;
 }
+
+.task-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: #4a5568;
+  color: white;
+  font-size: 10px;
+  padding: 2px 5px;
+  border-radius: 10px;
+}
+
+.user-avatar-draggable.at-limit {
+  border: 2px solid #ef4444;
+  opacity: 0.8;
+}
+
+.user-option.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #f3f4f6;
+  pointer-events: none;
+}
+
+.user-option.disabled:hover {
+  background-color: #f3f4f6;
+}

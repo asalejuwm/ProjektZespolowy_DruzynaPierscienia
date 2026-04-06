@@ -362,20 +362,34 @@ export class App implements OnInit {
     return colors[userId % colors.length];
   }
 
-  toggleUserAssignment(task: any, userId: number) {
-    if (!task.assignee_ids) {
-      task.assignee_ids = [];
-    }
-
-    const index = task.assignee_ids.indexOf(userId);
-    if (index > -1) {
-      task.assignee_ids.splice(index, 1);
-    } else {
-      task.assignee_ids.push(userId);
-    }
+  canUserAcceptTask(userId: number): boolean {
+    const user = this.allUsers.find(u => u.id === userId);
+    if (!user) return false;
+  
+    const currentCount = this.getUserTaskCount(userId);
+    const limit = user.task_limit || 3;
+  
+    return currentCount < limit;
   }
 
+  toggleUserAssignment(task: any, userId: number) {
+    if (!task.assignee_ids) task.assignee_ids = [];
 
+    const isCurrentlyAssigned = task.assignee_ids.includes(userId);
+
+    if (!isCurrentlyAssigned) {
+      if (!this.canUserAcceptTask(userId)) {
+        alert("Ten użytkownik osiągnął już swój limit zadań!");
+        return;
+      }
+      task.assignee_ids.push(userId);
+    } else {
+      const index = task.assignee_ids.indexOf(userId);
+      task.assignee_ids.splice(index, 1);
+    }
+
+    this.api.updateTask(task.id, { assignee_ids: task.assignee_ids }).subscribe();
+  }
 
   createUser(username: string) {
     if (!username.trim()) return;
@@ -388,29 +402,14 @@ export class App implements OnInit {
     });
   }
 
-
+  getUserTaskCount(userId: number): number {
+    return this.allTasks.filter(t => t.assignee_ids && t.assignee_ids.includes(userId)).length;
+  }
 
   onUserDropped(event: any, task: any) {
     const user = event.item.data;
-
     if (user && user.id) {
-      if (!task.assignee_ids) {
-        task.assignee_ids = [];
-      }
-
-      if (!task.assignee_ids.includes(user.id)) {
-        const newAssignees = [...task.assignee_ids, user.id];
-        this.api.updateTask(task.id, { assignee_ids: newAssignees })
-          .pipe(take(1))
-          .subscribe({
-            next: () => {
-              task.assignee_ids = newAssignees;
-              this.cdr.detectChanges();
-              console.log(`Przypisano użytkownika ${user.username} do zadania`);
-            },
-            error: (err) => console.error("Błąd podczas przypisywania:", err)
-          });
-      }
+      this.toggleUserAssignment(task, user.id);
     }
   }
 }

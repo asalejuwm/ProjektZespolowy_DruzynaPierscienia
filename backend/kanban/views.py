@@ -83,18 +83,28 @@ def move_task(request, task_id):
 @csrf_exempt
 def update_task(request, task_id):
     if request.method == 'PATCH':
-        try:
-            data = json.loads(request.body)
-            task = Task.objects.get(id=task_id)
+        data = json.loads(request.body)
+        task = Task.objects.get(id=task_id)
+
+        if 'assignee_ids' in data:
+            new_assignee_ids = data['assignee_ids']
             
-            if 'content' in data:
-                task.content = data['content']
-                task.save()
-                
-            return JsonResponse({"status": "updated", "content": task.content})
-        except Task.DoesNotExist:
-            return JsonResponse({"error": "Task not found"}, status=404)
-    return HttpResponseNotAllowed(['PATCH'])
+            for u_id in new_assignee_ids:
+                if not task.assignees.filter(id=u_id).exists():
+                    user = User.objects.get(id=u_id)
+                    current_tasks_count = user.assigned_tasks.count()
+                    
+                    user_limit = getattr(user, 'userprofile', None).task_limit if hasattr(user, 'userprofile') else 3
+                    
+                    if current_tasks_count >= user_limit:
+                        return JsonResponse({
+                            "error": f"Użytkownik {user.username} osiągnął limit zadań ({user_limit})!"
+                        }, status=400)
+            
+            task.assignees.set(new_assignee_ids)
+        
+        task.save()
+        return JsonResponse({"status": "success"})
 
 @csrf_exempt
 def delete_task(request, task_id):

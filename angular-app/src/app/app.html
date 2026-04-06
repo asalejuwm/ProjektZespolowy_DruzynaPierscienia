@@ -1,13 +1,15 @@
 <div class="page-background">
   <div class="users-toolbar">
     <div class="user-pill-container">
-      <div *ngFor="let user of allUsers" class="user-avatar-draggable" cdkDrag [cdkDragData]="user">
-        {{ getUserInitials(user.id) }}
-        <span class="user-tooltip">{{ user.username }}</span>
-
-        <div *cdkDragPreview class="user-avatar-preview" [style.background-color]="getUserColor(user.id)">
-          {{ getUserInitials(user.id) }}
-        </div>
+      <div *ngFor="let user of allUsers" 
+          class="user-option" 
+          [class.selected]="(task.assignee_ids || []).includes(user.id)"
+          [class.disabled]="!canUserAcceptTask(user.id) && !(task.assignee_ids || []).includes(user.id)"
+          (click)="toggleUserAssignment(task, user.id)">
+  
+        <span class="checkbox-indicator">{{ (task.assignee_ids || []).includes(user.id) ? '☑' : '☐' }}</span>
+        {{ user.username }} 
+        <small>({{ getUserTaskCount(user.id) }}/{{ user.task_limit }})</small>
       </div>
 
       <div class="add-user-inline">
