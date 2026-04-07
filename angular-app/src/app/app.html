@@ -1,17 +1,47 @@
 <div class="page-background">
   <div class="users-toolbar">
-    <div class="user-pill-container">
-      <div *ngFor="let user of allUsers" class="user-avatar-draggable" 
-          [class.at-limit]="getUserTaskCount(user.id) >= 3"
-          cdkDrag [cdkDragData]="user">
-        {{ getUserInitials(user.id) }}
-        <span class="task-badge">{{ getUserTaskCount(user.id) }}/3</span>
-      </div>
+  <div class="user-pill-container"
+     id="userList"
+     cdkDropList
+     cdkDropListOrientation="horizontal"
+     [cdkDropListConnectedTo]="allTaskDropIds"> <div *ngFor="let user of allUsers" 
+       class="user-avatar-draggable" 
+       [class.at-limit]="getUserTaskCount(user.id) >= (user.task_limit || 3)"
+       cdkDrag 
+       [cdkDragData]="user">
+    {{ getUserInitials(user.id) }}
+    <span class="task-badge">{{ getUserTaskCount(user.id) }}/{{ user.task_limit || 3 }}</span>
+    <div *cdkDragPlaceholder></div>
+  </div>
 
-      <div class="add-user-inline">
-        <input #uIn type="text" placeholder="New user..." (keydown.enter)="createUser(uIn.value); uIn.value=''" />
-        <button (click)="createUser(uIn.value); uIn.value=''">+</button>
+    <div class="add-user-inline">
+      <input #uIn type="text" placeholder="New user..." (keydown.enter)="createUser(uIn.value); uIn.value=''" />
+      <button (click)="createUser(uIn.value); uIn.value=''">+</button>
+      <button style="margin-left: 10px; background-color: #64748b; width: auto; padding: 0 10px;" (click)="toggleUserPanel()">Zarządzaj</button>
+    </div>
+  </div>
+  </div>
+  <div class="edit-backdrop" *ngIf="showUserPanel" (click)="toggleUserPanel()"></div>
+
+  <div class="edit-popover user-panel" *ngIf="showUserPanel">
+    <h4>Zarządzanie Użytkownikami</h4>
+    
+    <div class="user-manage-list">
+      <div class="user-manage-item" *ngFor="let user of allUsers">
+        <strong>{{ user.username }}</strong>
+        <div class="user-manage-actions">
+          <label>Limit:</label>
+          <input type="number" min="1" [value]="user.task_limit || 3" #limitInput (blur)="updateUserLimit(user, limitInput.value)" class="limit-input">
+          <button class="delete-btn-protected" (click)="deleteUser(user.id)">✕</button>
+        </div>
       </div>
+      <div *ngIf="allUsers.length === 0" style="font-size: 12px; color: #64748b; text-align: center;">
+        Brak użytkowników.
+      </div>
+    </div>
+
+    <div class="popover-footer">
+      <button class="close-popover" (click)="toggleUserPanel()">Zamknij</button>
     </div>
   </div>
 
@@ -39,7 +69,7 @@
           </div>
         </div>
         <div class="wip-limit-display" [style.color]="'inherit'">
-          Limit: <strong [style.color]="'inherit'">{{ col.limit }}</strong>
+          Limit: <strong [style.color]="'inherit'">{{ col.limit === 0 ? '∞' : col.limit }}</strong>
         </div>
       </div>
 
@@ -55,7 +85,7 @@
 
         <span class="swimlane-name" [style.color]="'inherit'">{{ swim.name }}</span>
         <div class="wip-limit-display" [style.color]="'inherit'">
-          Limit: <strong [style.color]="'inherit'">{{ swim.limit }}</strong>
+          Limit: <strong [style.color]="'inherit'">{{ swim.limit === 0 ? '∞' : swim.limit }}</strong>
         </div>
 
         <div class="header-actions">
@@ -73,9 +103,15 @@
           [cdkDropListConnectedTo]="allCellIds" class="example-list" [style.background]="'transparent'"
           (cdkDropListDropped)="drop($event, col.id, swim.id)">
 
-          <div class="example-box" *ngFor="let task of getTasksForCell(col.id, swim.id)" cdkDrag [cdkDragData]="task"
-            cdkDropList [cdkDropListData]="task" [cdkDropListSortingDisabled]="true"
-            (cdkDropListDropped)="onUserDropped($event, task)">
+          <div class="example-box" *ngFor="let task of getTasksForCell(col.id, swim.id)" 
+                cdkDrag 
+                [cdkDragData]="task"
+                
+                cdkDropList 
+                [id]="'task-' + task.id" 
+                [cdkDropListData]="task"
+                [cdkDropListSortingDisabled]="true"
+                (cdkDropListDropped)="onUserDropped($event, task)">
 
             <div class="task-header">
               <span class="task-main-text">{{ task.content }}</span>

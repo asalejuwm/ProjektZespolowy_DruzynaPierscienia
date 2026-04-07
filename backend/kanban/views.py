@@ -11,7 +11,16 @@ def tasks(request):
     cols = Column.objects.all().order_by('order')
     swims = Swimlane.objects.all().order_by('order')
     all_tasks = Task.objects.all().order_by('order')
-    users = User.objects.all().values('id', 'username')
+
+    users_qs = User.objects.select_related('userprofile').all()
+    users_data = []
+    for u in users_qs:
+        limit = u.userprofile.task_limit if hasattr(u, 'userprofile') else 3
+        users_data.append({
+            'id': u.id, 
+            'username': u.username, 
+            'task_limit': limit
+        })
 
     task_data = []
     for t in all_tasks:
@@ -28,7 +37,7 @@ def tasks(request):
         "columns": list(cols.values('id', 'title', 'limit', 'order', 'header_color', 'bg_color')),
         "swimlanes": list(swims.values('id', 'name', 'limit', 'order', 'color')),
         "tasks": task_data,
-        "users": list(users) 
+        "users": users_data
     }, safe=False)
 
 # --- OPERACJE NA ZADANIACH ---
@@ -267,3 +276,32 @@ def add_user(request):
         data = json.loads(request.body)
         user = User.objects.create_user(username=data['username'], password='password123')
         return JsonResponse({"id": user.id, "username": user.username})
+
+@csrf_exempt
+def delete_user(request, user_id):
+    if request.method == 'DELETE':
+        try:
+            user = User.objects.get(id=user_id)
+            user.delete()
+            return JsonResponse({"status": "deleted"})
+        except User.DoesNotExist:
+            return JsonResponse({"error": "User not found"}, status=404)
+    return HttpResponseNotAllowed(['DELETE'])
+
+@csrf_exempt
+def update_user(request, user_id):
+    if request.method == 'PATCH':
+        try:
+            data = json.loads(request.body)
+            user = User.objects.get(id=user_id)
+            
+            if 'task_limit' in data:
+                from .models import UserProfile
+                profile, created = UserProfile.objects.get_or_create(user=user)
+                profile.task_limit = data['task_limit']
+                profile.save()
+                
+            return JsonResponse({"status": "updated"})
+        except User.DoesNotExist:
+            return JsonResponse({"error": "User not found"}, status=404)
+    return HttpResponseNotAllowed(['PATCH'])

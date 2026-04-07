@@ -77,4 +77,12 @@ export class ApiService {
   addUser(data: { username: string }): Observable<any> {
     return this.http.post(`${this.baseUrl}/users/add/`, data);
   }
+
+  deleteUser(userId: number): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/users/${userId}/delete/`);
+  }
+
+  updateUser(userId: number, data: { task_limit: number }): Observable<any> {
+    return this.http.patch(`${this.baseUrl}/users/${userId}/update/`, data);
+  }
 }

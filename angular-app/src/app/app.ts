@@ -24,6 +24,7 @@ export class App implements OnInit {
   swimlanes: any[] = []; // NOWE: lista osób/wierszy
   allTasks: any[] = [];  // NOWE: płaska lista wszystkich zadań
   allUsers: any[] = [];
+  showUserPanel: boolean = false;
 
   constructor(private api: ApiService, private cdr: ChangeDetectorRef, private zone: NgZone) { }
 
@@ -407,10 +408,76 @@ export class App implements OnInit {
     return this.allTasks.filter(t => t.assignee_ids && t.assignee_ids.includes(userId)).length;
   }
 
-  onUserDropped(event: any, task: any) {
+  get allTaskDropIds(): string[] {
+    return this.allTasks.map(t => 'task-' + t.id);
+  }
+
+  onUserDropped(event: CdkDragDrop<any>, task: any) {
     const user = event.item.data;
-    if (user && user.id) {
-      this.toggleUserAssignment(task, user.id);
+
+    if (!user || user.username === undefined) return;
+
+    if (!task.assignee_ids) task.assignee_ids = [];
+    if (task.assignee_ids.includes(user.id)) return;
+
+    if (!this.canUserAcceptTask(user.id)) {
+      alert(`Użytkownik ${user.username} osiągnął już swój limit zadań (${user.task_limit || 3})!`);
+      return;
     }
+
+    task.assignee_ids.push(user.id);
+    
+    this.api.updateTask(task.id, { assignee_ids: task.assignee_ids }).subscribe({
+      next: () => this.cdr.detectChanges(),
+      error: (err) => {
+        console.error("Błąd przypisywania:", err);
+        task.assignee_ids = task.assignee_ids.filter((id: number) => id !== user.id);
+      }
+    });
+
+    //event.source._dragRef.reset();
+  }
+  toggleUserPanel() {
+    this.showUserPanel = !this.showUserPanel;
+  }
+
+  deleteUser(userId: number) {
+    if (!confirm('Na pewno chcesz usunąć tego użytkownika? Jego przypisania zostaną usunięte.')) return;
+    
+    // Zakładając, że masz / zrobisz metodę deleteUser w pliku API
+    this.api.deleteUser(userId).pipe(take(1)).subscribe({
+      next: () => {
+        // Optymistyczna aktualizacja UI
+        this.allUsers = this.allUsers.filter(u => u.id !== userId);
+        
+        // Zaktualizuj zadania u przypisanego użytkownika, żeby nie wysypało frontu
+        this.allTasks.forEach(t => {
+          if (t.assignee_ids) {
+            t.assignee_ids = t.assignee_ids.filter((id: number) => id !== userId);
+          }
+        });
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error("Error deleting user:", err)
+    });
+  }
+
+  updateUserLimit(user: any, newLimitStr: string) {
+    let newLimit = parseInt(newLimitStr, 10);
+    if (isNaN(newLimit) || newLimit < 1) newLimit = 3;
+
+    // Sprawdzamy czy w ogóle nastąpiła zmiana
+    if (user.task_limit === newLimit) return;
+
+    // Zakładając, że masz / zrobisz metodę updateUser w pliku API
+    this.api.updateUser(user.id, { task_limit: newLimit }).pipe(take(1)).subscribe({
+      next: () => {
+        this.zone.run(() => {
+          user.task_limit = newLimit;
+          this.cdr.detectChanges();
+        });
+      },
+      error: (err) => console.error("Error updating user limit:", err)
+    });
   }
 }

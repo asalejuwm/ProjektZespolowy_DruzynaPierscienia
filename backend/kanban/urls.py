@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import add_user, delete_swimlane, tasks, add_task, delete_task, update_swimlane, update_task, move_task, add_column, delete_column, update_column, update_column_order, add_swimlane
+from .views import add_user, delete_user, update_user, delete_swimlane, tasks, add_task, delete_task, update_swimlane, update_task, move_task, add_column, delete_column, update_column, update_column_order, add_swimlane
 
 urlpatterns = [
     path('tasks/', tasks),
@@ -15,4 +15,7 @@ urlpatterns = [
     path('swimlanes/<int:swimlane_id>/delete/', delete_swimlane),
     path('swimlanes/<int:swimlane_id>/update/', update_swimlane),
     path('users/add/', add_user),
+    path('users/<int:user_id>/delete/', delete_user),
+    path('users/<int:user_id>/update/', update_user),
 ]
+    
