@@ -83,28 +83,43 @@ def move_task(request, task_id):
 @csrf_exempt
 def update_task(request, task_id):
     if request.method == 'PATCH':
-        data = json.loads(request.body)
-        task = Task.objects.get(id=task_id)
+        try:
+            data = json.loads(request.body)
+            task = Task.objects.get(id=task_id)
 
-        if 'assignee_ids' in data:
-            new_assignee_ids = data['assignee_ids']
+            # --- DODAJ TO: Obsługa zmiany treści zadania ---
+            if 'content' in data:
+                task.content = data['content']
+
+            # --- Istniejąca logika przypisywania osób ---
+            if 'assignee_ids' in data:
+                new_assignee_ids = data['assignee_ids']
+                
+                for u_id in new_assignee_ids:
+                    # Sprawdzamy limit tylko dla nowych osób (których jeszcze nie ma w zadaniu)
+                    if not task.assignees.filter(id=u_id).exists():
+                        user = User.objects.get(id=u_id)
+                        current_tasks_count = user.assigned_tasks.count()
+                        
+                        user_limit = getattr(user, 'userprofile', None).task_limit if hasattr(user, 'userprofile') else 3
+                        
+                        if current_tasks_count >= user_limit:
+                            return JsonResponse({
+                                "error": f"Użytkownik {user.username} osiągnął limit zadań ({user_limit})!"
+                            }, status=400)
+                
+                task.assignees.set(new_assignee_ids)
             
-            for u_id in new_assignee_ids:
-                if not task.assignees.filter(id=u_id).exists():
-                    user = User.objects.get(id=u_id)
-                    current_tasks_count = user.assigned_tasks.count()
-                    
-                    user_limit = getattr(user, 'userprofile', None).task_limit if hasattr(user, 'userprofile') else 3
-                    
-                    if current_tasks_count >= user_limit:
-                        return JsonResponse({
-                            "error": f"Użytkownik {user.username} osiągnął limit zadań ({user_limit})!"
-                        }, status=400)
+            # save() teraz zapisze zmieniony 'content' do bazy
+            task.save()
+            return JsonResponse({"status": "success"})
             
-            task.assignees.set(new_assignee_ids)
-        
-        task.save()
-        return JsonResponse({"status": "success"})
+        except Task.DoesNotExist:
+            return JsonResponse({"error": "Task not found"}, status=404)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    return HttpResponseNotAllowed(['PATCH'])
 
 @csrf_exempt
 def delete_task(request, task_id):
