@@ -360,8 +360,8 @@ export class App implements OnInit {
   }
 
   getUserColor(userId: number): string {
-    const colors = ['#4a90e2', '#48bb78', '#ed8936', '#9f7aea', '#f56565', '#f6ad55'];
-    return colors[userId % colors.length];
+    const user = this.allUsers.find(u => u.id === userId);
+    return user ? user.color : '#64748b';
   }
 
   canUserAcceptTask(userId: number): boolean {
@@ -480,4 +480,19 @@ export class App implements OnInit {
       error: (err) => console.error("Error updating user limit:", err)
     });
   }
+
+  updateUserColor(user: any, newColor: string) {
+    user.color = newColor;
+    this.api.updateUser(user.id, { color: newColor }).pipe(take(1)).subscribe({
+      next: () => {
+        console.log(`Kolor dla ${user.username} został zapisany.`);
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Błąd przy zapisie koloru:', err);
+        alert("Nie udało się zapisać koloru.");
+      }
+    });
+  }
+
 }

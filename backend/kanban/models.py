@@ -33,3 +33,7 @@ class Task(models.Model):
 class UserProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, db_index=True, on_delete=models.CASCADE)
     task_limit = models.IntegerField(default=3)
+    color = models.CharField(max_length=7, default='#64748b') 
+
+    def __str__(self):
+        return f"Profile of {self.user.username}"

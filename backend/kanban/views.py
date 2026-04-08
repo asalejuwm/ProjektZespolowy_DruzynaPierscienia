@@ -1,7 +1,7 @@
 import json
 from django.http import JsonResponse, HttpResponseNotAllowed
 from django.views.decorators.csrf import csrf_exempt
-from .models import Column, Task, Swimlane
+from .models import Column, Task, Swimlane, UserProfile
 from django.db.models import Max
 from django.contrib.auth.models import User
 
@@ -19,7 +19,8 @@ def tasks(request):
         users_data.append({
             'id': u.id, 
             'username': u.username, 
-            'task_limit': limit
+            'task_limit': limit,
+            'color': u.userprofile.color if hasattr(u, 'userprofile') else '#64748b'
         })
 
     task_data = []
@@ -294,13 +295,17 @@ def update_user(request, user_id):
         try:
             data = json.loads(request.body)
             user = User.objects.get(id=user_id)
+            profile, created = UserProfile.objects.get_or_create(user=user)
             
             if 'task_limit' in data:
-                from .models import UserProfile
-                profile, created = UserProfile.objects.get_or_create(user=user)
                 profile.task_limit = data['task_limit']
-                profile.save()
-                
+
+            
+            if 'color' in data:
+                profile.color = data['color']
+
+            profile.save()
+
             return JsonResponse({"status": "updated"})
         except User.DoesNotExist:
             return JsonResponse({"error": "User not found"}, status=404)

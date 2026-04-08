@@ -6,6 +6,8 @@
      cdkDropListOrientation="horizontal"
      [cdkDropListConnectedTo]="allTaskDropIds"> <div *ngFor="let user of allUsers" 
        class="user-avatar-draggable" 
+       [style.background-color]="user.color || '#64748b'"
+       style="color: white; font-weight: bold;"
        [class.at-limit]="getUserTaskCount(user.id) >= (user.task_limit || 3)"
        cdkDrag 
        [cdkDragData]="user">
@@ -28,6 +30,11 @@
     
     <div class="user-manage-list">
       <div class="user-manage-item" *ngFor="let user of allUsers">
+        <div style="display: flex; align-items: center; gap: 10px;"></div>
+          <input type="color" 
+                [value]="user.color || '#64748b'" 
+                (change)="updateUserColor(user, $any($event.target).value)"
+                style="width: 30px; height: 30px; border: none; cursor: pointer; background: none;">
         <strong>{{ user.username }}</strong>
         <div class="user-manage-actions">
           <label>Limit:</label>

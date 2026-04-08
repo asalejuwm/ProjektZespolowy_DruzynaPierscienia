@@ -82,7 +82,7 @@ export class ApiService {
     return this.http.delete(`${this.baseUrl}/users/${userId}/delete/`);
   }
 
-  updateUser(userId: number, data: { task_limit: number }): Observable<any> {
+  updateUser(userId: number, data: { task_limit?: number, color?: string }): Observable<any> {
     return this.http.patch(`${this.baseUrl}/users/${userId}/update/`, data);
   }
 }
