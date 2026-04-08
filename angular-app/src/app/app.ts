@@ -361,7 +361,7 @@ export class App implements OnInit {
 
   getUserColor(userId: number): string {
     const user = this.allUsers.find(u => u.id === userId);
-    return user ? user.color : '#64748b';
+    return user && user.color ? user.color : '#64748b';
   }
 
   canUserAcceptTask(userId: number): boolean {
@@ -397,6 +397,11 @@ export class App implements OnInit {
     if (!username.trim()) return;
     this.api.addUser({ username }).pipe(take(1)).subscribe({
       next: (newUser) => {
+        const userWithDefaults = {
+          ...newUser,
+          color: '#64748b',
+          task_limit: 3
+          };
         this.allUsers.push(newUser);
         this.cdr.detectChanges();
       },
