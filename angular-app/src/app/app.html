@@ -130,8 +130,10 @@
 
             <div class="task-footer">
               <div class="assignee-badges">
-                <div *ngFor="let userId of task.assignee_ids" class="user-avatar-mini" [title]="getUserName(userId)"
-                  [style.background-color]="getUserColor(userId)">
+                <div *ngFor="let userId of task.assignee_ids" 
+                    class="user-avatar-mini-styled" 
+                    [title]="getUserName(userId)"
+                    [style.background-color]="getUserColor(userId)">
                   {{ getUserInitials(userId) }}
                 </div>
               </div>
