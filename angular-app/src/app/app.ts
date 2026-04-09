@@ -292,7 +292,7 @@ export class App implements OnInit {
 
   updateSwimlaneName(swim: any) {
     this.api.updateSwimlane(swim.id, { name: swim.name }).pipe(take(1)).subscribe({
-      next: () => console.log('Nazwa zaktualizowana'),
+      next: () => console.log('Name updated'),
       error: (err) => console.error(err)
     });
   }
@@ -315,7 +315,7 @@ export class App implements OnInit {
     event.preventDefault();
     event.stopPropagation();
 
-    console.log(`Próba otwarcia menu dla: ${type}, ID: ${id}`);
+    console.log(`Trying to open menu for: ${type}, ID: ${id}`);
 
     if (this.activeEditMenu?.id === id && this.activeEditMenu?.type === type) {
       this.activeEditMenu = null;
@@ -351,7 +351,7 @@ export class App implements OnInit {
 
   getUserName(userId: number): string {
     const user = this.allUsers.find(u => u.id === userId);
-    return user ? user.username : 'Nieznany';
+    return user ? user.username : 'Unknown';
   }
 
   getUserInitials(userId: number) {
@@ -381,7 +381,7 @@ export class App implements OnInit {
 
     if (!isCurrentlyAssigned) {
       if (!this.canUserAcceptTask(userId)) {
-        alert("Ten użytkownik osiągnął już swój limit zadań!");
+        alert("This user already reached their task limit!");
         return;
       }
       task.assignee_ids.push(userId);
@@ -426,7 +426,7 @@ export class App implements OnInit {
     if (task.assignee_ids.includes(user.id)) return;
 
     if (!this.canUserAcceptTask(user.id)) {
-      alert(`Użytkownik ${user.username} osiągnął już swój limit zadań (${user.task_limit || 3})!`);
+      alert(`User ${user.username} already reached their task limit (${user.task_limit || 3})!`);
       return;
     }
 
@@ -435,7 +435,7 @@ export class App implements OnInit {
     this.api.updateTask(task.id, { assignee_ids: task.assignee_ids }).subscribe({
       next: () => this.cdr.detectChanges(),
       error: (err) => {
-        console.error("Błąd przypisywania:", err);
+        console.error("Error assigning: ", err);
         task.assignee_ids = task.assignee_ids.filter((id: number) => id !== user.id);
       }
     });
@@ -447,7 +447,7 @@ export class App implements OnInit {
   }
 
   deleteUser(userId: number) {
-    if (!confirm('Na pewno chcesz usunąć tego użytkownika? Jego przypisania zostaną usunięte.')) return;
+    if (!confirm('Are you sure you want to delete this user? Their assignments will also be cancelled')) return;
     
     // Zakładając, że masz / zrobisz metodę deleteUser w pliku API
     this.api.deleteUser(userId).pipe(take(1)).subscribe({
@@ -490,12 +490,12 @@ export class App implements OnInit {
     user.color = newColor;
     this.api.updateUser(user.id, { color: newColor }).pipe(take(1)).subscribe({
       next: () => {
-        console.log(`Kolor dla ${user.username} został zapisany.`);
+        console.log(`Color for ${user.username} has been changed.`);
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error('Błąd przy zapisie koloru:', err);
-        alert("Nie udało się zapisać koloru.");
+        console.error('Error saving color: ', err);
+        alert("Couldn't save color");
       }
     });
   }

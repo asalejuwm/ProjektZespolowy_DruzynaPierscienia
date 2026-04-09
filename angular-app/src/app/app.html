@@ -19,14 +19,14 @@
     <div class="add-user-inline">
       <input #uIn type="text" placeholder="New user..." (keydown.enter)="createUser(uIn.value); uIn.value=''" />
       <button (click)="createUser(uIn.value); uIn.value=''">+</button>
-      <button style="margin-left: 10px; background-color: #64748b; width: auto; padding: 0 10px;" (click)="toggleUserPanel()">Zarządzaj</button>
+      <button style="margin-left: 10px; background-color: #64748b; width: auto; padding: 0 10px;" (click)="toggleUserPanel()">Manage</button>
     </div>
   </div>
   </div>
   <div class="edit-backdrop" *ngIf="showUserPanel" (click)="toggleUserPanel()"></div>
 
   <div class="edit-popover user-panel" *ngIf="showUserPanel">
-    <h4>Zarządzanie Użytkownikami</h4>
+    <h4>User management</h4>
     
     <div class="user-manage-list">
       <div class="user-manage-item" *ngFor="let user of allUsers">
@@ -48,7 +48,7 @@
     </div>
 
     <div class="popover-footer">
-      <button class="close-popover" (click)="toggleUserPanel()">Zamknij</button>
+      <button class="close-popover" (click)="toggleUserPanel()">Close</button>
     </div>
   </div>
 

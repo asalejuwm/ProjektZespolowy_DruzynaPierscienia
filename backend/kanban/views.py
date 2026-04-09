@@ -115,7 +115,7 @@ def update_task(request, task_id):
                         
                         if current_tasks_count >= user_limit:
                             return JsonResponse({
-                                "error": f"Użytkownik {user.username} osiągnął limit zadań ({user_limit})!"
+                                "error": f"User {user.username} already reached their task limit ({user_limit})!"
                             }, status=400)
                 
                 task.assignees.set(new_assignee_ids)
