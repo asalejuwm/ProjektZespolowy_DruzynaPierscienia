@@ -26,10 +26,19 @@ class Task(models.Model):
     swimlane = models.ForeignKey(Swimlane, on_delete=models.CASCADE, related_name='tasks', null=True, blank=True)
     order = models.IntegerField(default=0)
     assignees = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name='assigned_tasks')
+    is_completed = models.BooleanField(default=False)
 
     def __str__(self):
         return self.content
-    
+
+class Subtask(models.Model):
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='subtasks')
+    content = models.CharField(max_length=255)
+    is_completed = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.content
+
 class UserProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, db_index=True, on_delete=models.CASCADE)
     task_limit = models.IntegerField(default=3)

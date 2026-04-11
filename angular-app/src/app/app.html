@@ -121,7 +121,19 @@
                 (cdkDropListDropped)="onUserDropped($event, task)">
 
             <div class="task-header">
-              <span class="task-main-text">{{ task.content }}</span>
+              <span class="task-main-text">
+                <div class="task-content-wrapper">
+                  <input type="checkbox" [checked]="task.is_completed" (change)="toggleTaskCompletion(task)">
+                  <span [class.completed-text]="task.is_completed">{{ task.content }}</span>
+                </div>
+
+                <div class="subtasks-container" *ngIf="task.subtasks?.length">
+                  <div class="subtask-item" *ngFor="let subtask of task.subtasks">
+                    <input type="checkbox" [checked]="subtask.is_completed" (change)="toggleSubtaskCompletion(task, subtask)">
+                    <span [class.completed-text]="subtask.is_completed">{{ subtask.content }}</span>
+                  </div>
+                </div>
+              </span>
               <div class="header-actions">
                 <button class="icon-btn" (click)="toggleEditMenu('task', task.id, $event)">⚙️</button>
                 <button class="delete-btn" (click)="removeItem(task.id)">✕</button>
@@ -211,6 +223,20 @@
     <h4>Edit task</h4>
     <label>Task content:</label>
     <input #editTaskContent [value]="task.content" (keydown.enter)="saveTaskContent(task, editTaskContent.value)">
+    
+    <div class="subtasks-edit-section" style="margin-top: 15px;">
+      <label style="font-weight: bold; font-size: 13px; color: #475569;">Subtasks:</label>
+      <div *ngFor="let subtask of task.subtasks" class="subtask-edit-row">
+        <input type="checkbox" [checked]="subtask.is_completed" (change)="toggleSubtaskCompletion(task, subtask)">
+        <span [class.completed-text]="subtask.is_completed" style="flex-grow: 1;">{{ subtask.content }}</span>
+        <button class="delete-btn" (click)="deleteSubtask(task, subtask.id)">✕</button>
+      </div>
+      
+      <div class="add-subtask-row">
+        <input #newSubtaskInput placeholder="New subtask..." (keydown.enter)="addSubtask(task, newSubtaskInput.value); newSubtaskInput.value=''">
+        <button (click)="addSubtask(task, newSubtaskInput.value); newSubtaskInput.value=''">Add</button>
+      </div>
+    </div>
     <div class="popover-footer">
       <button class="save-btn" (click)="saveTaskContent(task, editTaskContent.value)">Save</button>
       <button class="close-popover" (click)="closeEditMenu()">Cancel</button>

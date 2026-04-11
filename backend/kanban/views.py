@@ -1,7 +1,7 @@
 import json
 from django.http import JsonResponse, HttpResponseNotAllowed
 from django.views.decorators.csrf import csrf_exempt
-from .models import Column, Task, Swimlane, UserProfile
+from .models import Column, Task, Swimlane, UserProfile, Subtask
 from django.db.models import Max
 from django.contrib.auth.models import User
 
@@ -31,7 +31,8 @@ def tasks(request):
             'column_id': t.column_id,
             'swimlane_id': t.swimlane_id,
             'order': t.order,
-            'assignee_ids': list(t.assignees.values_list('id', flat=True))
+            'assignee_ids': list(t.assignees.values_list('id', flat=True)),
+            'subtasks': list(t.subtasks.values('id', 'content', 'is_completed')),
         })
 
     return JsonResponse({
@@ -100,6 +101,11 @@ def update_task(request, task_id):
             # --- DODAJ TO: Obsługa zmiany treści zadania ---
             if 'content' in data:
                 task.content = data['content']
+
+            if 'content' in data:
+                task.content = data['content']
+            if 'is_completed' in data:
+                task.is_completed = data['is_completed']
 
             # --- Istniejąca logika przypisywania osób ---
             if 'assignee_ids' in data:
@@ -310,3 +316,29 @@ def update_user(request, user_id):
         except User.DoesNotExist:
             return JsonResponse({"error": "User not found"}, status=404)
     return HttpResponseNotAllowed(['PATCH'])
+
+@csrf_exempt
+def add_subtask(request, task_id):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        task = Task.objects.get(id=task_id)
+        subtask = Subtask.objects.create(task=task, content=data['content'])
+        return JsonResponse({"id": subtask.id, "content": subtask.content, "is_completed": subtask.is_completed})
+
+@csrf_exempt
+def update_subtask(request, subtask_id):
+    if request.method == 'PATCH':
+        data = json.loads(request.body)
+        subtask = Subtask.objects.get(id=subtask_id)
+        if 'content' in data:
+            subtask.content = data['content']
+        if 'is_completed' in data:
+            subtask.is_completed = data['is_completed']
+        subtask.save()
+        return JsonResponse({"status": "updated"})
+
+@csrf_exempt
+def delete_subtask(request, subtask_id):
+    if request.method == 'DELETE':
+        Subtask.objects.filter(id=subtask_id).delete()
+        return JsonResponse({"status": "deleted"})

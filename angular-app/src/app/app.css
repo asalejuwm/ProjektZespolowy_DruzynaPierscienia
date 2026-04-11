@@ -601,3 +601,64 @@ input::-webkit-inner-spin-button {
   padding-left: 8px;
   margin-top: 8px;
 }
+
+/* --- SUBTASKI I CHECKBOXY --- */
+.task-content-wrapper {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  word-break: break-word;
+}
+
+.completed-text {
+  text-decoration: line-through;
+  color: #94a3b8;
+  transition: all 0.2s ease;
+}
+
+.subtasks-container {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding-left: 10px;
+  border-left: 2px solid #cbd5e1;
+}
+
+.subtask-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #475569;
+}
+
+.subtask-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+.add-subtask-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.add-subtask-row input {
+  flex-grow: 1;
+}
+
+.delete-btn {
+  background: none;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  font-weight: bold;
+}
+.delete-btn:hover {
+  color: #b91c1c;
+}

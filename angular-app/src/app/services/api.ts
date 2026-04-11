@@ -85,4 +85,15 @@ export class ApiService {
   updateUser(userId: number, data: { task_limit?: number, color?: string }): Observable<any> {
     return this.http.patch(`${this.baseUrl}/users/${userId}/update/`, data);
   }
+  addSubtask(taskId: number, content: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/tasks/${taskId}/subtasks/add/`, { content });
+  }
+
+  updateSubtask(subtaskId: number, data: any): Observable<any> {
+    return this.http.patch(`${this.baseUrl}/subtasks/${subtaskId}/update/`, data);
+  }
+
+  deleteSubtask(subtaskId: number): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/subtasks/${subtaskId}/delete/`);
+  }
 }

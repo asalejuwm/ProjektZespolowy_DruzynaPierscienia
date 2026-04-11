@@ -500,4 +500,60 @@ export class App implements OnInit {
     });
   }
 
+  // --- ZADANIA (Checkboxy) ---
+  toggleTaskCompletion(task: any, forceState?: boolean) {
+    const newState = forceState !== undefined ? forceState : !task.is_completed;
+    
+    // Jeśli stan się nie zmienia, nie robimy niepotrzebnego strzału do API
+    if (task.is_completed === newState) return;
+
+    this.api.updateTask(task.id, { is_completed: newState }).pipe(take(1)).subscribe(() => {
+      this.zone.run(() => {
+        task.is_completed = newState;
+        this.cdr.detectChanges();
+      });
+    });
+  }
+
+  // --- SUBTASKI ---
+  addSubtask(task: any, content: string) {
+    if (!content.trim()) return;
+    this.api.addSubtask(task.id, content).pipe(take(1)).subscribe((newSubtask) => {
+      this.zone.run(() => {
+        if (!task.subtasks) task.subtasks = [];
+        task.subtasks.push(newSubtask);
+        this.cdr.detectChanges();
+      });
+    });
+  }
+
+  toggleSubtaskCompletion(task: any, subtask: any) {
+    const newState = !subtask.is_completed;
+    
+    this.api.updateSubtask(subtask.id, { is_completed: newState }).pipe(take(1)).subscribe(() => {
+      this.zone.run(() => {
+        subtask.is_completed = newState;
+        
+        const allCompleted = task.subtasks && task.subtasks.length > 0 && task.subtasks.every((s: any) => s.is_completed);
+        
+        if (allCompleted && !task.is_completed) {
+          this.toggleTaskCompletion(task, true);
+        } else if (!allCompleted && task.is_completed) {
+          this.toggleTaskCompletion(task, false);
+        }
+        
+        this.cdr.detectChanges();
+      });
+    });
+  }
+
+  deleteSubtask(task: any, subtaskId: number) {
+    this.api.deleteSubtask(subtaskId).pipe(take(1)).subscribe(() => {
+      this.zone.run(() => {
+        task.subtasks = task.subtasks.filter((s: any) => s.id !== subtaskId);
+        this.cdr.detectChanges();
+      });
+    });
+  }
+
 }
