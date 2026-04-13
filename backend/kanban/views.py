@@ -60,7 +60,26 @@ def add_task(request):
             swimlane=swim,
             order=max_order + 1 
         )
-        return JsonResponse({"id": task.id, "content": task.content}, status=201)
+
+        default_texts = ["Research", "Implementation", "Testing", "Documentation"]
+        created_subtasks = []
+        for sub_text in default_texts:
+            sub = Subtask.objects.create(task=task, content=sub_text)
+            created_subtasks.append({
+                "id": sub.id,
+                "content": sub.content,
+                "is_completed": sub.is_completed
+            })
+            
+        return JsonResponse({
+            "id": task.id, 
+            "content": task.content,
+            "column_id": task.column_id,
+            "swimlane_id": task.swimlane_id,
+            "subtasks": created_subtasks,
+            "is_completed": task.is_completed
+        }, status=201)
+        
     return HttpResponseNotAllowed(['POST'])
 
 @csrf_exempt

@@ -31,6 +31,7 @@ export class App implements OnInit {
   editingColumn: any = null;
   editingTask: { taskId: number } | null = null; // Zmiana: teraz bazujemy na ID zadania
   IMMUTABLE_COLUMNS = ['To do', 'Done'];
+  editingSubtaskId: number | null = null;
 
   ngOnInit(): void {
     this.loadBoard();
@@ -555,5 +556,35 @@ export class App implements OnInit {
       });
     });
   }
+
+  saveSubtaskContent(subtask: any, newContent: string) {
+  const content = newContent.trim();
+  
+  // Jeśli użytkownik nic nie zmienił lub usunął tekst - tylko zamknij edycję
+  if (!content || content === subtask.content) {
+    this.editingSubtaskId = null;
+    return;
+  }
+
+  // Korzystamy z Twojego api.ts które już masz
+  this.api.updateSubtask(subtask.id, { content: content }).pipe(take(1)).subscribe({
+    next: () => {
+      this.zone.run(() => {
+        subtask.content = content;
+        this.editingSubtaskId = null;
+        this.cdr.detectChanges();
+      });
+    },
+    error: () => {
+      this.editingSubtaskId = null;
+    }
+  });
+}
+
+getSubtaskProgress(task: any): number {
+  if (!task.subtasks || task.subtasks.length === 0) return 0;
+  const completed = task.subtasks.filter((s: any) => s.is_completed).length;
+  return Math.round((completed / task.subtasks.length) * 100);
+}
 
 }

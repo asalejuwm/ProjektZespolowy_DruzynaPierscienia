@@ -1,44 +1,39 @@
 <div class="page-background">
   <div class="users-toolbar">
-  <div class="user-pill-container"
-     id="userList"
-     cdkDropList
-     cdkDropListOrientation="horizontal"
-     [cdkDropListConnectedTo]="allTaskDropIds"> <div *ngFor="let user of allUsers" 
-       class="user-avatar-draggable" 
-       [style.background-color]="user.color || '#64748b'"
-       style="color: white; font-weight: bold;"
-       [class.at-limit]="getUserTaskCount(user.id) >= (user.task_limit || 3)"
-       cdkDrag 
-       [cdkDragData]="user">
-    {{ getUserInitials(user.id) }}
-    <span class="task-badge">{{ getUserTaskCount(user.id) }}/{{ user.task_limit || 3 }}</span>
-    <div *cdkDragPlaceholder></div>
-  </div>
+    <div class="user-pill-container" id="userList" cdkDropList cdkDropListOrientation="horizontal"
+      [cdkDropListConnectedTo]="allTaskDropIds">
+      <div *ngFor="let user of allUsers" class="user-avatar-draggable"
+        [style.background-color]="user.color || '#64748b'" style="color: white; font-weight: bold;"
+        [class.at-limit]="getUserTaskCount(user.id) >= (user.task_limit || 3)" cdkDrag [cdkDragData]="user">
+        {{ getUserInitials(user.id) }}
+        <span class="task-badge">{{ getUserTaskCount(user.id) }}/{{ user.task_limit || 3 }}</span>
+        <div *cdkDragPlaceholder></div>
+      </div>
 
-    <div class="add-user-inline">
-      <input #uIn type="text" placeholder="New user..." (keydown.enter)="createUser(uIn.value); uIn.value=''" />
-      <button (click)="createUser(uIn.value); uIn.value=''">+</button>
-      <button style="margin-left: 10px; background-color: #64748b; width: auto; padding: 0 10px;" (click)="toggleUserPanel()">Manage</button>
+      <div class="add-user-inline">
+        <input #uIn type="text" placeholder="New user..." (keydown.enter)="createUser(uIn.value); uIn.value=''" />
+        <button (click)="createUser(uIn.value); uIn.value=''">+</button>
+        <button style="margin-left: 10px; background-color: #64748b; width: auto; padding: 0 10px;"
+          (click)="toggleUserPanel()">Manage</button>
+      </div>
     </div>
-  </div>
   </div>
   <div class="edit-backdrop" *ngIf="showUserPanel" (click)="toggleUserPanel()"></div>
 
   <div class="edit-popover user-panel" *ngIf="showUserPanel">
     <h4>User management</h4>
-    
+
     <div class="user-manage-list">
       <div class="user-manage-item" *ngFor="let user of allUsers">
         <div style="display: flex; align-items: center; gap: 10px;"></div>
-          <input type="color" 
-                [value]="user.color || '#64748b'" 
-                (change)="updateUserColor(user, $any($event.target).value)"
-                style="width: 30px; height: 30px; border: none; cursor: pointer; background: none;">
+        <input type="color" [value]="user.color || '#64748b'"
+          (change)="updateUserColor(user, $any($event.target).value)"
+          style="width: 30px; height: 30px; border: none; cursor: pointer; background: none;">
         <strong>{{ user.username }}</strong>
         <div class="user-manage-actions">
           <label>Limit:</label>
-          <input type="number" min="1" [value]="user.task_limit || 3" #limitInput (blur)="updateUserLimit(user, limitInput.value)" class="limit-input">
+          <input type="number" min="1" [value]="user.task_limit || 3" #limitInput
+            (blur)="updateUserLimit(user, limitInput.value)" class="limit-input">
           <button class="delete-btn-protected" (click)="deleteUser(user.id)">✕</button>
         </div>
       </div>
@@ -110,15 +105,9 @@
           [cdkDropListConnectedTo]="allCellIds" class="example-list" [style.background]="'transparent'"
           (cdkDropListDropped)="drop($event, col.id, swim.id)">
 
-          <div class="example-box" *ngFor="let task of getTasksForCell(col.id, swim.id)" 
-                cdkDrag 
-                [cdkDragData]="task"
-                
-                cdkDropList 
-                [id]="'task-' + task.id" 
-                [cdkDropListData]="task"
-                [cdkDropListSortingDisabled]="true"
-                (cdkDropListDropped)="onUserDropped($event, task)">
+          <div class="example-box" *ngFor="let task of getTasksForCell(col.id, swim.id)" cdkDrag [cdkDragData]="task"
+            cdkDropList [id]="'task-' + task.id" [cdkDropListData]="task" [cdkDropListSortingDisabled]="true"
+            (cdkDropListDropped)="onUserDropped($event, task)">
 
             <div class="task-header">
               <span class="task-main-text">
@@ -129,9 +118,16 @@
 
                 <div class="subtasks-container" *ngIf="task.subtasks?.length">
                   <div class="subtask-item" *ngFor="let subtask of task.subtasks">
-                    <input type="checkbox" [checked]="subtask.is_completed" (change)="toggleSubtaskCompletion(task, subtask)">
+                    <input type="checkbox" [checked]="subtask.is_completed"
+                      (change)="toggleSubtaskCompletion(task, subtask)">
                     <span [class.completed-text]="subtask.is_completed">{{ subtask.content }}</span>
                   </div>
+                </div>
+                <div class="task-progress-wrapper" *ngIf="task.subtasks?.length > 0">
+                  <div class="progress-bar-background">
+                    <div class="progress-bar-fill" [style.width.%]="getSubtaskProgress(task)"></div>
+                  </div>
+                  <span class="progress-percentage">{{ getSubtaskProgress(task) }}%</span>
                 </div>
               </span>
               <div class="header-actions">
@@ -142,10 +138,8 @@
 
             <div class="task-footer">
               <div class="assignee-badges">
-                <div *ngFor="let userId of task.assignee_ids" 
-                    class="user-avatar-mini-styled" 
-                    [title]="getUserName(userId)"
-                    [style.background-color]="getUserColor(userId)">
+                <div *ngFor="let userId of task.assignee_ids" class="user-avatar-mini-styled"
+                  [title]="getUserName(userId)" [style.background-color]="getUserColor(userId)">
                   {{ getUserInitials(userId) }}
                 </div>
               </div>
@@ -223,17 +217,28 @@
     <h4>Edit task</h4>
     <label>Task content:</label>
     <input #editTaskContent [value]="task.content" (keydown.enter)="saveTaskContent(task, editTaskContent.value)">
-    
+
     <div class="subtasks-edit-section" style="margin-top: 15px;">
       <label style="font-weight: bold; font-size: 13px; color: #475569;">Subtasks:</label>
       <div *ngFor="let subtask of task.subtasks" class="subtask-edit-row">
         <input type="checkbox" [checked]="subtask.is_completed" (change)="toggleSubtaskCompletion(task, subtask)">
-        <span [class.completed-text]="subtask.is_completed" style="flex-grow: 1;">{{ subtask.content }}</span>
+
+        <span *ngIf="editingSubtaskId !== subtask.id" [class.completed-text]="subtask.is_completed"
+          (dblclick)="editingSubtaskId = subtask.id" style="flex-grow: 1; cursor: pointer;">
+          {{ subtask.content }}
+        </span>
+
+        <input *ngIf="editingSubtaskId === subtask.id" #subEditInput [value]="subtask.content"
+          (keydown.enter)="saveSubtaskContent(subtask, subEditInput.value)"
+          (blur)="saveSubtaskContent(subtask, subEditInput.value)" (keydown.escape)="editingSubtaskId = null"
+          style="flex-grow: 1; border: 1px solid #3b82f6; padding: 2px 4px; border-radius: 4px; outline: none;">
+
         <button class="delete-btn" (click)="deleteSubtask(task, subtask.id)">✕</button>
       </div>
-      
+
       <div class="add-subtask-row">
-        <input #newSubtaskInput placeholder="New subtask..." (keydown.enter)="addSubtask(task, newSubtaskInput.value); newSubtaskInput.value=''">
+        <input #newSubtaskInput placeholder="New subtask..."
+          (keydown.enter)="addSubtask(task, newSubtaskInput.value); newSubtaskInput.value=''">
         <button (click)="addSubtask(task, newSubtaskInput.value); newSubtaskInput.value=''">Add</button>
       </div>
     </div>
