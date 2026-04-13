@@ -204,7 +204,7 @@ def delete_column(request, column_id):
         try:
             column = Column.objects.get(id=column_id)
             # Przenosimy zadania do innej kolumny przed usunięciem (opcjonalnie)
-            target_column = Column.objects.exclude(id=column_id).first()
+            target_column = Column.objects.exclude(id=column_id).order_by('order').first()
             if target_column:
                 Task.objects.filter(column=column).update(column=target_column)
             
