@@ -17,6 +17,7 @@ import { take } from 'rxjs';
   standalone: true,
   imports: [RouterOutlet, CommonModule, CdkDrag, CdkDropList, CdkDragPlaceholder],
   templateUrl: './app.html',
+  template:'<div>Mock Template</div>',
   styleUrls: ['./app.css']
 })
 export class App implements OnInit {
@@ -355,10 +356,11 @@ export class App implements OnInit {
     return user ? user.username : 'Unknown';
   }
 
-  getUserInitials(userId: number) {
-    const user = this.allUsers.find(u => u.id === userId);
-    return user ? user.username.substring(0, 2).toUpperCase() : '??';
-  }
+  getUserInitials(userId: number): string {
+  const user = this.allUsers?.find(u => u.id === userId);
+  if (!user || !user.username) return '??'; // Zabezpieczenie przed undefined
+  return user?.username ? user.username.substring(0, 2).toUpperCase() : '??';
+}
 
   getUserColor(userId: number): string {
     const user = this.allUsers.find(u => u.id === userId);
@@ -415,8 +417,9 @@ export class App implements OnInit {
   }
 
   get allTaskDropIds(): string[] {
-    return this.allTasks.map(t => 'task-' + t.id);
-  }
+    if (!this.columns) return [];
+    return this.columns.map(c => `col-${c.id}`);
+}
 
   onUserDropped(event: CdkDragDrop<any>, task: any) {
     const user = event.item.data;
