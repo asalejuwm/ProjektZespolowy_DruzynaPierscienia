@@ -8,6 +8,11 @@ body {
 
 .page-background {
   min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); /* Nowoczesny gradient */
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 /* --- UKŁAD SIATKI (GRID) --- */
@@ -18,6 +23,13 @@ body {
   border: 1px solid #d0d7e2;
   border-radius: 8px;
   overflow-x: auto;
+  width: fit-content;
+  max-width: 100vw;
+  max-height: 70vh;
+  overflow-x: auto;
+  display: block;
+  position: relative;
+  
 }
 
 .columns-header-row, .swimlane-row {
@@ -258,11 +270,7 @@ body {
 }
 
 /* PRZYCISKI GŁÓWNE (List / Row) */
-.add-column-wrapper {
-  padding: 10px;
-  display: flex;
-  align-items: center;
-}
+
 
 .add-action-cell {
   background: #f1f5f9;
@@ -287,12 +295,7 @@ body {
   background: #357abd;
 }
 
-.add-swimlane-footer-row {
-  display: flex;
-  width: fit-content;
-  border-top: 2px solid #cbd5e1;
-  background: #f8fafc;
-}
+
 
 /* --- NAZWY WIERSZY --- */
 .swimlane-name {
@@ -353,7 +356,12 @@ input::-webkit-inner-spin-button {
 }
 
 .users-toolbar {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   background: white;
+  backdrop-filter: blur(5px);
   padding: 10px 15px;
   margin-bottom: 20px;
   border-radius: 10px;
@@ -694,4 +702,26 @@ input::-webkit-inner-spin-button {
   color: #64748b;
   min-width: 30px;
   text-align: right;
+}
+
+.board-actions {
+  display: flex;
+  gap: 10px;
+  padding-left: 15px;
+  border-left: 1px solid #eee;
+}
+
+.add-column-btn {
+  height: 34px;
+  display: flex;
+  align-items: center;
+  padding: 0 15px;
+}
+
+.content-container {
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
