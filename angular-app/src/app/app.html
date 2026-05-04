@@ -16,6 +16,11 @@
         <button style="margin-left: 10px; background-color: #64748b; width: auto; padding: 0 10px;"
           (click)="toggleUserPanel()">Manage</button>
       </div>
+
+      <div class="board-actions">
+        <button class="add-column-btn" (click)="addColumn()">+ List</button>
+        <button class="add-column-btn" (click)="addSwimlane()">+ Row</button>
+      </div>
     </div>
   </div>
   <div class="edit-backdrop" *ngIf="showUserPanel" (click)="toggleUserPanel()"></div>
@@ -75,9 +80,7 @@
         </div>
       </div>
 
-      <div class="add-column-wrapper">
-        <button class="add-column-btn" (click)="addColumn()">+ List</button>
-      </div>
+      
     </div>
 
     <div class="swimlane-row" *ngFor="let swim of swimlanes">
@@ -157,9 +160,7 @@
     </div>
 
     <div class="add-swimlane-footer-row">
-      <div class="swimlane-side-label add-action-cell">
-        <button class="add-column-btn" (click)="addSwimlane()">+ Row</button>
-      </div>
+      
       <div class="grid-cell disabled-cell" *ngFor="let col of columns"></div>
     </div>
 
