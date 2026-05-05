@@ -33,6 +33,7 @@ def tasks(request):
             'order': t.order,
             'assignee_ids': list(t.assignees.values_list('id', flat=True)),
             'subtasks': list(t.subtasks.values('id', 'content', 'is_completed')),
+            'is_completed': t.is_completed,
         })
 
     return JsonResponse({

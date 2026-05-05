@@ -11,6 +11,8 @@ import { RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ApiService } from './services/api';
 import { take } from 'rxjs';
+import { Observable, forkJoin } from 'rxjs';
+
 
 @Component({
   selector: 'app-root',
@@ -79,26 +81,32 @@ export class App implements OnInit {
 
   // --- AKCJE ZADAŃ ---
 
-  drop(event: CdkDragDrop<any[]>, targetColId: number, targetSwimId: number) {
-    const task = event.item.data; // Zadanie, które trzymamy
-    const newIndex = event.currentIndex;
+drop(event: CdkDragDrop<any[]>, targetColId: number, targetSwimId: number) {
+  const task = event.item.data;
+  const newIndex = event.currentIndex;
 
-    if (event.previousContainer === event.container) {
-      moveItemInArray(event.container.data, event.previousIndex, newIndex);
-    } else {
-      transferArrayItem(
-        event.previousContainer.data,
-        event.container.data,
-        event.previousIndex,
-        newIndex
-      );
-    }
-
-    // Informujemy backend o nowym położeniu: Kolumna, Wiersz i Pozycja w liście
-    this.api.updateTaskPosition(task.id, targetColId, targetSwimId, newIndex).pipe(take(1)).subscribe({
-      next: () => this.loadBoard()
-    });
+  // 1. Zmiana wizualna (natychmiastowa)
+  if (event.previousContainer === event.container) {
+    moveItemInArray(event.container.data, event.previousIndex, newIndex);
+  } else {
+    transferArrayItem(event.previousContainer.data, event.container.data, event.previousIndex, newIndex);
   }
+
+  // 2. Logika zapisu
+  const statusUpdate$ = this.checkTaskCompletion(task);
+  const positionUpdate$ = this.api.updateTaskPosition(task.id, targetColId, targetSwimId, newIndex);
+
+  // Używamy forkJoin, żeby poczekać na oba API zanim zrobimy loadBoard
+  const requests = [positionUpdate$];
+  if (statusUpdate$) requests.push(statusUpdate$);
+
+  forkJoin(requests).pipe(take(1)).subscribe({
+    next: () => {
+      console.log('Wszystko zapisane, odświeżam...');
+      this.loadBoard(); // Teraz loadBoard pobierze już poprawne dane
+    }
+  });
+}
 
   addItem(colId: number, swimId: number, text: string) {
     const value = text.trim();
@@ -520,16 +528,22 @@ export class App implements OnInit {
   }
 
   // --- SUBTASKI ---
-  addSubtask(task: any, content: string) {
-    if (!content.trim()) return;
-    this.api.addSubtask(task.id, content).pipe(take(1)).subscribe((newSubtask) => {
-      this.zone.run(() => {
-        if (!task.subtasks) task.subtasks = [];
-        task.subtasks.push(newSubtask);
-        this.cdr.detectChanges();
-      });
+addSubtask(task: any, content: string) {
+  if (!content.trim()) return;
+  this.api.addSubtask(task.id, content).pipe(take(1)).subscribe((newSubtask) => {
+    this.zone.run(() => {
+      if (!task.subtasks) task.subtasks = [];
+      
+      // Dodajemy nowy subtask (domyślnie done: false)
+      task.subtasks.push(newSubtask);
+      
+      // To wywoła nową logikę z punktu 1 i wyśle poprawkę do bazy
+      this.checkTaskCompletion(task);
+      
+      this.cdr.detectChanges();
     });
-  }
+  });
+}
 
   toggleSubtaskCompletion(task: any, subtask: any) {
     const newState = !subtask.is_completed;
@@ -545,7 +559,7 @@ export class App implements OnInit {
         } else if (!allCompleted && task.is_completed) {
           this.toggleTaskCompletion(task, false);
         }
-        
+        this.checkTaskCompletion(task);
         this.cdr.detectChanges();
       });
     });
@@ -555,6 +569,7 @@ export class App implements OnInit {
     this.api.deleteSubtask(subtaskId).pipe(take(1)).subscribe(() => {
       this.zone.run(() => {
         task.subtasks = task.subtasks.filter((s: any) => s.id !== subtaskId);
+        this.checkTaskCompletion(task);
         this.cdr.detectChanges();
       });
     });
@@ -588,6 +603,19 @@ getSubtaskProgress(task: any): number {
   if (!task.subtasks || task.subtasks.length === 0) return 0;
   const completed = task.subtasks.filter((s: any) => s.is_completed).length;
   return Math.round((completed / task.subtasks.length) * 100);
+}
+
+checkTaskCompletion(task: any): Observable<any> | null {
+  if (!task.subtasks || task.subtasks.length === 0) return null;
+
+  const allDone = task.subtasks.every((st: any) => st.is_completed);
+  
+  if (task.is_completed !== allDone) {
+    task.is_completed = allDone;
+    // ZWRACAMY observable, żeby móc na niego poczekać
+    return this.api.updateTask(task.id, { is_completed: allDone });
+  }
+  return null;
 }
 
 }
