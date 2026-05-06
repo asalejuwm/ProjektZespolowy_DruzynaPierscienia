@@ -83,6 +83,11 @@ export class App implements OnInit {
 
 drop(event: CdkDragDrop<any[]>, targetColId: number, targetSwimId: number) {
   const task = event.item.data;
+
+  if (!task || task.username) {
+    return;
+  }
+
   const newIndex = event.currentIndex;
 
   // 1. Zmiana wizualna (natychmiastowa)
@@ -425,8 +430,7 @@ drop(event: CdkDragDrop<any[]>, targetColId: number, targetSwimId: number) {
   }
 
   get allTaskDropIds(): string[] {
-    if (!this.columns) return [];
-    return this.columns.map(c => `col-${c.id}`);
+    return this.allTasks.map(t => `task-${t.id}`);
 }
 
   onUserDropped(event: CdkDragDrop<any>, task: any) {

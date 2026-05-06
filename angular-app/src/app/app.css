@@ -729,3 +729,8 @@ input::-webkit-inner-spin-button {
   flex-direction: column;
   align-items: center;
 }
+
+.example-box.cdk-drop-list-receiving {
+  border: 2px dashed #4a90e2;
+  background-color: #ebf4ff;
+}
