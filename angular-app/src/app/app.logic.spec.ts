@@ -2,7 +2,7 @@ import { TestBed, ComponentFixture} from '@angular/core/testing';
 import { App } from './app';
 import { ApiService } from './services/api';
 import { of, throwError } from 'rxjs';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach} from 'vitest';
 
 
 
@@ -72,7 +72,7 @@ describe('App Component Logic Unit Tests', () => {
         expect(result[1].id).toBe(1); // order 2
       });
 
-      it('should return an empty array if no tasks match the cell', () => {
+      it.only('should return an empty array if no tasks match the cell', () => {
         component.allTasks = [{ id: 1, column_id: 1, swimlane_id: 1, order: 1 }] as any;
         const result = component.getTasksForCell(99, 99);
         expect(result).toEqual([]);

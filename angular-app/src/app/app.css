@@ -8,7 +8,7 @@ body {
 
 .page-background {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); /* Nowoczesny gradient */
+  background: radial-gradient(circle at top left, #1e293b 0%, #0f172a 100%);
   padding: 40px 20px;
   display: flex;
   flex-direction: column;
@@ -20,7 +20,7 @@ body {
   display: block;
   flex-direction: column;
   background: white;
-  border: 1px solid #d0d7e2;
+  /* border: 10px solid #4e4444; */
   border-radius: 8px;
   overflow-x: auto;
   width: fit-content;
@@ -359,19 +359,7 @@ input::-webkit-inner-spin-button {
   font-weight: bold;
 }
 
-.users-toolbar {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: white;
-  backdrop-filter: blur(5px);
-  padding: 10px 15px;
-  margin-bottom: 20px;
-  border-radius: 10px;
-  border: 1px solid #d0d7e2;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-}
+
 
 .user-pill-container {
   display: flex;
@@ -425,14 +413,6 @@ input::-webkit-inner-spin-button {
   justify-content: center;
   box-shadow: 0 5px 15px rgba(0,0,0,0.2);
   opacity: 0.9;
-}
-
-.add-user-inline {
-  display: flex;
-  gap: 5px;
-  margin-left: 10px;
-  padding-left: 10px;
-  border-left: 1px solid #eee;
 }
 
 .add-user-inline input {
@@ -733,4 +713,142 @@ input::-webkit-inner-spin-button {
 .example-box.cdk-drop-list-receiving {
   border: 2px dashed #4a90e2;
   background-color: #ebf4ff;
+}
+
+
+
+/* --- NOWY UKŁAD HEADER --- */
+.main-header {
+  width: 95%;
+  max-width: 1400px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 40px;
+}
+
+/* Lewa strona */
+.project-info {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.project-title {
+  color: white;
+  margin: 0;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -1px;
+}
+
+/* Przyciski akcji obok tytułu */
+.board-actions-group {
+  display: flex;
+  gap: 8px;
+}
+
+.minimal-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.minimal-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Facepile (Nakładające się awatary) */
+.facepile-layout {
+  display: flex;
+  align-items: center;
+  padding-left: 10px; /* Miejsce na pierwszy awatar */
+}
+
+.facepile-layout .user-avatar-draggable {
+  margin-left: -12px; /* To robi efekt nakładania */
+  border: 3px solid #00000044; /* Odcięcie od tła */
+  transition: transform 0.2s, margin 0.2s;
+  box-shadow: -4px 0 10px rgba(0,0,0,0.2);
+}
+
+.facepile-layout .user-avatar-draggable:hover {
+  transform: translateY(-5px) scale(1.1);
+  margin-right: 10px; /* Rozsuwa sąsiadów przy hoverze */
+  z-index: 10;
+}
+
+/* Przycisk dodawania w kółku */
+.add-user-btn-circle {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px dashed rgba(255,255,255,0.4);
+  background: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 10px;
+  transition: all 0.2s;
+}
+
+.add-user-btn-circle:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: white;
+}
+
+/* Prawa strona: Profil użytkownika */
+.current-user-profile {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 8px 18px;
+  border-radius: 50px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  color: white;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+  text-align: right;
+}
+
+.user-name {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.user-role {
+  font-size: 10px;
+  opacity: 0.7;
+  text-transform: uppercase;
+}
+
+.main-avatar {
+  width: 38px;
+  height: 38px;
+  background: #10b981;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
 }

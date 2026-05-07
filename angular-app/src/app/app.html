@@ -1,28 +1,46 @@
 <div class="page-background">
-  <div class="users-toolbar">
-    <div class="user-pill-container" id="userList" cdkDropList cdkDropListOrientation="horizontal"
-      [cdkDropListConnectedTo]="allTaskDropIds">
-      <div *ngFor="let user of allUsers" class="user-avatar-draggable"
-        [style.background-color]="user.color || '#64748b'" style="color: white; font-weight: bold;"
-        [class.at-limit]="getUserTaskCount(user.id) >= (user.task_limit || 3)" cdkDrag [cdkDragData]="user">
-        {{ getUserInitials(user.id) }}
-        <span class="task-badge">{{ getUserTaskCount(user.id) }}/{{ user.task_limit || 3 }}</span>
-        <div *cdkDragPlaceholder></div>
+  <header class="main-header">
+    
+    <div class="project-info">
+      <div class="title-row">
+        <h1 class="project-title">Drużyna Pierścienia</h1>
+        <div class="board-actions-group">
+          <button class="minimal-btn" (click)="addColumn()">+ List</button>
+          <button class="minimal-btn" (click)="addSwimlane()">+ Row</button>
+        </div>
       </div>
 
-      <div class="add-user-inline">
-        <input #uIn type="text" placeholder="New user..." (keydown.enter)="createUser(uIn.value); uIn.value=''" />
-        <button (click)="createUser(uIn.value); uIn.value=''">+</button>
-        <button style="margin-left: 10px; background-color: #64748b; width: auto; padding: 0 10px;"
-          (click)="toggleUserPanel()">Manage</button>
-      </div>
+      <div class="team-section">
+        <div class="user-pill-container facepile-layout" id="userList" cdkDropList cdkDropListOrientation="horizontal"
+             [cdkDropListConnectedTo]="allTaskDropIds">
+          
+          <div *ngFor="let user of allUsers" class="user-avatar-draggable"
+               [style.background-color]="user.color || '#64748b'" 
+               [class.at-limit]="getUserTaskCount(user.id) >= (user.task_limit || 3)" 
+               cdkDrag [cdkDragData]="user">
+            
+            {{ getUserInitials(user.id) }}
+            <span class="task-badge">{{ getUserTaskCount(user.id) }}/{{ user.task_limit || 3 }}</span>
+            
+            <div class="user-tooltip">{{ user.username }}</div>
+            <div *cdkDragPlaceholder></div>
+          </div>
 
-      <div class="board-actions">
-        <button class="add-column-btn" (click)="addColumn()">+ List</button>
-        <button class="add-column-btn" (click)="addSwimlane()">+ Row</button>
+          <button class="add-user-btn-circle" (click)="toggleUserPanel()" title="Manage Team">
+            <span style="margin-top: -2px;">+</span>
+          </button>
+        </div>
       </div>
     </div>
-  </div>
+
+    <div class="current-user-profile">
+      <div class="user-details">
+        <span class="user-name">Admin User</span>
+        <span class="user-role">Project Owner</span>
+      </div>
+      <div class="main-avatar">A</div>
+    </div>
+  </header>
   <div class="edit-backdrop" *ngIf="showUserPanel" (click)="toggleUserPanel()"></div>
 
   <div class="edit-popover user-panel" *ngIf="showUserPanel">

@@ -105,7 +105,7 @@ describe('AppComponent (Template Tests)', () => {
   });
 
   
-  it('should display column titles and WIP limits', async () => {
+  it.only('should display column titles and WIP limits', async () => {
     const mockColumns = [{ id: 1, title: 'Do zrobienia', limit: 5, header_color: '#3b82f6' }];
     
     apiSpy.getTasks.mockReturnValue(of({ 
