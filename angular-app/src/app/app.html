@@ -130,41 +130,32 @@
             (cdkDropListDropped)="onUserDropped($event, task)">
 
             <div class="task-header">
-              <span class="task-main-text">
-                <div class="task-content-wrapper">
-                  <input type="checkbox" [checked]="task.is_completed" (change)="toggleTaskCompletion(task)">
-                  <span [class.completed-text]="task.is_completed">{{ task.content }}</span>
-                </div>
+  <div class="task-content-wrapper">
+    <input type="checkbox" [checked]="task.is_completed" (change)="toggleTaskCompletion(task)">
+    <span [class.completed-text]="task.is_completed" class="task-title">{{ task.content }}</span>
+  </div>
+  <div class="header-actions">
+    <button class="icon-btn-tiny" (click)="toggleEditMenu('task', task.id, $event)">⚙️</button>
+    <button class="delete-btn-tiny" (click)="removeItem(task.id)">✕</button>
+  </div>
+</div>
 
-                <div class="subtasks-container" *ngIf="task.subtasks?.length">
-                  <div class="subtask-item" *ngFor="let subtask of task.subtasks">
-                    <input type="checkbox" [checked]="subtask.is_completed"
-                      (change)="toggleSubtaskCompletion(task, subtask)">
-                    <span [class.completed-text]="subtask.is_completed">{{ subtask.content }}</span>
-                  </div>
-                </div>
-                <div class="task-progress-wrapper" *ngIf="task.subtasks?.length > 0">
-                  <div class="progress-bar-background">
-                    <div class="progress-bar-fill" [style.width.%]="getSubtaskProgress(task)"></div>
-                  </div>
-                  <span class="progress-percentage">{{ getSubtaskProgress(task) }}%</span>
-                </div>
-              </span>
-              <div class="header-actions">
-                <button class="icon-btn" (click)="toggleEditMenu('task', task.id, $event)">⚙️</button>
-                <button class="delete-btn" (click)="removeItem(task.id)">✕</button>
-              </div>
-            </div>
+<div class="task-progress-compact" *ngIf="task.subtasks?.length > 0">
+  <div class="progress-bar-container">
+    <div class="progress-bar-fill" [style.width.%]="getSubtaskProgress(task)"></div>
+  </div>
+  <span class="progress-text">{{ getSubtaskProgress(task) }}%</span>
+</div>
 
-            <div class="task-footer">
-              <div class="assignee-badges">
-                <div *ngFor="let userId of task.assignee_ids" class="user-avatar-mini-styled"
-                  [title]="getUserName(userId)" [style.background-color]="getUserColor(userId)">
-                  {{ getUserInitials(userId) }}
-                </div>
-              </div>
-              <button class="add-assignee-btn" (click)="toggleEditMenu('task_users', task.id, $event)">+</button>
-            </div>
+<div class="task-footer">
+  <div class="assignee-badges">
+    <div *ngFor="let userId of task.assignee_ids" class="user-avatar-mini-styled"
+         [title]="getUserName(userId)" [style.background-color]="getUserColor(userId)">
+      {{ getUserInitials(userId) }}
+    </div>
+    <button class="add-assignee-btn-circle" (click)="toggleEditMenu('task_users', task.id, $event)">+</button>
+  </div>
+</div>
           </div>
 
           <div class="add-item-mini">
