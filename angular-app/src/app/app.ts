@@ -24,15 +24,15 @@ import { Observable, forkJoin } from 'rxjs';
 })
 export class App implements OnInit {
   columns: any[] = [];
-  swimlanes: any[] = []; // NOWE: lista osób/wierszy
-  allTasks: any[] = [];  // NOWE: płaska lista wszystkich zadań
+  swimlanes: any[] = [];
+  allTasks: any[] = [];  
   allUsers: any[] = [];
   showUserPanel: boolean = false;
 
   constructor(private api: ApiService, private cdr: ChangeDetectorRef, private zone: NgZone) { }
 
   editingColumn: any = null;
-  editingTask: { taskId: number } | null = null; // Zmiana: teraz bazujemy na ID zadania
+  editingTask: { taskId: number } | null = null; 
   IMMUTABLE_COLUMNS = ['To do', 'Done'];
   editingSubtaskId: number | null = null;
 
@@ -44,7 +44,6 @@ export class App implements OnInit {
     this.api.getTasks().pipe(take(1)).subscribe({
       next: (data: any) => {
         this.zone.run(() => {
-          // Zakładamy, że backend zwraca teraz obiekt: { columns: [], swimlanes: [], tasks: [] }
           this.columns = data.columns || [];
           this.swimlanes = data.swimlanes || [];
           this.allTasks = data.tasks || [];
@@ -58,19 +57,16 @@ export class App implements OnInit {
 
   // --- LOGIKA SIATKI (GRID) ---
 
-  // Pobiera zadania tylko dla konkretnej komórki (np. "Ania" w "In Progress")
   getTasksForCell(colId: number, swimId: number) {
     return this.allTasks
       .filter(t => t.column_id === colId && t.swimlane_id === swimId)
       .sort((a, b) => a.order - b.order);
   }
 
-  // Tworzy unikalne ID dla każdej listy w siatce (potrzebne dla Drag & Drop)
   getCellId(colId: number, swimId: number): string {
     return `cell-${colId}-${swimId}`;
   }
 
-  // Zwraca listę wszystkich ID komórek, żeby zadania mogły "latać" między nimi
   get allCellIds(): string[] {
     const ids: string[] = [];
     this.columns.forEach(c => {
@@ -90,25 +86,22 @@ drop(event: CdkDragDrop<any[]>, targetColId: number, targetSwimId: number) {
 
   const newIndex = event.currentIndex;
 
-  // 1. Zmiana wizualna (natychmiastowa)
   if (event.previousContainer === event.container) {
     moveItemInArray(event.container.data, event.previousIndex, newIndex);
   } else {
     transferArrayItem(event.previousContainer.data, event.container.data, event.previousIndex, newIndex);
   }
 
-  // 2. Logika zapisu
   const statusUpdate$ = this.checkTaskCompletion(task);
   const positionUpdate$ = this.api.updateTaskPosition(task.id, targetColId, targetSwimId, newIndex);
 
-  // Używamy forkJoin, żeby poczekać na oba API zanim zrobimy loadBoard
   const requests = [positionUpdate$];
   if (statusUpdate$) requests.push(statusUpdate$);
 
   forkJoin(requests).pipe(take(1)).subscribe({
     next: () => {
       console.log('Wszystko zapisane, odświeżam...');
-      this.loadBoard(); // Teraz loadBoard pobierze już poprawne dane
+      this.loadBoard(); 
     }
   });
 }
@@ -141,10 +134,8 @@ drop(event: CdkDragDrop<any[]>, targetColId: number, targetSwimId: number) {
     const limit = Number(col.limit);
     if (isNaN(limit) || limit <= 0) return false;
 
-    // Pobierz listę ID aktywnych wierszy
     const activeSwimlaneIds = this.swimlanes.map(s => String(s.id));
 
-    // Licz tylko zadania, które należą do tej kolumny ORAZ do jednego z widocznych wierszy
     const count = this.allTasks.filter(t =>
       String(t.column_id) === String(col.id) &&
       activeSwimlaneIds.includes(String(t.swimlane_id))
@@ -162,7 +153,6 @@ drop(event: CdkDragDrop<any[]>, targetColId: number, targetSwimId: number) {
   }
 
   saveColumn(col: any, data: { title: string, limit: any, header_color: string, bg_color: string }) {
-    // Parsujemy, a potem sprawdzamy czy nie jest NaN lub mniejsze od 0
     let parsedLimit = parseInt(data.limit, 10);
     if (isNaN(parsedLimit) || parsedLimit < 0) {
       parsedLimit = 0;
@@ -170,7 +160,7 @@ drop(event: CdkDragDrop<any[]>, targetColId: number, targetSwimId: number) {
   
     const payload = {
       title: data.title.trim(),
-      limit: parsedLimit, // Używamy zweryfikowanej liczby
+      limit: parsedLimit, 
       header_color: data.header_color,
       bg_color: data.bg_color
     };
@@ -178,14 +168,13 @@ drop(event: CdkDragDrop<any[]>, targetColId: number, targetSwimId: number) {
     this.api.updateColumn(col.id, payload).pipe(take(1)).subscribe({
       next: () => {
         this.zone.run(() => {
-          // Aktualizacja lokalna
           col.title = payload.title;
           col.limit = payload.limit;
           col.header_color = payload.header_color;
           col.bg_color = payload.bg_color;
   
           this.cdr.detectChanges();
-          this.loadBoard(); // Odświeżenie danych
+          this.loadBoard(); 
         });
       },
       error: (err) => console.error("Error updating column:", err)
@@ -210,7 +199,6 @@ drop(event: CdkDragDrop<any[]>, targetColId: number, targetSwimId: number) {
     let newLimit = parseInt(limit, 10);
     if (isNaN(newLimit)) return;
 
-    // Blokada wartości ujemnych
     if (newLimit < 0) newLimit = 0;
 
     this.api.updateColumn(col.id, { limit: newLimit })
@@ -235,21 +223,16 @@ drop(event: CdkDragDrop<any[]>, targetColId: number, targetSwimId: number) {
 
 
   getContrastColor(hexColor: string): string {
-    if (!hexColor) return '#1e293b'; // Domyślny ciemny tekst
+    if (!hexColor) return '#1e293b'; 
 
-    // Usuń '#' jeśli jest obecny
     const hex = hexColor.replace('#', '');
 
-    // Konwersja HEX na RGB
     const r = parseInt(hex.substr(0, 2), 16);
     const g = parseInt(hex.substr(2, 2), 16);
     const b = parseInt(hex.substr(4, 2), 16);
 
-    // Obliczanie jasności (standard YIQ)
-    // Formula: (R*299 + G*587 + B*114) / 1000
     const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
 
-    // Jeśli jasność >= 128, dajemy ciemny tekst, w przeciwnym razie biały
     return (yiq >= 128) ? '#1e293b' : '#ffffff';
   }
 
@@ -260,7 +243,7 @@ drop(event: CdkDragDrop<any[]>, targetColId: number, targetSwimId: number) {
     if (!name) return;
     this.api.addSwimlane({ name }).pipe(take(1)).subscribe({
       next: () => {
-        this.loadBoard(); // Odświeża dane z backendu
+        this.loadBoard(); 
       },
       error: (err) => console.error("Error while adding row:", err)
     });
@@ -289,7 +272,6 @@ drop(event: CdkDragDrop<any[]>, targetColId: number, targetSwimId: number) {
     let newLimit = parseInt(limit, 10);
     if (isNaN(newLimit)) return;
 
-    // Blokada wartości ujemnych
     if (newLimit < 0) newLimit = 0;
 
     this.api.updateSwimlane(swim.id, { limit: newLimit })
@@ -356,7 +338,7 @@ drop(event: CdkDragDrop<any[]>, targetColId: number, targetSwimId: number) {
         next: () => {
           task.content = content;
           this.closeEditMenu();
-          this.cdr.detectChanges(); // Odśwież widok lokalnie
+          this.cdr.detectChanges();
         },
         error: (err) => console.error("Error updating task:", err)
       });
@@ -371,7 +353,7 @@ drop(event: CdkDragDrop<any[]>, targetColId: number, targetSwimId: number) {
 
   getUserInitials(userId: number): string {
   const user = this.allUsers?.find(u => u.id === userId);
-  if (!user || !user.username) return '??'; // Zabezpieczenie przed undefined
+  if (!user || !user.username) return '??';
   return user?.username ? user.username.substring(0, 2).toUpperCase() : '??';
 }
 
@@ -465,13 +447,10 @@ drop(event: CdkDragDrop<any[]>, targetColId: number, targetSwimId: number) {
   deleteUser(userId: number) {
     if (!confirm('Are you sure you want to delete this user? Their assignments will also be cancelled')) return;
     
-    // Zakładając, że masz / zrobisz metodę deleteUser w pliku API
     this.api.deleteUser(userId).pipe(take(1)).subscribe({
       next: () => {
-        // Optymistyczna aktualizacja UI
         this.allUsers = this.allUsers.filter(u => u.id !== userId);
-        
-        // Zaktualizuj zadania u przypisanego użytkownika, żeby nie wysypało frontu
+      
         this.allTasks.forEach(t => {
           if (t.assignee_ids) {
             t.assignee_ids = t.assignee_ids.filter((id: number) => id !== userId);
@@ -487,10 +466,8 @@ drop(event: CdkDragDrop<any[]>, targetColId: number, targetSwimId: number) {
     let newLimit = parseInt(newLimitStr, 10);
     if (isNaN(newLimit) || newLimit < 1) newLimit = 3;
 
-    // Sprawdzamy czy w ogóle nastąpiła zmiana
     if (user.task_limit === newLimit) return;
 
-    // Zakładając, że masz / zrobisz metodę updateUser w pliku API
     this.api.updateUser(user.id, { task_limit: newLimit }).pipe(take(1)).subscribe({
       next: () => {
         this.zone.run(() => {
@@ -520,7 +497,6 @@ drop(event: CdkDragDrop<any[]>, targetColId: number, targetSwimId: number) {
   toggleTaskCompletion(task: any, forceState?: boolean) {
     const newState = forceState !== undefined ? forceState : !task.is_completed;
     
-    // Jeśli stan się nie zmienia, nie robimy niepotrzebnego strzału do API
     if (task.is_completed === newState) return;
 
     this.api.updateTask(task.id, { is_completed: newState }).pipe(take(1)).subscribe(() => {
@@ -538,12 +514,8 @@ addSubtask(task: any, content: string) {
     this.zone.run(() => {
       if (!task.subtasks) task.subtasks = [];
       
-      // Dodajemy nowy subtask (domyślnie done: false)
       task.subtasks.push(newSubtask);
-      
-      // To wywoła nową logikę z punktu 1 i wyśle poprawkę do bazy
       this.checkTaskCompletion(task);
-      
       this.cdr.detectChanges();
     });
   });
@@ -582,13 +554,11 @@ addSubtask(task: any, content: string) {
   saveSubtaskContent(subtask: any, newContent: string) {
   const content = newContent.trim();
   
-  // Jeśli użytkownik nic nie zmienił lub usunął tekst - tylko zamknij edycję
   if (!content || content === subtask.content) {
     this.editingSubtaskId = null;
     return;
   }
 
-  // Korzystamy z Twojego api.ts które już masz
   this.api.updateSubtask(subtask.id, { content: content }).pipe(take(1)).subscribe({
     next: () => {
       this.zone.run(() => {
@@ -616,7 +586,6 @@ checkTaskCompletion(task: any): Observable<any> | null {
   
   if (task.is_completed !== allDone) {
     task.is_completed = allDone;
-    // ZWRACAMY observable, żeby móc na niego poczekać
     return this.api.updateTask(task.id, { is_completed: allDone });
   }
   return null;

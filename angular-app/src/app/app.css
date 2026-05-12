@@ -17,22 +17,15 @@ body {
 
 /* --- UKŁAD SIATKI (GRID) --- */
 .board-wrapper {
-  display: block;
-  flex-direction: column;
-  background: white;
-  /* border: 10px solid #4e4444; */
-  border-radius: 8px;
-  overflow-x: auto;
-  width: fit-content;
-  min-width: 300px;
-  max-width: 95vw;
-  max-height: 70vh;
-  margin-left: auto;
-  margin-right: auto;
-  overflow-x: auto;
-  display: block;
   position: relative;
-  
+  overflow: auto;
+  height: calc(100vh - 80px);
+  width: 100%;
+  background-color: #0f172a !important;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  box-sizing: border-box;
 }
 
 .columns-header-row, .swimlane-row {
@@ -44,38 +37,67 @@ body {
 
 /* NAGŁÓWEK TABELI */
 .columns-header-row {
-  background: #c7ddff;
-  border-bottom: 2px solid #cbd5e1;
+  display: flex;
+  width: max-content;
+  min-width: 100%;
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 1000;
+  background: #111827 !important;
+  margin: 0; 
+  padding: 0;
+  box-shadow: 0 0 0 2px #111827; 
 }
 
 /* ETYKIETY BOCZNE (Spacer i Row Labels) */
-.swimlane-label-spacer, .swimlane-side-label {
-  width: 140px;
-  min-width: 140px;
-  padding: 15px;
-  background: #f1f5f9;
-  border-right: 2px solid #cbd5e1;
+.swimlane-label-spacer, 
+.swimlane-side-label {
+  width: 160px; 
+  min-width: 160px;
+  padding: 10px; 
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  /* font-weight: bold; <--- USUNIĘTE: nie chcemy bolda na wszystkim w bocznej sekcji */
-  position: relative;
+  gap: 8px; 
+  
+  position: sticky;
+  left: 0;
+  z-index: 900;
+  background: #1e293b !important; 
+  border-right: 2px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.3);
+  box-sizing: border-box;
+}
+
+.swimlane-side-label h3,
+.swimlane-side-label span,
+.swimlane-side-label div {
+  color: #f1f5f9 !important;
+  margin: 0;
+  text-align: center;
+  font-size: 14px;
 }
 
 .swimlane-row {
-  border-bottom: 1px solid #cbd5e1;
+  display: flex;
+  width: max-content;
+  min-width: 100%;
+  background-color: #0f172a;
 }
 
 /* KOLUMNY I KOMÓRKI */
-.column-header-container, .grid-cell {
+.column-header-container, 
+.grid-cell {
   width: 280px;
   min-width: 280px;
-  border-right: 1px solid #e2e8f0;
+  box-sizing: border-box; 
   position: relative;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.grid-cell {
+  min-height: 100px; 
 }
 
 .column-header {
@@ -88,7 +110,7 @@ body {
 .column-header h2 {
   margin: 0;
   font-size: 16px;
-  font-weight: 700; /* Konsekwentny mocny bold dla nagłówków */
+  font-weight: 700; 
 }
 
 /* --- LISTA ZADAŃ I KOMÓRKI --- */
@@ -145,7 +167,6 @@ body {
 
 .icon-btn:hover { background: rgba(0,0,0,0.1); }
 
-/* Ujednolicony czerwony dla wszystkich przycisków usuwania */
 .icon-btn.delete, 
 .delete-btn, 
 .delete-swim-btn { 
@@ -158,7 +179,7 @@ body {
 .delete-swim-btn {
   font-size: 14px;
   padding: 4px;
-  opacity: 0.6; /* Lekko przygaszony domyślnie, żeby nie raził */
+  opacity: 0.6; 
   transition: opacity 0.2s;
 }
 
@@ -166,30 +187,29 @@ body {
   opacity: 1;
 }
 
-/* Tło blokujące resztę ekranu */
 .edit-backdrop {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.4); /* Przyciemnienie */
+  background: rgba(0, 0, 0, 0.4); 
   z-index: 999;
 }
 
 /* --- MENU EDYCJI (POPOVER) --- */
 .edit-popover {
-  position: fixed; /* Zmiana z absolute na fixed */
+  position: fixed; 
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%); /* Idealne centrowanie */
+  transform: translate(-50%, -50%); 
   background: white !important;
-  border: none !important; /* Usuwamy zbędne ramki */
+  border: none !important; 
   box-shadow: 0 20px 40px rgba(0,0,0,0.3) !important;
-  padding: 25px; /* Trochę więcej oddechu */
+  padding: 25px; 
   border-radius: 12px;
   z-index: 1000 !important;
-  width: 300px; /* Nieco szersze dla wygody */
+  width: 300px; 
   display: flex;
   flex-direction: column;
   gap: 15px;
@@ -208,7 +228,7 @@ body {
   font-size: 11px;
   color: #64748b;
   text-transform: uppercase;
-  font-weight: 500; /* Subtelniejszy tekst zamiast bolda */
+  font-weight: 500; 
 }
 
 .edit-popover input {
@@ -292,7 +312,7 @@ body {
   border-radius: 6px;
   cursor: pointer;
   white-space: nowrap;
-  font-weight: 600; /* Delikatny bold na przycisku */
+  font-weight: 600; 
 }
 
 .add-column-btn:hover {
@@ -304,7 +324,7 @@ body {
 /* --- NAZWY WIERSZY --- */
 .swimlane-name {
   font-size: 14px;
-  font-weight: 700; /* Bold dla nazwy wiersza, żeby pasował do nagłówków kolumn */
+  font-weight: 700; 
 }
 
 /* --- LIMIT WIP DISPLAY --- */
@@ -371,7 +391,7 @@ input::-webkit-inner-spin-button {
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: #4a90e2; /* Możesz użyć getUserColor w [style] */
+  background: #4a90e2; 
   color: white;
   display: flex;
   align-items: center;
@@ -443,17 +463,19 @@ input::-webkit-inner-spin-button {
 .swimlane-side-label .icon-btn {
   opacity: 0.9;
   filter: drop-shadow(0px 1px 1px rgba(0,0,0,0.2));
+  font-size: 12px;
+  padding: 4px;
 }
 
 .column-header-container .icon-btn:hover,
 .swimlane-side-label .icon-btn:hover {
   opacity: 1;
-  background: rgba(255, 255, 255, 0.2); /* Lekkie rozjaśnienie tła przy hoverze */
+  background: rgba(255, 255, 255, 0.2); 
 }
 
 .delete-btn-protected {
-  background: rgba(255, 255, 255, 0.4); /* Lekkie, jasne tło pod przyciskiem */
-  color: #ef4444 !important; /* Wyraźny czerwony kolor */
+  background: rgba(255, 255, 255, 0.4); 
+  color: #ef4444 !important; 
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -474,12 +496,20 @@ input::-webkit-inner-spin-button {
 
 .column-header-container .icon-btn,
 .swimlane-side-label .icon-btn {
-  text-shadow: 0px 0px 3px rgba(0,0,0,0.4); /* Delikatny cień oddzielający od tła */
+  text-shadow: 0px 0px 3px rgba(0,0,0,0.4); 
 }
 
 .column-header-container {
-  cursor: grab;
-  user-select: none;
+  width: 280px;
+  min-width: 280px;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  border-top: none !important; 
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .column-header-container:active {
@@ -668,15 +698,15 @@ input::-webkit-inner-spin-button {
 .progress-bar-background {
   flex-grow: 1;
   height: 6px;
-  background-color: #e2e8f0; /* Jasny szary */
+  background-color: #e2e8f0; 
   border-radius: 10px;
   overflow: hidden;
 }
 
 .progress-bar-fill {
   height: 100%;
-  background-color: #10b981; /* Ładna zieleń (Emerald) */
-  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* Płynna animacja */
+  background-color: #10b981; 
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
   border-radius: 10px;
 }
 
@@ -773,19 +803,19 @@ input::-webkit-inner-spin-button {
 .facepile-layout {
   display: flex;
   align-items: center;
-  padding-left: 10px; /* Miejsce na pierwszy awatar */
+  padding-left: 10px; 
 }
 
 .facepile-layout .user-avatar-draggable {
-  margin-left: -12px; /* To robi efekt nakładania */
-  border: 3px solid #00000044; /* Odcięcie od tła */
+  margin-left: -12px; 
+  border: 3px solid #00000044; 
   transition: transform 0.2s, margin 0.2s;
   box-shadow: -4px 0 10px rgba(0,0,0,0.2);
 }
 
 .facepile-layout .user-avatar-draggable:hover {
   transform: translateY(-5px) scale(1.1);
-  margin-right: 10px; /* Rozsuwa sąsiadów przy hoverze */
+  margin-right: 10px; 
   z-index: 10;
 }
 
@@ -851,4 +881,10 @@ input::-webkit-inner-spin-button {
   justify-content: center;
   font-weight: 900;
   box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+}
+
+:host {
+  display: block;
+  background: #0f172a;
+  min-height: 100vh;
 }

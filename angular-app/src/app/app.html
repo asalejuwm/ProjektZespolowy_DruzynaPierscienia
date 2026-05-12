@@ -1,6 +1,6 @@
 <div class="page-background">
   <header class="main-header">
-    
+
     <div class="project-info">
       <div class="title-row">
         <h1 class="project-title">Drużyna Pierścienia</h1>
@@ -12,16 +12,15 @@
 
       <div class="team-section">
         <div class="user-pill-container facepile-layout" id="userList" cdkDropList cdkDropListOrientation="horizontal"
-             [cdkDropListConnectedTo]="allTaskDropIds">
-          
+          [cdkDropListConnectedTo]="allTaskDropIds">
+
           <div *ngFor="let user of allUsers" class="user-avatar-draggable"
-               [style.background-color]="user.color || '#64748b'" 
-               [class.at-limit]="getUserTaskCount(user.id) >= (user.task_limit || 3)" 
-               cdkDrag [cdkDragData]="user">
-            
+            [style.background-color]="user.color || '#64748b'"
+            [class.at-limit]="getUserTaskCount(user.id) >= (user.task_limit || 3)" cdkDrag [cdkDragData]="user">
+
             {{ getUserInitials(user.id) }}
             <span class="task-badge">{{ getUserTaskCount(user.id) }}/{{ user.task_limit || 3 }}</span>
-            
+
             <div class="user-tooltip">{{ user.username }}</div>
             <div *cdkDragPlaceholder></div>
           </div>
@@ -78,8 +77,8 @@
       <div class="swimlane-label-spacer"></div>
 
       <div class="column-header-container" *ngFor="let col of columns" cdkDrag [cdkDragData]="col"
-        [style.background-color]="col.header_color || '#c7ddff'"
-        [style.color]="getContrastColor(col.header_color || '#c7ddff')">
+        [style.border-top]="'4px solid ' + col.header_color"
+        style="background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); color: #f8fafc;">
 
         <div class="column-header-placeholder" *cdkDragPlaceholder></div>
 
@@ -98,13 +97,13 @@
         </div>
       </div>
 
-      
+
     </div>
 
     <div class="swimlane-row" *ngFor="let swim of swimlanes">
 
       <div class="swimlane-side-label" [class.over-limit]="isSwimlaneOverLimit(swim)"
-        [style.background-color]="swim.color || '#f1f5f9'" [style.color]="getContrastColor(swim.color || '#f1f5f9')">
+        style="background-color: #1e293b !important; color: #f8fafc !important;">
 
         <span class="swimlane-name" [style.color]="'inherit'">{{ swim.name }}</span>
         <div class="wip-limit-display" [style.color]="'inherit'">
@@ -119,8 +118,8 @@
         </div>
       </div>
 
-      <div class="grid-cell" *ngFor="let col of columns" [style.background-color]="col.bg_color"
-        [style.color]="getContrastColor(col.bg_color)">
+      <div class="grid-cell" *ngFor="let col of columns"
+        [style.background]="'linear-gradient(to bottom, ' + col.header_color + '10, transparent)'">
 
         <div cdkDropList [id]="getCellId(col.id, swim.id)" [cdkDropListData]="getTasksForCell(col.id, swim.id)"
           [cdkDropListConnectedTo]="allCellIds" class="example-list" [style.background]="'transparent'"
@@ -177,9 +176,10 @@
       </div>
     </div>
 
-    <div class="add-swimlane-footer-row">
-      
-      <div class="grid-cell disabled-cell" *ngFor="let col of columns"></div>
+    <div class="add-swimlane-footer-row" style="display: flex;">
+      <div class="swimlane-label-spacer" style="width: 160px; min-width: 160px; background: transparent;"></div>
+      <div class="grid-cell disabled-cell" *ngFor="let col of columns"
+        style="background: rgba(255,255,255,0.02); border: none;"></div>
     </div>
 
   </div>

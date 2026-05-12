@@ -13,8 +13,6 @@ TestBed.initTestEnvironment(
 // Konfiguracja globalna dla testów
 TestBed.configureTestingModule({
   providers: [
-    // Informujemy Angulara, że używamy trybu "Noop" (brak animacji)
-    // bez wywoływania zdeprecjonowanych funkcji pomocniczych.
     { provide: ANIMATION_MODULE_TYPE, useValue: 'NoopAnimations' }
   ]
 });

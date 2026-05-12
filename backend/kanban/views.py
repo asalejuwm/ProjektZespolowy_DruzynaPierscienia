@@ -5,8 +5,6 @@ from .models import Column, Task, Swimlane, UserProfile, Subtask
 from django.db.models import Max
 from django.contrib.auth.models import User
 
-# --- GŁÓWNY WIDOK (Pobieranie danych) ---
-
 def tasks(request):
     cols = Column.objects.all().order_by('order')
     swims = Swimlane.objects.all().order_by('order')
@@ -43,16 +41,12 @@ def tasks(request):
         "users": users_data
     }, safe=False)
 
-# --- OPERACJE NA ZADANIACH ---
-
 @csrf_exempt
 def add_task(request):
     if request.method == 'POST':
         data = json.loads(request.body)
         col = Column.objects.get(id=data['column_id'])
         swim = Swimlane.objects.get(id=data['swimlane_id'])
-        
-        # Obliczamy kolejność wewnątrz konkretnej komórki (przecięcie Kolumna x Osoba)
         max_order = Task.objects.filter(column=col, swimlane=swim).aggregate(Max('order'))['order__max'] or 0
         
         task = Task.objects.create(
@@ -94,14 +88,10 @@ def move_task(request, task_id):
         task = Task.objects.get(id=task_id)
         new_col = Column.objects.get(id=new_column_id)
         new_swim = Swimlane.objects.get(id=new_swimlane_id)
-
-        # Pobieramy zadania z docelowej komórki, żeby przeliczyć ich kolejność (order)
         other_tasks = list(Task.objects.filter(column=new_col, swimlane=new_swim).exclude(id=task_id).order_by('order'))
 
-        # Wstawiamy nasze zadanie na wybraną pozycję
         other_tasks.insert(new_index, task)
         
-        # Zapisujemy nową kolejność dla wszystkich zadań w tej komórce
         for i, t in enumerate(other_tasks):
             t.order = i
             t.column = new_col
@@ -118,7 +108,6 @@ def update_task(request, task_id):
             data = json.loads(request.body)
             task = Task.objects.get(id=task_id)
 
-            # --- DODAJ TO: Obsługa zmiany treści zadania ---
             if 'content' in data:
                 task.content = data['content']
 
@@ -127,12 +116,10 @@ def update_task(request, task_id):
             if 'is_completed' in data:
                 task.is_completed = data['is_completed']
 
-            # --- Istniejąca logika przypisywania osób ---
             if 'assignee_ids' in data:
                 new_assignee_ids = data['assignee_ids']
                 
                 for u_id in new_assignee_ids:
-                    # Sprawdzamy limit tylko dla nowych osób (których jeszcze nie ma w zadaniu)
                     if not task.assignees.filter(id=u_id).exists():
                         user = User.objects.get(id=u_id)
                         current_tasks_count = user.assigned_tasks.count()
@@ -146,7 +133,6 @@ def update_task(request, task_id):
                 
                 task.assignees.set(new_assignee_ids)
             
-            # save() teraz zapisze zmieniony 'content' do bazy
             task.save()
             return JsonResponse({"status": "success"})
             
@@ -204,7 +190,6 @@ def delete_column(request, column_id):
     if request.method == 'DELETE':
         try:
             column = Column.objects.get(id=column_id)
-            # Przenosimy zadania do innej kolumny przed usunięciem (opcjonalnie)
             target_column = Column.objects.exclude(id=column_id).order_by('order').first()
             if target_column:
                 Task.objects.filter(column=column).update(column=target_column)
@@ -226,9 +211,9 @@ def update_column(request, column_id):
                 col.limit = data['limit']
             if 'title' in data:
                 col.title = data['title']
-            if 'header_color' in data:     # NOWE
+            if 'header_color' in data:     
                 col.header_color = data['header_color']
-            if 'bg_color' in data:         # NOWE
+            if 'bg_color' in data:         
                 col.bg_color = data['bg_color']
                 
             col.save()

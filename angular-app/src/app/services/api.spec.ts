@@ -13,8 +13,8 @@ describe('ApiService', () => {
     TestBed.configureTestingModule({
       providers: [
         ApiService,
-        provideHttpClient(),        // Zastępuje HttpClientModule
-        provideHttpClientTesting(), // Zastępuje HttpClientTestingModule
+        provideHttpClient(),        
+        provideHttpClientTesting(), 
       ]
     });
 
