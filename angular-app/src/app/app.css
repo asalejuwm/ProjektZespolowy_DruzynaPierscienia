@@ -887,4 +887,49 @@ input::-webkit-inner-spin-button {
   display: block;
   background: #0f172a;
   min-height: 100vh;
+
+.preset-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 10px 0;
+  padding: 5px;
+  background: #f8fafc;
+  border-radius: 8px;
+}
+
+.preset-item {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  position: relative;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: transform 0.2s, border-color 0.2s;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.preset-item:hover {
+  transform: scale(1.1);
+}
+
+.preset-item.active {
+  border-color: #3b82f6;
+  transform: scale(1.15);
+  box-shadow: 0 0 0 2px #3b82f6;
+}
+
+.preset-bg-preview {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.05);
+
+}
+
+
 }

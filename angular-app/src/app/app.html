@@ -200,22 +200,20 @@
     <input type="number" min="0" #editColLimit [value]="col.limit" [disabled]="isImmutable(col)"
       [class.disabled-input]="isImmutable(col)">
 
-    <div style="display: flex; gap: 10px; margin-top: 5px;">
-      <div style="flex: 1;">
-        <label>Header Color:</label>
-        <input type="color" #editColHeader [value]="col.header_color || '#c7ddff'">
-      </div>
-      <div style="flex: 1;">
-        <label>Column BG:</label>
-        <input type="color" #editColBg [value]="col.bg_color || '#ffffff'">
+
+    <div class="preset-container">
+      <div *ngFor="let preset of COLOR_PRESETS" 
+          class="preset-item"
+          [class.active]="col.header_color === preset.header"
+          [style.background-color]="preset.header"
+          (click)="applyPreset(col, preset)"
+          [title]="preset.label">
+        <div class="preset-bg-preview" [style.background-color]="preset.bg"></div>
       </div>
     </div>
 
-    <div class="popover-footer">
-      <button class="save-btn"
-        (click)="saveColumn(col, { title: editColName.value, limit: editColLimit.value, header_color: editColHeader.value, bg_color: editColBg.value }); closeEditMenu()">Save</button>
-      <button class="close-popover" (click)="closeEditMenu()">Cancel</button>
-    </div>
+    
+
   </div>
 
   <div class="edit-popover" *ngIf="activeEditMenu.type === 'swimlane' && getActiveSwimlane() as swim">

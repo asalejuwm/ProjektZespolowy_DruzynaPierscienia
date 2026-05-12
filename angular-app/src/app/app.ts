@@ -591,4 +591,27 @@ checkTaskCompletion(task: any): Observable<any> | null {
   return null;
 }
 
+  COLOR_PRESETS = [
+    { label: 'Red', header: '#ff0000', bg: '#fff5f5' },
+    { label: 'Orange', header: '#ff8c00', bg: '#fffaf0' },
+    { label: 'Amber', header: '#ffbf00', bg: '#fffbeb' },
+    { label: 'Yellow', header: '#fde047', bg: '#fefce8' },
+    { label: 'Citrus', header: '#bef264', bg: '#f7fee7' },
+    { label: 'Lime', header: '#22c55e', bg: '#f0fdf4' },
+    { label: 'Emerald', header: '#059669', bg: '#ecfdf5' },
+    { label: 'Teal', header: '#0d9488', bg: '#f0fdfa' },
+    { label: 'Cyan', header: '#06b6d4', bg: '#ecfeff' },
+    { label: 'Azure', header: '#3b82f6', bg: '#eff6ff' },
+    { label: 'Blue', header: '#1d4ed8', bg: '#eff6ff' },
+    { label: 'Indigo', header: '#6366f1', bg: '#eef2ff' },
+    { label: 'Violet', header: '#8b5cf6', bg: '#f5f3ff' },
+    { label: 'Purple', header: '#a855f7', bg: '#faf5ff' },
+    { label: 'Magenta', header: '#d946ef', bg: '#fdf4ff' }
+  ];
+
+  applyPreset(col: any, preset: any) {
+    col.header_color = preset.header;
+    col.bg_color = preset.bg;
+  }
+
 }
