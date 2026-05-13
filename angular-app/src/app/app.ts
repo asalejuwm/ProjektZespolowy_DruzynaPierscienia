@@ -19,20 +19,21 @@ import { Observable, forkJoin } from 'rxjs';
   standalone: true,
   imports: [RouterOutlet, CommonModule, CdkDrag, CdkDropList, CdkDragPlaceholder],
   templateUrl: './app.html',
-  template:'<div>Mock Template</div>',
+  template: '<div>Mock Template</div>',
   styleUrls: ['./app.css']
 })
 export class App implements OnInit {
   columns: any[] = [];
   swimlanes: any[] = [];
-  allTasks: any[] = [];  
+  allTasks: any[] = [];
   allUsers: any[] = [];
   showUserPanel: boolean = false;
+  isAdding: { [key: string]: boolean } = {};
 
   constructor(private api: ApiService, private cdr: ChangeDetectorRef, private zone: NgZone) { }
 
   editingColumn: any = null;
-  editingTask: { taskId: number } | null = null; 
+  editingTask: { taskId: number } | null = null;
   IMMUTABLE_COLUMNS = ['To do', 'Done'];
   editingSubtaskId: number | null = null;
 
@@ -77,44 +78,52 @@ export class App implements OnInit {
 
   // --- AKCJE ZADAŃ ---
 
-drop(event: CdkDragDrop<any[]>, targetColId: number, targetSwimId: number) {
-  const task = event.item.data;
+  drop(event: CdkDragDrop<any[]>, targetColId: number, targetSwimId: number) {
+    const task = event.item.data;
 
-  if (!task || task.username) {
-    return;
-  }
-
-  const newIndex = event.currentIndex;
-
-  if (event.previousContainer === event.container) {
-    moveItemInArray(event.container.data, event.previousIndex, newIndex);
-  } else {
-    transferArrayItem(event.previousContainer.data, event.container.data, event.previousIndex, newIndex);
-  }
-
-  const statusUpdate$ = this.checkTaskCompletion(task);
-  const positionUpdate$ = this.api.updateTaskPosition(task.id, targetColId, targetSwimId, newIndex);
-
-  const requests = [positionUpdate$];
-  if (statusUpdate$) requests.push(statusUpdate$);
-
-  forkJoin(requests).pipe(take(1)).subscribe({
-    next: () => {
-      console.log('Wszystko zapisane, odświeżam...');
-      this.loadBoard(); 
+    if (!task || task.username) {
+      return;
     }
-  });
-}
+
+    const newIndex = event.currentIndex;
+
+    if (event.previousContainer === event.container) {
+      moveItemInArray(event.container.data, event.previousIndex, newIndex);
+    } else {
+      transferArrayItem(event.previousContainer.data, event.container.data, event.previousIndex, newIndex);
+    }
+
+    const statusUpdate$ = this.checkTaskCompletion(task);
+    const positionUpdate$ = this.api.updateTaskPosition(task.id, targetColId, targetSwimId, newIndex);
+
+    const requests = [positionUpdate$];
+    if (statusUpdate$) requests.push(statusUpdate$);
+
+    forkJoin(requests).pipe(take(1)).subscribe({
+      next: () => {
+        console.log('Wszystko zapisane, odświeżam...');
+        this.loadBoard();
+      }
+    });
+  }
 
   addItem(colId: number, swimId: number, text: string) {
     const value = text.trim();
-    if (!value) return;
+    const cellId = this.getCellId(colId, swimId);
+
+    if (!value) {
+      this.isAdding[cellId] = false; // Zamknij jeśli puste
+      return;
+    }
 
     this.api.addTask({
       content: value,
       column_id: colId,
       swimlane_id: swimId
-    }).subscribe(() => this.loadBoard());
+    }).subscribe(() => {
+      this.isAdding[cellId] = false; // Zamknij po sukcesie
+      this.loadBoard();
+    });
   }
 
   removeItem(taskId: number) {
@@ -157,14 +166,14 @@ drop(event: CdkDragDrop<any[]>, targetColId: number, targetSwimId: number) {
     if (isNaN(parsedLimit) || parsedLimit < 0) {
       parsedLimit = 0;
     }
-  
+
     const payload = {
       title: data.title.trim(),
-      limit: parsedLimit, 
+      limit: parsedLimit,
       header_color: data.header_color,
       bg_color: data.bg_color
     };
-  
+
     this.api.updateColumn(col.id, payload).pipe(take(1)).subscribe({
       next: () => {
         this.zone.run(() => {
@@ -172,9 +181,9 @@ drop(event: CdkDragDrop<any[]>, targetColId: number, targetSwimId: number) {
           col.limit = payload.limit;
           col.header_color = payload.header_color;
           col.bg_color = payload.bg_color;
-  
+
           this.cdr.detectChanges();
-          this.loadBoard(); 
+          this.loadBoard();
         });
       },
       error: (err) => console.error("Error updating column:", err)
@@ -223,7 +232,7 @@ drop(event: CdkDragDrop<any[]>, targetColId: number, targetSwimId: number) {
 
 
   getContrastColor(hexColor: string): string {
-    if (!hexColor) return '#1e293b'; 
+    if (!hexColor) return '#1e293b';
 
     const hex = hexColor.replace('#', '');
 
@@ -243,7 +252,7 @@ drop(event: CdkDragDrop<any[]>, targetColId: number, targetSwimId: number) {
     if (!name) return;
     this.api.addSwimlane({ name }).pipe(take(1)).subscribe({
       next: () => {
-        this.loadBoard(); 
+        this.loadBoard();
       },
       error: (err) => console.error("Error while adding row:", err)
     });
@@ -352,10 +361,10 @@ drop(event: CdkDragDrop<any[]>, targetColId: number, targetSwimId: number) {
   }
 
   getUserInitials(userId: number): string {
-  const user = this.allUsers?.find(u => u.id === userId);
-  if (!user || !user.username) return '??';
-  return user?.username ? user.username.substring(0, 2).toUpperCase() : '??';
-}
+    const user = this.allUsers?.find(u => u.id === userId);
+    if (!user || !user.username) return '??';
+    return user?.username ? user.username.substring(0, 2).toUpperCase() : '??';
+  }
 
   getUserColor(userId: number): string {
     const user = this.allUsers.find(u => u.id === userId);
@@ -365,10 +374,10 @@ drop(event: CdkDragDrop<any[]>, targetColId: number, targetSwimId: number) {
   canUserAcceptTask(userId: number): boolean {
     const user = this.allUsers.find(u => u.id === userId);
     if (!user) return false;
-  
+
     const currentCount = this.getUserTaskCount(userId);
     const limit = user.task_limit || 3;
-  
+
     return currentCount < limit;
   }
 
@@ -399,7 +408,7 @@ drop(event: CdkDragDrop<any[]>, targetColId: number, targetSwimId: number) {
           ...newUser,
           color: '#64748b',
           task_limit: 3
-          };
+        };
         this.allUsers.push(newUser);
         this.cdr.detectChanges();
       },
@@ -413,7 +422,7 @@ drop(event: CdkDragDrop<any[]>, targetColId: number, targetSwimId: number) {
 
   get allTaskDropIds(): string[] {
     return this.allTasks.map(t => `task-${t.id}`);
-}
+  }
 
   onUserDropped(event: CdkDragDrop<any>, task: any) {
     const user = event.item.data;
@@ -429,7 +438,7 @@ drop(event: CdkDragDrop<any[]>, targetColId: number, targetSwimId: number) {
     }
 
     task.assignee_ids.push(user.id);
-    
+
     this.api.updateTask(task.id, { assignee_ids: task.assignee_ids }).subscribe({
       next: () => this.cdr.detectChanges(),
       error: (err) => {
@@ -446,11 +455,11 @@ drop(event: CdkDragDrop<any[]>, targetColId: number, targetSwimId: number) {
 
   deleteUser(userId: number) {
     if (!confirm('Are you sure you want to delete this user? Their assignments will also be cancelled')) return;
-    
+
     this.api.deleteUser(userId).pipe(take(1)).subscribe({
       next: () => {
         this.allUsers = this.allUsers.filter(u => u.id !== userId);
-      
+
         this.allTasks.forEach(t => {
           if (t.assignee_ids) {
             t.assignee_ids = t.assignee_ids.filter((id: number) => id !== userId);
@@ -496,7 +505,7 @@ drop(event: CdkDragDrop<any[]>, targetColId: number, targetSwimId: number) {
   // --- ZADANIA (Checkboxy) ---
   toggleTaskCompletion(task: any, forceState?: boolean) {
     const newState = forceState !== undefined ? forceState : !task.is_completed;
-    
+
     if (task.is_completed === newState) return;
 
     this.api.updateTask(task.id, { is_completed: newState }).pipe(take(1)).subscribe(() => {
@@ -508,28 +517,28 @@ drop(event: CdkDragDrop<any[]>, targetColId: number, targetSwimId: number) {
   }
 
   // --- SUBTASKI ---
-addSubtask(task: any, content: string) {
-  if (!content.trim()) return;
-  this.api.addSubtask(task.id, content).pipe(take(1)).subscribe((newSubtask) => {
-    this.zone.run(() => {
-      if (!task.subtasks) task.subtasks = [];
-      
-      task.subtasks.push(newSubtask);
-      this.checkTaskCompletion(task);
-      this.cdr.detectChanges();
+  addSubtask(task: any, content: string) {
+    if (!content.trim()) return;
+    this.api.addSubtask(task.id, content).pipe(take(1)).subscribe((newSubtask) => {
+      this.zone.run(() => {
+        if (!task.subtasks) task.subtasks = [];
+
+        task.subtasks.push(newSubtask);
+        this.checkTaskCompletion(task);
+        this.cdr.detectChanges();
+      });
     });
-  });
-}
+  }
 
   toggleSubtaskCompletion(task: any, subtask: any) {
     const newState = !subtask.is_completed;
-    
+
     this.api.updateSubtask(subtask.id, { is_completed: newState }).pipe(take(1)).subscribe(() => {
       this.zone.run(() => {
         subtask.is_completed = newState;
-        
+
         const allCompleted = task.subtasks && task.subtasks.length > 0 && task.subtasks.every((s: any) => s.is_completed);
-        
+
         if (allCompleted && !task.is_completed) {
           this.toggleTaskCompletion(task, true);
         } else if (!allCompleted && task.is_completed) {
@@ -552,44 +561,44 @@ addSubtask(task: any, content: string) {
   }
 
   saveSubtaskContent(subtask: any, newContent: string) {
-  const content = newContent.trim();
-  
-  if (!content || content === subtask.content) {
-    this.editingSubtaskId = null;
-    return;
-  }
+    const content = newContent.trim();
 
-  this.api.updateSubtask(subtask.id, { content: content }).pipe(take(1)).subscribe({
-    next: () => {
-      this.zone.run(() => {
-        subtask.content = content;
-        this.editingSubtaskId = null;
-        this.cdr.detectChanges();
-      });
-    },
-    error: () => {
+    if (!content || content === subtask.content) {
       this.editingSubtaskId = null;
+      return;
     }
-  });
-}
 
-getSubtaskProgress(task: any): number {
-  if (!task.subtasks || task.subtasks.length === 0) return 0;
-  const completed = task.subtasks.filter((s: any) => s.is_completed).length;
-  return Math.round((completed / task.subtasks.length) * 100);
-}
-
-checkTaskCompletion(task: any): Observable<any> | null {
-  if (!task.subtasks || task.subtasks.length === 0) return null;
-
-  const allDone = task.subtasks.every((st: any) => st.is_completed);
-  
-  if (task.is_completed !== allDone) {
-    task.is_completed = allDone;
-    return this.api.updateTask(task.id, { is_completed: allDone });
+    this.api.updateSubtask(subtask.id, { content: content }).pipe(take(1)).subscribe({
+      next: () => {
+        this.zone.run(() => {
+          subtask.content = content;
+          this.editingSubtaskId = null;
+          this.cdr.detectChanges();
+        });
+      },
+      error: () => {
+        this.editingSubtaskId = null;
+      }
+    });
   }
-  return null;
-}
+
+  getSubtaskProgress(task: any): number {
+    if (!task.subtasks || task.subtasks.length === 0) return 0;
+    const completed = task.subtasks.filter((s: any) => s.is_completed).length;
+    return Math.round((completed / task.subtasks.length) * 100);
+  }
+
+  checkTaskCompletion(task: any): Observable<any> | null {
+    if (!task.subtasks || task.subtasks.length === 0) return null;
+
+    const allDone = task.subtasks.every((st: any) => st.is_completed);
+
+    if (task.is_completed !== allDone) {
+      task.is_completed = allDone;
+      return this.api.updateTask(task.id, { is_completed: allDone });
+    }
+    return null;
+  }
 
   COLOR_PRESETS = [
     { label: 'Red', header: '#ff0000', bg: '#fff5f5' },

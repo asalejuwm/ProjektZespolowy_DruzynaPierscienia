@@ -5,8 +5,6 @@
       <div class="title-row">
         <h1 class="project-title">Drużyna Pierścienia</h1>
         <div class="board-actions-group">
-          <button class="minimal-btn" (click)="addColumn()">+ List</button>
-          <button class="minimal-btn" (click)="addSwimlane()">+ Row</button>
         </div>
       </div>
 
@@ -96,7 +94,9 @@
           Limit: <strong [style.color]="'inherit'">{{ col.limit === 0 ? '∞' : col.limit }}</strong>
         </div>
       </div>
-
+      <div class="add-column-placeholder" (click)="addColumn()">
+        <span>+ Add Column</span>
+      </div>
 
     </div>
 
@@ -130,47 +130,71 @@
             (cdkDropListDropped)="onUserDropped($event, task)">
 
             <div class="task-header">
-  <div class="task-content-wrapper">
-    <input type="checkbox" [checked]="task.is_completed" (change)="toggleTaskCompletion(task)">
-    <span [class.completed-text]="task.is_completed" class="task-title">{{ task.content }}</span>
-  </div>
-  <div class="header-actions">
-    <button class="icon-btn-tiny" (click)="toggleEditMenu('task', task.id, $event)">⚙️</button>
-    <button class="delete-btn-tiny" (click)="removeItem(task.id)">✕</button>
-  </div>
-</div>
+              <div class="task-content-wrapper">
+                <input type="checkbox" [checked]="task.is_completed" (change)="toggleTaskCompletion(task)">
+                <span [class.completed-text]="task.is_completed" class="task-title">{{ task.content }}</span>
+              </div>
+              <div class="header-actions">
+                <button class="icon-btn-tiny" (click)="toggleEditMenu('task', task.id, $event)">⚙️</button>
+                <button class="delete-btn-tiny" (click)="removeItem(task.id)">✕</button>
+              </div>
+            </div>
 
-<div class="task-progress-compact" *ngIf="task.subtasks?.length > 0">
-  <div class="progress-bar-container">
-    <div class="progress-bar-fill" [style.width.%]="getSubtaskProgress(task)"></div>
-  </div>
-  <span class="progress-text">{{ getSubtaskProgress(task) }}%</span>
-</div>
+            <div class="task-progress-compact" *ngIf="task.subtasks?.length > 0">
+              <div class="progress-bar-container">
+                <div class="progress-bar-fill" [style.width.%]="getSubtaskProgress(task)"></div>
+              </div>
+              <span class="progress-text">{{ getSubtaskProgress(task) }}%</span>
+            </div>
 
-<div class="task-footer">
-  <div class="assignee-badges">
-    <div *ngFor="let userId of task.assignee_ids" class="user-avatar-mini-styled"
-         [title]="getUserName(userId)" [style.background-color]="getUserColor(userId)">
-      {{ getUserInitials(userId) }}
-    </div>
-    <button class="add-assignee-btn-circle" (click)="toggleEditMenu('task_users', task.id, $event)">+</button>
-  </div>
-</div>
+            <div class="task-footer">
+              <div class="assignee-badges">
+                <div *ngFor="let userId of task.assignee_ids" class="user-avatar-mini-styled"
+                  [title]="getUserName(userId)" [style.background-color]="getUserColor(userId)">
+                  {{ getUserInitials(userId) }}
+                </div>
+                <button class="add-assignee-btn-circle"
+                  (click)="toggleEditMenu('task_users', task.id, $event)">+</button>
+              </div>
+            </div>
           </div>
 
-          <div class="add-item-mini">
-            <input #taskIn type="text" placeholder="..."
-              (keydown.enter)="addItem(col.id, swim.id, taskIn.value); taskIn.value=''" />
-            <button (click)="addItem(col.id, swim.id, taskIn.value); taskIn.value=''">+</button>
+          <div class="add-task-wrapper">
+            <button class="add-task-ghost-btn" 
+                    *ngIf="!isAdding[getCellId(col.id, swim.id)]"
+                    (click)="isAdding[getCellId(col.id, swim.id)] = true">
+              <span>+</span>
+            </button>
+          
+            <div class="add-task-form-card" *ngIf="isAdding[getCellId(col.id, swim.id)]">
+              <textarea #taskIn 
+                        placeholder="Enter task content..."
+                        (keydown.enter)="$event.preventDefault(); addItem(col.id, swim.id, taskIn.value)"
+                        (keydown.escape)="isAdding[getCellId(col.id, swim.id)] = false"
+                        autoFocus></textarea>
+                        
+              <div class="add-task-actions">
+                <button class="save-task-btn" (click)="addItem(col.id, swim.id, taskIn.value)">Add</button>
+                <button class="cancel-task-btn" (click)="isAdding[getCellId(col.id, swim.id)] = false">✕</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="add-swimlane-footer-row" style="display: flex;">
-      <div class="swimlane-label-spacer" style="width: 160px; min-width: 160px; background: transparent;"></div>
+    <div class="add-swimlane-footer-row" style="display: flex; align-items: center; margin-top: 10px;">
+
+      <div class="add-row-btn" (click)="addSwimlane()"
+        style="width: 140px; min-width: 140px; background: transparent !important;">
+        <span>+ Add Row</span>
+      </div>
+
       <div class="grid-cell disabled-cell" *ngFor="let col of columns"
-        style="background: rgba(255,255,255,0.02); border: none;"></div>
+        style="border: none; background: transparent !important; flex: 1;"></div>
+
+      <div class="grid-cell disabled-cell" style="background: transparent !important; border: none; min-width: 200px;">
+      </div>
     </div>
 
   </div>
@@ -193,17 +217,13 @@
 
 
     <div class="preset-container">
-      <div *ngFor="let preset of COLOR_PRESETS" 
-          class="preset-item"
-          [class.active]="col.header_color === preset.header"
-          [style.background-color]="preset.header"
-          (click)="applyPreset(col, preset)"
-          [title]="preset.label">
+      <div *ngFor="let preset of COLOR_PRESETS" class="preset-item" [class.active]="col.header_color === preset.header"
+        [style.background-color]="preset.header" (click)="applyPreset(col, preset)" [title]="preset.label">
         <div class="preset-bg-preview" [style.background-color]="preset.bg"></div>
       </div>
     </div>
 
-    
+
 
   </div>
 
