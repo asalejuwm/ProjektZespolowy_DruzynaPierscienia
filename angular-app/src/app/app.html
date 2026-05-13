@@ -3,7 +3,7 @@
 
     <div class="project-info">
       <div class="title-row">
-        <h1 class="project-title">Drużyna Pierścienia</h1>
+        <h1 class="project-title">Kanban Board</h1>
         <div class="board-actions-group">
         </div>
       </div>
@@ -160,19 +160,16 @@
           </div>
 
           <div class="add-task-wrapper">
-            <button class="add-task-ghost-btn" 
-                    *ngIf="!isAdding[getCellId(col.id, swim.id)]"
-                    (click)="isAdding[getCellId(col.id, swim.id)] = true">
+            <button class="add-task-ghost-btn" *ngIf="!isAdding[getCellId(col.id, swim.id)]"
+              (click)="isAdding[getCellId(col.id, swim.id)] = true">
               <span>+</span>
             </button>
-          
+
             <div class="add-task-form-card" *ngIf="isAdding[getCellId(col.id, swim.id)]">
-              <textarea #taskIn 
-                        placeholder="Enter task content..."
-                        (keydown.enter)="$event.preventDefault(); addItem(col.id, swim.id, taskIn.value)"
-                        (keydown.escape)="isAdding[getCellId(col.id, swim.id)] = false"
-                        autoFocus></textarea>
-                        
+              <textarea #taskIn placeholder="Enter task content..."
+                (keydown.enter)="$event.preventDefault(); addItem(col.id, swim.id, taskIn.value)"
+                (keydown.escape)="isAdding[getCellId(col.id, swim.id)] = false" autoFocus></textarea>
+
               <div class="add-task-actions">
                 <button class="save-task-btn" (click)="addItem(col.id, swim.id, taskIn.value)">Add</button>
                 <button class="cancel-task-btn" (click)="isAdding[getCellId(col.id, swim.id)] = false">✕</button>
@@ -241,35 +238,45 @@
     </div>
   </div>
 
-  <div class="edit-popover" *ngIf="activeEditMenu.type === 'task' && getActiveTask() as task">
+  <div class="edit-popover task-edit-popover" *ngIf="activeEditMenu.type === 'task' && getActiveTask() as task">
     <h4>Edit task</h4>
-    <label>Task content:</label>
-    <input #editTaskContent [value]="task.content" (keydown.enter)="saveTaskContent(task, editTaskContent.value)">
 
-    <div class="subtasks-edit-section" style="margin-top: 15px;">
-      <label style="font-weight: bold; font-size: 13px; color: #475569;">Subtasks:</label>
-      <div *ngFor="let subtask of task.subtasks" class="subtask-edit-row">
-        <input type="checkbox" [checked]="subtask.is_completed" (change)="toggleSubtaskCompletion(task, subtask)">
+    <div class="input-group">
+      <label>Task content:</label>
+      <input #editTaskContent [value]="task.content" (keydown.enter)="saveTaskContent(task, editTaskContent.value)"
+        class="main-input">
+    </div>
 
-        <span *ngIf="editingSubtaskId !== subtask.id" [class.completed-text]="subtask.is_completed"
-          (dblclick)="editingSubtaskId = subtask.id" style="flex-grow: 1; cursor: pointer;">
-          {{ subtask.content }}
-        </span>
+    <div class="subtasks-edit-section">
+      <label class="section-label">Subtasks:</label>
 
-        <input *ngIf="editingSubtaskId === subtask.id" #subEditInput [value]="subtask.content"
-          (keydown.enter)="saveSubtaskContent(subtask, subEditInput.value)"
-          (blur)="saveSubtaskContent(subtask, subEditInput.value)" (keydown.escape)="editingSubtaskId = null"
-          style="flex-grow: 1; border: 1px solid #3b82f6; padding: 2px 4px; border-radius: 4px; outline: none;">
+      <div class="subtask-list">
+        <div *ngFor="let subtask of task.subtasks" class="subtask-edit-row">
+          <input type="checkbox" class="subtask-checkbox" [checked]="subtask.is_completed"
+            (change)="toggleSubtaskCompletion(task, subtask)">
 
-        <button class="delete-btn" (click)="deleteSubtask(task, subtask.id)">✕</button>
+          <span *ngIf="editingSubtaskId !== subtask.id" [class.completed-text]="subtask.is_completed"
+            (dblclick)="editingSubtaskId = subtask.id" class="subtask-text">
+            {{ subtask.content }}
+          </span>
+
+          <input *ngIf="editingSubtaskId === subtask.id" #subEditInput [value]="subtask.content"
+            (keydown.enter)="saveSubtaskContent(subtask, subEditInput.value)"
+            (blur)="saveSubtaskContent(subtask, subEditInput.value)" (keydown.escape)="editingSubtaskId = null"
+            class="subtask-edit-input" autoFocus>
+
+          <button class="delete-subtask-btn" (click)="deleteSubtask(task, subtask.id)">✕</button>
+        </div>
       </div>
 
       <div class="add-subtask-row">
         <input #newSubtaskInput placeholder="New subtask..."
           (keydown.enter)="addSubtask(task, newSubtaskInput.value); newSubtaskInput.value=''">
-        <button (click)="addSubtask(task, newSubtaskInput.value); newSubtaskInput.value=''">Add</button>
+        <button class="add-sub-btn"
+          (click)="addSubtask(task, newSubtaskInput.value); newSubtaskInput.value=''">Add</button>
       </div>
     </div>
+
     <div class="popover-footer">
       <button class="save-btn" (click)="saveTaskContent(task, editTaskContent.value)">Save</button>
       <button class="close-popover" (click)="closeEditMenu()">Cancel</button>

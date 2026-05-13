@@ -3,36 +3,45 @@
 /* --- OGÓLNE --- */
 body {
   font-family: 'Inter', sans-serif !important;
-  background: #e9f2ff;
+  background: #0f172a; 
   margin: 0;
-  padding: 20px;
+  padding: 0;
+  height: 100vh;
+  overflow: hidden; 
 }
 
 .page-background {
-  min-height: 100vh;
+  height: 100vh;
+  width: 100vw;
   background: radial-gradient(circle at top left, #09024d 0%, #224495 100%);
-  padding: 40px 20px;
+  padding: 20px 40px; 
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 /* --- UKŁAD SIATKI (GRID) --- */
 .board-wrapper {
   position: relative;
-  overflow: auto;
-  height: calc(100vh - 80px);
-  width: 100%;
-  background-color: #0f172a !important;
+  /* To wycentruje tylko tablicę względem strony */
+  margin: 0 auto; 
+  
+  width: fit-content; 
+  max-width: 100%; 
+  max-height: calc(100vh - 160px); /* Dopasuj pod swój header */
+  
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  box-sizing: border-box;
-  border-radius: 20px; 
-  margin: 20px; 
+  
+  background-color: #0f172a !important;
+  border-radius: 12px; 
   border: 1px solid rgba(255, 255, 255, 0.1); 
   overflow: auto; 
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); 
+  box-sizing: border-box;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
 .board-wrapper::-webkit-scrollbar {
@@ -54,7 +63,7 @@ body {
 .columns-header-row, .swimlane-row {
   display: flex;
   width: max-content;
-  min-width: 100%;
+  min-width: 0;
   overflow: visible !important;
 }
 
@@ -62,7 +71,6 @@ body {
 .columns-header-row {
   display: flex;
   width: max-content;
-  min-width: 100%;
   position: sticky;
   top: 0;
   z-index: 1000;
@@ -237,15 +245,14 @@ body {
   left: 50%;
   transform: translate(-50%, -50%); 
   background: white !important;
-  border: none !important; 
-  box-shadow: 0 20px 40px rgba(0,0,0,0.3) !important;
   padding: 25px; 
   border-radius: 12px;
   z-index: 1000 !important;
-  width: 300px; 
+  width: 320px; 
   display: flex;
   flex-direction: column;
   gap: 15px;
+  box-sizing: border-box;
 }
 
 .edit-popover h4 {
@@ -271,6 +278,25 @@ body {
   font-size: 13px;
   width: 100%;
   box-sizing: border-box;
+}
+
+.task-edit-popover {
+  width: 350px; 
+  gap: 20px;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.section-label {
+  display: block;
+  font-weight: bold;
+  font-size: 13px;
+  color: #475569;
+  margin-bottom: 10px;
 }
 
 .popover-footer {
@@ -761,6 +787,15 @@ input::-webkit-inner-spin-button {
   border-left: 2px solid #cbd5e1;
 }
 
+.subtask-list {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  overflow-x: hidden; /* Całkowicie blokuje poziomy suwak */
+  overflow-y: auto;   /* Pionowy pojawi się tylko, gdy lista będzie długa */
+  padding-right: 5px; /* Miejsce na suwak pionowy, żeby nie "gniótł" przycisków X */
+}
+
 .subtask-item {
   display: flex;
   align-items: center;
@@ -769,34 +804,93 @@ input::-webkit-inner-spin-button {
   color: #475569;
 }
 
+.subtask-checkbox {
+  flex-shrink: 0 !important;
+  width: 16px !important;
+  height: 16px !important;
+  margin: 0 !important; /* Usuwa automatyczne centrowanie marginesami */
+}
+
 .subtask-edit-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 6px;
+  display: flex !important;
+  flex-direction: row !important; /* Wymusza układ poziomy */
+  align-items: center !important;
+  justify-content: flex-start !important; /* Wpycha wszystko na lewo */
+  width: 100% !important;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.subtask-edit-input {
+  width: 100%;
+  border: 1px solid #3b82f6;
+  padding: 2px 6px;
+  border-radius: 4px;
   font-size: 14px;
+  outline: none;
+}
+
+.subtask-text {
+  flex: 1 !important; /* Zajmuje całą wolną przestrzeń */
+  text-align: left !important;
+  color: #334155 !important;
+  font-size: 14px !important;
+  display: block !important; /* Upewnia się, że span nie ma szerokości 0 */
+  min-width: 0; /* Pozwala na ucinanie tekstu zamiast rozpychania */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.subtasks-edit-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; 
+  width: 100%;
 }
 
 .add-subtask-row {
   display: flex;
-  gap: 6px;
-  margin-top: 10px;
-  margin-bottom: 10px;
+  gap: 8px;
+  background: #f8fafc;
+  padding: 8px;
+  border-radius: 6px;
+}
+
+.add-sub-btn {
+  background: #64748b;
+  color: white;
+  border: none;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .add-subtask-row input {
-  flex-grow: 1;
+  flex: 1;
+  border: 1px solid #cbd5e1;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 13px;
 }
 
-.delete-btn {
-  background: none;
+.delete-subtask-btn {
+  background: transparent;
   border: none;
-  color: #ef4444;
+  color: #94a3b8;
   cursor: pointer;
-  font-weight: bold;
+  padding: 4px 8px;
+  font-size: 14px;
+  transition: color 0.2s;
+  flex-shrink: 0;
 }
-.delete-btn:hover {
-  color: #b91c1c;
+
+
+.delete-subtask-btn:hover {
+  color: #ef4444;
 }
 
 /* --- PROGRESS BAR --- */
@@ -868,8 +962,10 @@ input::-webkit-inner-spin-button {
   max-width: 1400px;
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 40px;
+  align-items: center;
+  flex-shrink: 0;
+  padding-bottom: 20px;
+  margin: 0 auto 30px auto;
 }
 
 /* Lewa strona */
