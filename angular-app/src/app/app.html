@@ -147,6 +147,11 @@
               <span class="progress-text">{{ getSubtaskProgress(task) }}%</span>
             </div>
 
+            <div class="task-time-info" style="font-size: 10px; color: #64748b; margin-top: 5px;">
+              <div>🕒 Total: {{ getTotalLifetime(task) }}</div>
+              <div>📍 In column: {{ getTimeInCurrentColumn(task) }}</div>
+            </div>
+
             <div class="task-footer">
               <div class="assignee-badges">
                 <div *ngFor="let userId of task.assignee_ids" class="user-avatar-mini-styled"

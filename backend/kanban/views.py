@@ -1,9 +1,10 @@
 import json
 from django.http import JsonResponse, HttpResponseNotAllowed
 from django.views.decorators.csrf import csrf_exempt
-from .models import Column, Task, Swimlane, UserProfile, Subtask
+from .models import Column, Task, Swimlane, UserProfile, Subtask, TaskColumnTime
 from django.db.models import Max
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 def tasks(request):
     cols = Column.objects.all().order_by('order')
@@ -12,6 +13,7 @@ def tasks(request):
 
     users_qs = User.objects.select_related('userprofile').all()
     users_data = []
+
     for u in users_qs:
         limit = u.userprofile.task_limit if hasattr(u, 'userprofile') else 3
         users_data.append({
@@ -21,12 +23,18 @@ def tasks(request):
             'color': u.userprofile.color if hasattr(u, 'userprofile') else '#64748b'
         })
 
+    now = timezone.now()
     task_data = []
     for t in all_tasks:
+        current_stay = (now - t.current_column_entered_at).total_seconds()
+        history = {ct.column_id: ct.total_duration_seconds for ct in t.column_times.all()}
+        history[t.column_id] = history.get(t.column_id, 0) + current_stay
         task_data.append({
             'id': t.id,
             'content': t.content,
             'column_id': t.column_id,
+            'created_at': t.created_at.isoformat(),
+            'time_in_columns': history,
             'swimlane_id': t.swimlane_id,
             'order': t.order,
             'assignee_ids': list(t.assignees.values_list('id', flat=True)),
@@ -86,10 +94,21 @@ def move_task(request, task_id):
         new_index = data.get('position', 0)
 
         task = Task.objects.get(id=task_id)
+        old_col = task.column
         new_col = Column.objects.get(id=new_column_id)
         new_swim = Swimlane.objects.get(id=new_swimlane_id)
-        other_tasks = list(Task.objects.filter(column=new_col, swimlane=new_swim).exclude(id=task_id).order_by('order'))
 
+        if old_col.id != new_col.id:
+                now = timezone.now()
+                duration = int((now - task.current_column_entered_at).total_seconds())
+                
+                record, _ = TaskColumnTime.objects.get_or_create(task=task, column=old_col)
+                record.total_duration_seconds += duration
+                record.save()
+                
+                task.current_column_entered_at = now
+
+        other_tasks = list(Task.objects.filter(column=new_col, swimlane=new_swim).exclude(id=task_id).order_by('order'))
         other_tasks.insert(new_index, task)
         
         for i, t in enumerate(other_tasks):

@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.utils import timezone
 
 class Column(models.Model):
     title = models.CharField(max_length=100, unique=True)
@@ -27,6 +28,8 @@ class Task(models.Model):
     order = models.IntegerField(default=0)
     assignees = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name='assigned_tasks')
     is_completed = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    current_column_entered_at = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
         return self.content
@@ -46,3 +49,12 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return f"Profile of {self.user.username}"
+    
+
+class TaskColumnTime(models.Model):
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='column_times')
+    column = models.ForeignKey(Column, on_delete=models.CASCADE)
+    total_duration_seconds = models.IntegerField(default=0)
+
+    class Meta:
+        unique_together = ('task', 'column')

@@ -600,6 +600,30 @@ export class App implements OnInit {
     return null;
   }
 
+  formatTime(seconds: number): string {
+    if (!seconds || seconds < 0) return '0s';
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+
+    let res = '';
+    if (days > 0) res += `${days}d `;
+    if (hours > 0) res += `${hours}h `;
+    if (mins > 0 || res === '') res += `${mins}m`;
+    return res.trim();
+  }
+
+  getTotalLifetime(task: any): string {
+    const created = new Date(task.created_at).getTime();
+    const now = new Date().getTime();
+    return this.formatTime((now - created) / 1000);
+  }
+
+  getTimeInCurrentColumn(task: any): string {
+    const seconds = task.time_in_columns ? task.time_in_columns[task.column_id] : 0;
+    return this.formatTime(seconds);
+  }
+
   COLOR_PRESETS = [
     { label: 'Red', header: '#ff0000', bg: '#fff5f5' },
     { label: 'Orange', header: '#ff8c00', bg: '#fffaf0' },
