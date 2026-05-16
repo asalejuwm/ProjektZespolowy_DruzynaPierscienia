@@ -40,6 +40,7 @@ def tasks(request):
             'assignee_ids': list(t.assignees.values_list('id', flat=True)),
             'subtasks': list(t.subtasks.values('id', 'content', 'is_completed')),
             'is_completed': t.is_completed,
+            'parent_id': t.parent_id,
         })
 
     return JsonResponse({
@@ -53,32 +54,45 @@ def tasks(request):
 def add_task(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-        col = Column.objects.get(id=data['column_id'])
-        swim = Swimlane.objects.get(id=data['swimlane_id'])
-        max_order = Task.objects.filter(column=col, swimlane=swim).aggregate(Max('order'))['order__max'] or 0
+        parent_id = data.get('parent_id')
+
+        if parent_id:
+            parent_task = Task.objects.get(id=parent_id)
+            col = parent_task.column
+            swim = parent_task.swimlane
+        else:
+            parent_task = None
+            col = Column.objects.get(id=data['column_id'])
+            swim = Swimlane.objects.get(id=data['swimlane_id'])
+            
+        max_order = Task.objects.filter(column=col, swimlane=swim, parent=parent_task).aggregate(Max('order'))['order__max'] or 0
+
         
         task = Task.objects.create(
             content=data['content'], 
             column=col,
             swimlane=swim,
-            order=max_order + 1 
+            order=max_order + 1,
+            parent=parent_task, 
         )
-
-        default_texts = ["Research", "Implementation", "Testing", "Documentation"]
         created_subtasks = []
-        for sub_text in default_texts:
-            sub = Subtask.objects.create(task=task, content=sub_text)
-            created_subtasks.append({
-                "id": sub.id,
-                "content": sub.content,
-                "is_completed": sub.is_completed
-            })
-            
+
+        if parent_id:
+            default_texts = ["Research", "Implementation", "Testing", "Documentation"]
+            for sub_text in default_texts:
+                sub = Subtask.objects.create(task=task, content=sub_text)
+                created_subtasks.append({
+                    "id": sub.id,
+                    "content": sub.content,
+                    "is_completed": sub.is_completed
+                })
+      
         return JsonResponse({
             "id": task.id, 
             "content": task.content,
             "column_id": task.column_id,
             "swimlane_id": task.swimlane_id,
+            "parent_id": task.parent_id,
             "subtasks": created_subtasks,
             "is_completed": task.is_completed
         }, status=201)
@@ -116,6 +130,9 @@ def move_task(request, task_id):
             t.column = new_col
             t.swimlane = new_swim
             t.save()
+
+        if t.parent is None:
+            Task.objects.filter(parent=t).update(column=new_col, swimlane=new_swim)
 
         return JsonResponse({"status": "ok"})
     return HttpResponseNotAllowed(['PATCH'])

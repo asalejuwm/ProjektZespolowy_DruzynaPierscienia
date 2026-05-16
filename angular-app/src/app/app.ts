@@ -60,7 +60,7 @@ export class App implements OnInit {
 
   getTasksForCell(colId: number, swimId: number) {
     return this.allTasks
-      .filter(t => t.column_id === colId && t.swimlane_id === swimId)
+      .filter(t => t.column_id === colId && t.swimlane_id === swimId && !t.parent_id)
       .sort((a, b) => a.order - b.order);
   }
 
@@ -598,6 +598,47 @@ export class App implements OnInit {
       return this.api.updateTask(task.id, { is_completed: allDone });
     }
     return null;
+  }
+
+  // --- CHILD TASKI ---
+
+  getChildTasks(parentId: number) {
+    return this.allTasks
+      .filter(t => t.parent_id === parentId)
+      .sort((a, b) => a.order - b.order);
+  }
+
+  addChildTask(parentTask: any, inputElement: HTMLInputElement) {
+    const value = inputElement.value.trim();
+    if (!value) return;
+
+    this.api.addTask({
+      content: value,
+      parent_id: parentTask.id
+    }).pipe(take(1)).subscribe(() => {
+      inputElement.value = ''; 
+      this.loadBoard(); 
+    });
+  }
+
+  isEveryChildCompleted(parentId: number): boolean {
+    const children = this.getChildTasks(parentId);
+  
+    // Jeśli rodzic nie ma jeszcze żadnych child tasków, nie przekreślamy go
+    if (children.length === 0) {
+      return false;
+    }
+  
+    // Zwraca true tylko wtedy, gdy KAŻDE dziecko ma status is_completed na true
+    return children.every(child => child.is_completed);
+  }
+
+  getChildTaskProgress(task: any): number {
+    const children = this.getChildTasks(task.id);
+    if (!children || children.length === 0) return 0;
+  
+    const completed = children.filter(c => c.is_completed).length;
+    return Math.round((completed / children.length) * 100);
   }
 
   formatTime(seconds: number): string {

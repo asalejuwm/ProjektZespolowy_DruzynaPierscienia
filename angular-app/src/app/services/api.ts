@@ -19,7 +19,7 @@ export class ApiService {
   }
 
   // Dodajemy swimlane_id do parametrów
-  addTask(data: { content: string, column_id: number, swimlane_id: number }): Observable<any> {
+  addTask(data: { content: string, column_id?: number, swimlane_id?: number, parent_id?: number }): Observable<any> {
     return this.http.post(`${this.baseUrl}/tasks/add/`, data);
   }
 

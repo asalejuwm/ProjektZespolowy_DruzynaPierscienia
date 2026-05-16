@@ -30,6 +30,8 @@ class Task(models.Model):
     is_completed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     current_column_entered_at = models.DateTimeField(default=timezone.now)
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children')
+    
 
     def __str__(self):
         return self.content
