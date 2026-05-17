@@ -745,4 +745,144 @@ export class App implements OnInit {
     col.bg_color = preset.bg;
   }
 
+  // Zmienna sterująca wyświetlaniem wykresu punktowego
+  showChart: boolean = false;
+
+  // Przełącznik widoczności okna wykresu
+  toggleChart(): void {
+    this.showChart = !this.showChart;
+  }
+
+  // Metoda wyliczająca współrzędne punktów dla wykresu
+  getChartPoints(): any[] {
+    if (!this.allTasks || this.allTasks.length === 0 || !this.columns || !this.swimlanes) return [];
+
+    const validColumnIds = this.columns.map(c => c.id);
+    const validSwimlaneIds = this.swimlanes.map(s => s.id);
+    
+    const activeTasks = this.allTasks.filter(t => 
+      validColumnIds.includes(t.column_id) && 
+      validSwimlaneIds.includes(t.swimlane_id)
+    );
+
+    if (activeTasks.length === 0) return [];
+
+    const now = new Date().getTime();
+    
+    const parsedTasks = activeTasks.map(t => {
+      const createdTime = new Date(t.created_at).getTime();
+      const lifetimeSec = (now - createdTime) / 1000;
+      return {
+        content: t.content,
+        created: createdTime,
+        lifetime: lifetimeSec,
+        formattedLifetime: this.formatTime(lifetimeSec)
+      };
+    });
+
+    const minX = Math.min(...parsedTasks.map(t => t.created));
+    const maxX = Math.max(...parsedTasks.map(t => t.created));
+    const maxY = Math.max(...parsedTasks.map(t => t.lifetime)) || 1;
+
+    const width = 600;
+    const height = 350;
+    const paddingLeft = 70;
+    const paddingRight = 40;
+    const paddingTop = 40;
+    const paddingBottom = 50;
+
+    const xRange = (maxX - minX) || 1;
+    const yRange = maxY || 1;
+
+    return parsedTasks.map(t => {
+      const pctX = xRange === 1 ? 0.5 : (t.created - minX) / xRange;
+      const pctY = t.lifetime / yRange;
+
+      const x = paddingLeft + pctX * (width - paddingLeft - paddingRight);
+      const y = (height - paddingBottom) - pctY * (height - paddingTop - paddingBottom);
+
+      return {
+        content: t.content,
+        x: x,
+        y: y,
+        lifetimeStr: t.formattedLifetime,
+        dateStr: new Date(t.created).toLocaleString()
+      };
+    });
+  }
+
+  // Generowanie dynamicznych podziałek i etykiet dla osi Y (Czas życia)
+  getChartYAxisTicks(): any[] {
+    if (!this.allTasks || this.allTasks.length === 0 || !this.columns || !this.swimlanes) return [];
+    
+    const validColumnIds = this.columns.map(c => c.id);
+    const validSwimlaneIds = this.swimlanes.map(s => s.id);
+    
+    const activeTasks = this.allTasks.filter(t => 
+      validColumnIds.includes(t.column_id) && 
+      validSwimlaneIds.includes(t.swimlane_id)
+    );
+
+    if (activeTasks.length === 0) return [];
+
+    const now = new Date().getTime();
+    const maxSec = Math.max(...activeTasks.map(t => (now - new Date(t.created_at).getTime()) / 1000)) || 1;
+
+    const height = 350;
+    const paddingTop = 40;
+    const paddingBottom = 50;
+    const chartHeight = height - paddingTop - paddingBottom;
+
+    return [0, 0.25, 0.5, 0.75, 1].map(pct => {
+      const sec = pct * maxSec;
+      const y = (height - paddingBottom) - pct * chartHeight;
+      return {
+        y: y,
+        label: this.formatTime(sec)
+      };
+    });
+  }
+
+  // NOWA METODA: Generowanie dynamicznych podziałek i etykiet dla osi X (Data utworzenia)
+  getChartXAxisTicks(): any[] {
+    if (!this.allTasks || this.allTasks.length === 0 || !this.columns || !this.swimlanes) return [];
+
+    const validColumnIds = this.columns.map(c => c.id);
+    const validSwimlaneIds = this.swimlanes.map(s => s.id);
+
+    const activeTasks = this.allTasks.filter(t => 
+      validColumnIds.includes(t.column_id) && 
+      validSwimlaneIds.includes(t.swimlane_id)
+    );
+
+    if (activeTasks.length === 0) return [];
+
+    const timestamps = activeTasks.map(t => new Date(t.created_at).getTime());
+    const minX = Math.min(...timestamps);
+    const maxX = Math.max(...timestamps);
+    const xRange = (maxX - minX) || 1;
+
+    const width = 600;
+    const paddingLeft = 70;
+    const paddingRight = 40;
+    const chartWidth = width - paddingLeft - paddingRight;
+
+    // Definiujemy 4 punkty na osi X: 0%, 33%, 66%, 100% wysokości szerokości wykresu
+    return [0, 0.33, 0.66, 1].map(pct => {
+      const currentTimestamp = minX + pct * xRange;
+      const x = paddingLeft + pct * chartWidth;
+
+      // Formatowanie znacznika czasu na czytelną formę np. "15.05 14:23"
+      const date = new Date(currentTimestamp);
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      
+      return {
+        x: x,
+        label: `${day}.${month} ${hours}:${minutes}`
+      };
+    }); //sasadsa
+  }
 }

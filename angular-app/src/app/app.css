@@ -22,6 +22,40 @@ body {
   overflow: hidden;
 }
 
+.project-info-container {
+  display: flex;
+  align-items: center; 
+  gap: 24px;          
+  padding: 20px;
+}
+
+.logo-side-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.project-logo {
+  height: 75px;       
+  width: auto;
+  object-fit: contain;
+}
+
+.content-side-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;           
+}
+
+.project-title {
+  margin: 0;          
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.team-section {
+  margin: 0;          
+}
 /* --- UKŁAD SIATKI (GRID) --- */
 .board-wrapper {
   position: relative;
@@ -952,26 +986,6 @@ input::-webkit-inner-spin-button {
   margin: 0 auto 30px auto;
 }
 
-/* Lewa strona */
-.project-info {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.title-row {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.project-title {
-  color: white;
-  margin: 0;
-  font-size: 28px;
-  font-weight: 800;
-  letter-spacing: -1px;
-}
 
 /* Przyciski akcji obok tytułu */
 .board-actions-group {
@@ -1124,6 +1138,88 @@ input::-webkit-inner-spin-button {
   border-radius: 50%;
   border: 1px solid rgba(0,0,0,0.05);
 
+}
+/* --- STYLIZACJA WYKRESU PUNKTOWEGO --- */
+
+.chart-toggle-btn {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.4);
+}
+
+.chart-toggle-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px -2px rgba(59, 130, 246, 0.5);
+}
+
+.chart-popover {
+  width: 680px !important;
+  max-width: 95vw;
+  background: #ffffff !important;
+  color: #1e293b !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+  border: 1px solid #e2e8f0;
+}
+
+.chart-desc {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0 0 15px 0;
+  line-height: 1.4;
+}
+
+.svg-chart-container {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 15px 10px 10px 10px;
+}
+
+.chart-axis-text {
+  font-size: 11px;
+  fill: #64748b;
+  font-family: 'Inter', sans-serif;
+}
+
+.chart-label-text {
+  font-size: 12px;
+  fill: #1e293b;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Wygląd punktu reprezentującego zadanie */
+.chart-dot {
+  fill: #3b82f6;
+  stroke: #ffffff;
+  stroke-width: 2;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+/* Efekt po najechaniu na dany punkt wykresu */
+.chart-dot:hover {
+  fill: #ef4444;
+  r: 9;
+  filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.3));
+}
+
+.no-data-msg {
+  text-align: center;
+  padding: 50px;
+  color: #64748b;
+  font-style: italic;
+  font-size: 14px;
 }
 
 

@@ -1,31 +1,35 @@
 <div class="page-background">
   <header class="main-header">
 
-    <div class="project-info">
-      <div class="title-row">
-        <h1 class="project-title">Kanban Board</h1>
-        <div class="board-actions-group">
-        </div>
+    <div class="project-info-container">
+  
+      <div class="logo-side-wrapper">
+        <img src="logokanban.png" alt="Logo Projektu" class="project-logo">
       </div>
 
-      <div class="team-section">
-        <div class="user-pill-container facepile-layout" id="userList" cdkDropList cdkDropListOrientation="horizontal"
-          [cdkDropListConnectedTo]="allTaskDropIds">
-
-          <div *ngFor="let user of allUsers" class="user-avatar-draggable"
-            [style.background-color]="user.color || '#64748b'"
-            [class.at-limit]="getUserTaskCount(user.id) >= (user.task_limit || 3)" cdkDrag [cdkDragData]="user">
-
-            {{ getUserInitials(user.id) }}
-            <span class="task-badge">{{ getUserTaskCount(user.id) }}/{{ user.task_limit || 3 }}</span>
-
-            <div class="user-tooltip">{{ user.username }}</div>
-            <div *cdkDragPlaceholder></div>
+      <div class="content-side-wrapper">
+        <h1 class="project-title">Kanban Board</h1>
+        
+        <div class="team-section">
+          <div class="user-pill-container facepile-layout" id="userList" cdkDropList cdkDropListOrientation="horizontal" [cdkDropListConnectedTo]="allTaskDropIds">
+    
+            <div *ngFor="let user of allUsers" class="user-avatar-draggable"
+              [style.background-color]="user.color || '#64748b'"
+              [class.at-limit]="getUserTaskCount(user.id) >= (user.task_limit || 3)" cdkDrag [cdkDragData]="user">
+    
+              {{ getUserInitials(user.id) }}
+              <span class="task-badge">{{ getUserTaskCount(user.id) }}/{{ user.task_limit || 3 }}</span>
+    
+              <div class="user-tooltip">{{ user.username }}</div>
+              <div *cdkDragPlaceholder></div>
+            </div>
+    
+            <button class="add-user-btn-circle" (click)="toggleUserPanel()" title="Manage Team">
+              <span style="margin-top: -2px;">+</span>
+            </button>
+            <button class="chart-toggle-btn" (click)="toggleChart()">📊 Wykres czasu zadań</button>
           </div>
-
-          <button class="add-user-btn-circle" (click)="toggleUserPanel()" title="Manage Team">
-            <span style="margin-top: -2px;">+</span>
-          </button>
+          
         </div>
       </div>
     </div>
@@ -139,6 +143,7 @@
                 <button class="icon-btn-tiny" (click)="toggleEditMenu('task', task.id, $event)">⚙️</button>
                 <button class="delete-btn-tiny" (click)="removeItem(task.id)">✕</button>
               </div>
+<<<<<<< HEAD
             </div>
 
             <div class="task-progress-compact" *ngIf="task.subtasks?.length > 0">
@@ -152,14 +157,71 @@
                 <span style="opacity: 0.7;">Parent:</span> {{ getParentName(task.parent_id) }}
               </div>
             <div class="task-time-info" style="font-size: 10px; color: #64748b; margin-top: 5px;">
+=======
+              </div>
+            
+            <div class="child-tasks-container" style="margin-top: 10px; padding-left: 8px; border-left: 2px dashed #cbd5e1;">
+    
+              <div *ngFor="let child of getChildTasks(task.id)" class="child-task-item" 
+                style="margin-bottom: 8px; background: #f8fafc; padding: 6px; border-radius: 4px; border: 1px solid #e2e8f0;">
+      
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <input type="checkbox" 
+                      [checked]="child.is_completed" 
+                      (change)="toggleTaskCompletion(child, !child.is_completed)">
+                    <span style="font-size: 12px; font-weight: 600; color: #334155;"
+                      [style.text-decoration]="child.is_completed ? 'line-through' : 'none'">
+                      {{ child.content }}
+                    </span>
+                  </div>
+                  <button class="delete-btn-tiny" (click)="removeItem(child.id)" style="font-size: 9px; padding: 0 2px;">✕</button>
+                </div>
+                
+                <div class="task-progress-compact" *ngIf="child.subtasks?.length" style="margin-top: 4px; margin-bottom: 2px;">
+                  <div class="progress-bar-container" style="height: 4px;">
+                    <div class="progress-bar-fill" [style.width.%]="getSubtaskProgress(child)" style="background: #10b981;"></div>
+                  </div>
+                  <span class="progress-text" style="font-size: 9px; line-height: 4px;">{{ getSubtaskProgress(child) }}%</span>
+                </div>
+
+
+                
+
+              </div>
+
+              <div class="add-child-form" style="margin-top: 8px; display: flex; gap: 4px;">
+                <input #childIn type="text" placeholder="+ Add child task..." 
+                  (keydown.enter)="addChildTask(task, childIn)"
+                    style="font-size: 11px; padding: 4px; flex: 1; border: 1px solid #cbd5e1; border-radius: 4px;">
+                <button (click)="addChildTask(task, childIn)" 
+                  style="font-size: 11px; padding: 4px 8px; background: #0f172a; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                  Add
+                </button>
+              </div>
+            </div>
+
+            <div class="task-progress-compact" *ngIf="task.subtasks?.length > 0">
+              <div class="progress-bar-container">
+                <div class="progress-bar-fill" [style.width.%]="getSubtaskProgress(task)"></div>
+              </div>
+              <span class="progress-text">{{ getSubtaskProgress(task) }}%</span>
+            </div>
+
+            <div class="task-time-info" style="font-size: 10px; color: #64748b; margin-top: 8px; border-top: 1px solid #f1f5f9; padding-top: 4px;">
+>>>>>>> e1c09cbc4b9264b12e3c9009b79353c004e053ec
               <div>🕒 Total: {{ getTotalLifetime(task) }}</div>
               <div>📍 In column: {{ getTimeInCurrentColumn(task) }}</div>
             </div>
             
             <div class="task-footer">
               <div class="assignee-badges">
+<<<<<<< HEAD
                 <div *ngFor="let userId of task.assignee_ids" class="user-avatar-mini-styled"
                   [title]="getUserName(userId)" [style.background-color]="getUserColor(userId)">
+=======
+                 <div *ngFor="let userId of task.assignee_ids" class="user-avatar-mini-styled" [title]="getUserName(userId)" [style.background-color]="getUserColor(userId)">
+>>>>>>> e1c09cbc4b9264b12e3c9009b79353c004e053ec
                   {{ getUserInitials(userId) }}
                 </div>
                 <button class="add-assignee-btn-circle"
@@ -279,8 +341,39 @@
           <input type="checkbox" class="subtask-checkbox" [checked]="subtask.is_completed"
             (change)="toggleSubtaskCompletion(task, subtask)">
 
+<<<<<<< HEAD
           <span *ngIf="editingSubtaskId !== subtask.id" [class.completed-text]="subtask.is_completed"
             (dblclick)="editingSubtaskId = subtask.id" class="subtask-text">
+=======
+  <div *ngFor="let child of getChildTasks(task.id)" 
+       style="margin-bottom: 14px; padding: 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;">
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <input type="checkbox" 
+               [checked]="child.is_completed" 
+               (change)="toggleTaskCompletion(child, !child.is_completed)">
+        
+        <span style="font-size: 13px; font-weight: 600; color: #1e293b;"
+              [style.text-decoration]="child.is_completed ? 'line-through' : 'none'">
+          {{ child.content }}
+        </span>
+      </div>
+      
+      <button class="delete-subtask-btn" (click)="removeItem(child.id)" 
+              style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 14px; padding: 0 4px;" title="Delete Child Task">
+        ✕
+      </button>
+    </div>
+
+          <div style="padding-left: 18px; display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; border-left: 2px solid #e2e8f0;">
+      <div *ngFor="let subtask of child.subtasks" style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; gap: 6px; align-items: center;">
+          <input type="checkbox" [checked]="subtask.is_completed" (change)="toggleSubtaskCompletion(child, subtask)">
+          
+          <span style="font-size: 12px; color: #475569;"
+                [style.text-decoration]="subtask.is_completed ? 'line-through' : 'none'">
+>>>>>>> e1c09cbc4b9264b12e3c9009b79353c004e053ec
             {{ subtask.content }}
           </span>
 
@@ -291,6 +384,7 @@
 
           <button class="delete-subtask-btn" (click)="deleteSubtask(task, subtask.id)">✕</button>
         </div>
+<<<<<<< HEAD
       </div>
 
       <div class="add-subtask-row">
@@ -298,9 +392,42 @@
           (keydown.enter)="addSubtask(task, newSubtaskInput.value); newSubtaskInput.value=''">
         <button class="add-sub-btn"
           (click)="addSubtask(task, newSubtaskInput.value); newSubtaskInput.value=''">Add</button>
+=======
+          <button class="delete-subtask-btn" (click)="deleteSubtask(child, subtask.id)"
+                style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 11px;">
+          ✕
+        </button>
+        </div>
+>>>>>>> e1c09cbc4b9264b12e3c9009b79353c004e053ec
       </div>
+
+<<<<<<< HEAD
+=======
+      <div class="add-subtask-row" style="display: flex; gap: 4px; padding-left: 18px;">
+      <input #newSubtaskInput placeholder="New checklist item..." 
+             (keydown.enter)="addSubtask(child, newSubtaskInput.value); newSubtaskInput.value=''"
+             style="font-size: 11px; padding: 4px; flex: 1; border: 1px solid #cbd5e1; border-radius: 4px; background: #fff;">
+      <button class="add-sub-btn" 
+              (click)="addSubtask(child, newSubtaskInput.value); newSubtaskInput.value=''"
+              style="font-size: 11px; padding: 4px 8px; background: #64748b; color: white; border: none; border-radius: 4px; cursor: pointer;">
+        Add
+      </button>
     </div>
 
+  </div>
+
+  <div style="display: flex; gap: 4px; margin-top: 12px; border-top: 2px dashed #e2e8f0; padding-top: 12px;">
+    <input #popoverChildIn type="text" placeholder="+ Add new child task..." 
+           (keydown.enter)="addChildTask(task, popoverChildIn)"
+           style="font-size: 12px; padding: 6px; flex: 1; border: 1px solid #cbd5e1; border-radius: 4px; background: #fff;">
+    <button (click)="addChildTask(task, popoverChildIn)" 
+            style="font-size: 12px; padding: 6px 12px; background: #0f172a; color: white; border: none; border-radius: 4px; cursor: pointer;">
+      Add Child
+    </button>
+  </div>
+</div>
+
+>>>>>>> e1c09cbc4b9264b12e3c9009b79353c004e053ec
     <div class="popover-footer">
       <button class="save-btn" (click)="saveTaskContent(task, editTaskContent.value)">Save</button>
       <button class="close-popover" (click)="closeEditMenu()">Cancel</button>
@@ -322,3 +449,64 @@
   </div>
 
 </ng-container>
+
+<div class="edit-backdrop" *ngIf="showChart" (click)="toggleChart()"></div>
+  
+  <div class="edit-popover chart-popover" *ngIf="showChart">
+    <h4>Wykres punktowy czasu istnienia zadań</h4>
+    <p class="chart-desc">Poniższy wykres prezentuje ogólny czas istnienia (wiek) każdego zadania (Oś Y) w relacji do momentu jego utworzenia (Oś X).</p>
+    
+    <div class="svg-chart-container" *ngIf="allTasks.length > 0; else noTasksTemplate">
+      <svg width="100%" height="350" viewBox="0 0 600 350" preserveAspectRatio="xMidYMid meet">
+        <g class="chart-grid-lines">
+          <line *ngFor="let tick of getChartYAxisTicks()" 
+                x1="70" [attr.y1]="tick.y" 
+                x2="560" [attr.y2]="tick.y" 
+                stroke="#cbd5e1" stroke-dasharray="4 4" stroke-width="1" />
+        </g>
+
+        <g class="chart-grid-lines">
+          <line *ngFor="let tick of getChartXAxisTicks()" 
+                [attr.x1]="tick.x" y1="40" 
+                [attr.x2]="tick.x" y2="300" 
+                stroke="#cbd5e1" stroke-dasharray="4 4" stroke-width="1" />
+        </g>
+
+        <line x1="70" y1="40" x2="70" y2="300" stroke="#475569" stroke-width="2" /> 
+        <line x1="70" y1="300" x2="560" y2="300" stroke="#475569" stroke-width="2" /> 
+
+        <text *ngFor="let tick of getChartYAxisTicks()" 
+              x="62" [attr.y]="tick.y + 4" 
+              text-anchor="end" class="chart-axis-text">
+          {{ tick.label }}
+        </text>
+
+        <text *ngFor="let tick of getChartXAxisTicks()" 
+              [attr.x]="tick.x" y="316" 
+              text-anchor="middle" class="chart-axis-text" style="font-size: 10px;">
+          {{ tick.label }}
+        </text>
+
+        <text x="315" y="342" text-anchor="middle" class="chart-label-text font-bold">Czas utworzenia zadania →</text>
+        <text x="18" y="170" text-anchor="middle" class="chart-label-text font-bold" transform="rotate(-90, 18, 170)">Całkowity czas życia →</text>
+
+        <g class="chart-dots">
+          <circle *ngFor="let pt of getChartPoints()" 
+                  [attr.cx]="pt.x" 
+                  [attr.cy]="pt.y" 
+                  r="7" 
+                  class="chart-dot">
+            <title>Zadanie: {{ pt.content }}&#10;Utworzono: {{ pt.dateStr }}&#10;Czas istnienia: {{ pt.lifetimeStr }}</title>
+          </circle>
+        </g>
+      </svg>
+    </div>
+
+    <ng-template #noTasksTemplate>
+      <div class="no-data-msg">Brak zadań na tablicy do utworzenia wykresu.</div>
+    </ng-template>
+
+    <div class="popover-footer">
+      <button class="close-popover" (click)="toggleChart()">Zamknij</button>
+    </div>
+  </div>
