@@ -27,7 +27,7 @@
             <button class="add-user-btn-circle" (click)="toggleUserPanel()" title="Manage Team">
               <span style="margin-top: -2px;">+</span>
             </button>
-            <button class="chart-toggle-btn" (click)="toggleChart()">📊 Wykres czasu zadań</button>
+            <button class="chart-toggle-btn" (click)="toggleChart()">📊 Chart of lifetime of tasks</button>
           </div>
           
         </div>
@@ -328,8 +328,8 @@
 <div class="edit-backdrop" *ngIf="showChart" (click)="toggleChart()"></div>
   
   <div class="edit-popover chart-popover" *ngIf="showChart">
-    <h4>Wykres punktowy czasu istnienia zadań</h4>
-    <p class="chart-desc">Poniższy wykres prezentuje ogólny czas istnienia (wiek) każdego zadania (Oś Y) w relacji do momentu jego utworzenia (Oś X).</p>
+    <h4>Chart of tasks lifetime</h4>
+    <p class="chart-desc">The graph below shows the overall lifetime (age) of each task (Y-axis) relative to its creation time (X-axis).</p>
     
     <div class="svg-chart-container" *ngIf="allTasks.length > 0; else noTasksTemplate">
       <svg width="100%" height="350" viewBox="0 0 600 350" preserveAspectRatio="xMidYMid meet">
@@ -362,8 +362,8 @@
           {{ tick.label }}
         </text>
 
-        <text x="315" y="342" text-anchor="middle" class="chart-label-text font-bold">Czas utworzenia zadania →</text>
-        <text x="18" y="170" text-anchor="middle" class="chart-label-text font-bold" transform="rotate(-90, 18, 170)">Całkowity czas życia →</text>
+        <text x="315" y="342" text-anchor="middle" class="chart-label-text font-bold">Date of creation →</text>
+        <text x="18" y="170" text-anchor="middle" class="chart-label-text font-bold" transform="rotate(-90, 18, 170)">Lifetime →</text>
 
         <g class="chart-dots">
           <circle *ngFor="let pt of getChartPoints()" 
@@ -371,17 +371,17 @@
                   [attr.cy]="pt.y" 
                   r="7" 
                   class="chart-dot">
-            <title>Zadanie: {{ pt.content }}&#10;Utworzono: {{ pt.dateStr }}&#10;Czas istnienia: {{ pt.lifetimeStr }}</title>
+            <title>Task: {{ pt.content }}&#10;Created: {{ pt.dateStr }}&#10;Lifetime: {{ pt.lifetimeStr }}</title>
           </circle>
         </g>
       </svg>
     </div>
 
     <ng-template #noTasksTemplate>
-      <div class="no-data-msg">Brak zadań na tablicy do utworzenia wykresu.</div>
+      <div class="no-data-msg">No tasks for board to create chart.</div>
     </ng-template>
 
     <div class="popover-footer">
-      <button class="close-popover" (click)="toggleChart()">Zamknij</button>
+      <button class="close-popover" (click)="toggleChart()">Close</button>
     </div>
   </div>
