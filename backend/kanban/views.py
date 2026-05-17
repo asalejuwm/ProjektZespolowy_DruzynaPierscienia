@@ -75,8 +75,8 @@ def add_task(request):
             order=max_order + 1,
             parent=parent_task, 
         )
-        created_subtasks = []
 
+        created_subtasks = []
         if parent_id:
             default_texts = ["Research", "Implementation", "Testing", "Documentation"]
             for sub_text in default_texts:
@@ -86,7 +86,7 @@ def add_task(request):
                     "content": sub.content,
                     "is_completed": sub.is_completed
                 })
-      
+            
         return JsonResponse({
             "id": task.id, 
             "content": task.content,
