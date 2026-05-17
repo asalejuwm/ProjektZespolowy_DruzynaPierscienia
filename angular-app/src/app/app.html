@@ -143,7 +143,6 @@
                 <button class="icon-btn-tiny" (click)="toggleEditMenu('task', task.id, $event)">⚙️</button>
                 <button class="delete-btn-tiny" (click)="removeItem(task.id)">✕</button>
               </div>
-<<<<<<< HEAD
             </div>
 
             <div class="task-progress-compact" *ngIf="task.subtasks?.length > 0">
@@ -157,71 +156,13 @@
                 <span style="opacity: 0.7;">Parent:</span> {{ getParentName(task.parent_id) }}
               </div>
             <div class="task-time-info" style="font-size: 10px; color: #64748b; margin-top: 5px;">
-=======
-              </div>
-            
-            <div class="child-tasks-container" style="margin-top: 10px; padding-left: 8px; border-left: 2px dashed #cbd5e1;">
-    
-              <div *ngFor="let child of getChildTasks(task.id)" class="child-task-item" 
-                style="margin-bottom: 8px; background: #f8fafc; padding: 6px; border-radius: 4px; border: 1px solid #e2e8f0;">
-      
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                  <div style="display: flex; align-items: center; gap: 6px;">
-                    <input type="checkbox" 
-                      [checked]="child.is_completed" 
-                      (change)="toggleTaskCompletion(child, !child.is_completed)">
-                    <span style="font-size: 12px; font-weight: 600; color: #334155;"
-                      [style.text-decoration]="child.is_completed ? 'line-through' : 'none'">
-                      {{ child.content }}
-                    </span>
-                  </div>
-                  <button class="delete-btn-tiny" (click)="removeItem(child.id)" style="font-size: 9px; padding: 0 2px;">✕</button>
-                </div>
-                
-                <div class="task-progress-compact" *ngIf="child.subtasks?.length" style="margin-top: 4px; margin-bottom: 2px;">
-                  <div class="progress-bar-container" style="height: 4px;">
-                    <div class="progress-bar-fill" [style.width.%]="getSubtaskProgress(child)" style="background: #10b981;"></div>
-                  </div>
-                  <span class="progress-text" style="font-size: 9px; line-height: 4px;">{{ getSubtaskProgress(child) }}%</span>
-                </div>
-
-
-                
-
-              </div>
-
-              <div class="add-child-form" style="margin-top: 8px; display: flex; gap: 4px;">
-                <input #childIn type="text" placeholder="+ Add child task..." 
-                  (keydown.enter)="addChildTask(task, childIn)"
-                    style="font-size: 11px; padding: 4px; flex: 1; border: 1px solid #cbd5e1; border-radius: 4px;">
-                <button (click)="addChildTask(task, childIn)" 
-                  style="font-size: 11px; padding: 4px 8px; background: #0f172a; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                  Add
-                </button>
-              </div>
-            </div>
-
-            <div class="task-progress-compact" *ngIf="task.subtasks?.length > 0">
-              <div class="progress-bar-container">
-                <div class="progress-bar-fill" [style.width.%]="getSubtaskProgress(task)"></div>
-              </div>
-              <span class="progress-text">{{ getSubtaskProgress(task) }}%</span>
-            </div>
-
-            <div class="task-time-info" style="font-size: 10px; color: #64748b; margin-top: 8px; border-top: 1px solid #f1f5f9; padding-top: 4px;">
->>>>>>> e1c09cbc4b9264b12e3c9009b79353c004e053ec
               <div>🕒 Total: {{ getTotalLifetime(task) }}</div>
               <div>📍 In column: {{ getTimeInCurrentColumn(task) }}</div>
             </div>
             
             <div class="task-footer">
               <div class="assignee-badges">
-<<<<<<< HEAD
-                <div *ngFor="let userId of task.assignee_ids" class="user-avatar-mini-styled"
-                  [title]="getUserName(userId)" [style.background-color]="getUserColor(userId)">
-=======
                  <div *ngFor="let userId of task.assignee_ids" class="user-avatar-mini-styled" [title]="getUserName(userId)" [style.background-color]="getUserColor(userId)">
->>>>>>> e1c09cbc4b9264b12e3c9009b79353c004e053ec
                   {{ getUserInitials(userId) }}
                 </div>
                 <button class="add-assignee-btn-circle"
@@ -318,21 +259,21 @@
         class="main-input">
     </div>
     <div class="input-group" style="margin-top: 15px;">
-  <label style="font-size: 12px; font-weight: 600; color: #475569;">Assign Parent Task:</label>
-  <select (change)="updateTaskParent(task, $any($event.target).value)" 
+      <label style="font-size: 12px; font-weight: 600; color: #475569;">Assign Parent Task:</label>
+      <select (change)="updateTaskParent(task, $any($event.target).value)" 
           class="main-input" 
           style="width: 100%; margin-top: 5px; cursor: pointer;">
-    <option [value]="null" [selected]="task.parent_id === null">-- No Parent (Independent) --</option>
-    <option *ngFor="let p of getPotentialParents(task)" 
+        <option [value]="null" [selected]="task.parent_id === null">-- No Parent (Independent) --</option>
+        <option *ngFor="let p of getPotentialParents(task)" 
             [value]="p.id" 
             [selected]="task.parent_id === p.id">
-      {{ p.content | slice:0:40 }}{{ p.content.length > 40 ? '...' : '' }}
-    </option>
-  </select>
-  <small style="font-size: 10px; color: #94a3b8; display: block; margin-top: 4px;">
-    Linked tasks must be completed before the parent can move to "Done".
-  </small>
-</div>
+          {{ p.content | slice:0:40 }}{{ p.content.length > 40 ? '...' : '' }}
+        </option>
+      </select>
+      <small style="font-size: 10px; color: #94a3b8; display: block; margin-top: 4px;">
+        Linked tasks must be completed before the parent can move to "Done".
+      </small>
+    </div>
     <div class="subtasks-edit-section">
       <label class="section-label">Subtasks:</label>
 
@@ -341,39 +282,8 @@
           <input type="checkbox" class="subtask-checkbox" [checked]="subtask.is_completed"
             (change)="toggleSubtaskCompletion(task, subtask)">
 
-<<<<<<< HEAD
           <span *ngIf="editingSubtaskId !== subtask.id" [class.completed-text]="subtask.is_completed"
             (dblclick)="editingSubtaskId = subtask.id" class="subtask-text">
-=======
-  <div *ngFor="let child of getChildTasks(task.id)" 
-       style="margin-bottom: 14px; padding: 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;">
-    
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-      <div style="display: flex; align-items: center; gap: 6px;">
-        <input type="checkbox" 
-               [checked]="child.is_completed" 
-               (change)="toggleTaskCompletion(child, !child.is_completed)">
-        
-        <span style="font-size: 13px; font-weight: 600; color: #1e293b;"
-              [style.text-decoration]="child.is_completed ? 'line-through' : 'none'">
-          {{ child.content }}
-        </span>
-      </div>
-      
-      <button class="delete-subtask-btn" (click)="removeItem(child.id)" 
-              style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 14px; padding: 0 4px;" title="Delete Child Task">
-        ✕
-      </button>
-    </div>
-
-          <div style="padding-left: 18px; display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; border-left: 2px solid #e2e8f0;">
-      <div *ngFor="let subtask of child.subtasks" style="display: flex; justify-content: space-between; align-items: center;">
-        <div style="display: flex; gap: 6px; align-items: center;">
-          <input type="checkbox" [checked]="subtask.is_completed" (change)="toggleSubtaskCompletion(child, subtask)">
-          
-          <span style="font-size: 12px; color: #475569;"
-                [style.text-decoration]="subtask.is_completed ? 'line-through' : 'none'">
->>>>>>> e1c09cbc4b9264b12e3c9009b79353c004e053ec
             {{ subtask.content }}
           </span>
 
@@ -382,9 +292,8 @@
             (blur)="saveSubtaskContent(subtask, subEditInput.value)" (keydown.escape)="editingSubtaskId = null"
             class="subtask-edit-input" autoFocus>
 
-          <button class="delete-subtask-btn" (click)="deleteSubtask(task, subtask.id)">✕</button>
+        <button class="delete-subtask-btn" (click)="deleteSubtask(task, subtask.id)">✕</button>
         </div>
-<<<<<<< HEAD
       </div>
 
       <div class="add-subtask-row">
@@ -392,42 +301,8 @@
           (keydown.enter)="addSubtask(task, newSubtaskInput.value); newSubtaskInput.value=''">
         <button class="add-sub-btn"
           (click)="addSubtask(task, newSubtaskInput.value); newSubtaskInput.value=''">Add</button>
-=======
-          <button class="delete-subtask-btn" (click)="deleteSubtask(child, subtask.id)"
-                style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 11px;">
-          ✕
-        </button>
-        </div>
->>>>>>> e1c09cbc4b9264b12e3c9009b79353c004e053ec
       </div>
-
-<<<<<<< HEAD
-=======
-      <div class="add-subtask-row" style="display: flex; gap: 4px; padding-left: 18px;">
-      <input #newSubtaskInput placeholder="New checklist item..." 
-             (keydown.enter)="addSubtask(child, newSubtaskInput.value); newSubtaskInput.value=''"
-             style="font-size: 11px; padding: 4px; flex: 1; border: 1px solid #cbd5e1; border-radius: 4px; background: #fff;">
-      <button class="add-sub-btn" 
-              (click)="addSubtask(child, newSubtaskInput.value); newSubtaskInput.value=''"
-              style="font-size: 11px; padding: 4px 8px; background: #64748b; color: white; border: none; border-radius: 4px; cursor: pointer;">
-        Add
-      </button>
     </div>
-
-  </div>
-
-  <div style="display: flex; gap: 4px; margin-top: 12px; border-top: 2px dashed #e2e8f0; padding-top: 12px;">
-    <input #popoverChildIn type="text" placeholder="+ Add new child task..." 
-           (keydown.enter)="addChildTask(task, popoverChildIn)"
-           style="font-size: 12px; padding: 6px; flex: 1; border: 1px solid #cbd5e1; border-radius: 4px; background: #fff;">
-    <button (click)="addChildTask(task, popoverChildIn)" 
-            style="font-size: 12px; padding: 6px 12px; background: #0f172a; color: white; border: none; border-radius: 4px; cursor: pointer;">
-      Add Child
-    </button>
-  </div>
-</div>
-
->>>>>>> e1c09cbc4b9264b12e3c9009b79353c004e053ec
     <div class="popover-footer">
       <button class="save-btn" (click)="saveTaskContent(task, editTaskContent.value)">Save</button>
       <button class="close-popover" (click)="closeEditMenu()">Cancel</button>

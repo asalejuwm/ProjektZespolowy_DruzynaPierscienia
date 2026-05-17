@@ -66,7 +66,6 @@ def add_task(request):
             swimlane=swim,
             order=max_order + 1, 
         )
-<<<<<<< HEAD
         default_texts = ["Research", "Implementation", "Testing", "Documentation"]
         created_subtasks = []
         for sub_text in default_texts:
@@ -77,20 +76,6 @@ def add_task(request):
                 "is_completed": sub.is_completed
             })
       
-=======
-
-        created_subtasks = []
-        if parent_id:
-            default_texts = ["Research", "Implementation", "Testing", "Documentation"]
-            for sub_text in default_texts:
-                sub = Subtask.objects.create(task=task, content=sub_text)
-                created_subtasks.append({
-                    "id": sub.id,
-                    "content": sub.content,
-                    "is_completed": sub.is_completed
-                })
-            
->>>>>>> e1c09cbc4b9264b12e3c9009b79353c004e053ec
         return JsonResponse({
             "id": task.id, 
             "content": task.content,
