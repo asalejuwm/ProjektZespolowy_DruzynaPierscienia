@@ -54,38 +54,27 @@ def tasks(request):
 def add_task(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-        parent_id = data.get('parent_id')
-
-        if parent_id:
-            parent_task = Task.objects.get(id=parent_id)
-            col = parent_task.column
-            swim = parent_task.swimlane
-        else:
-            parent_task = None
-            col = Column.objects.get(id=data['column_id'])
-            swim = Swimlane.objects.get(id=data['swimlane_id'])
+        col = Column.objects.get(id=data['column_id'])
+        swim = Swimlane.objects.get(id=data['swimlane_id'])
             
-        max_order = Task.objects.filter(column=col, swimlane=swim, parent=parent_task).aggregate(Max('order'))['order__max'] or 0
+        max_order = Task.objects.filter(column=col, swimlane=swim).aggregate(Max('order'))['order__max'] or 0
 
         
         task = Task.objects.create(
             content=data['content'], 
             column=col,
             swimlane=swim,
-            order=max_order + 1,
-            parent=parent_task, 
+            order=max_order + 1, 
         )
+        default_texts = ["Research", "Implementation", "Testing", "Documentation"]
         created_subtasks = []
-
-        if parent_id:
-            default_texts = ["Research", "Implementation", "Testing", "Documentation"]
-            for sub_text in default_texts:
-                sub = Subtask.objects.create(task=task, content=sub_text)
-                created_subtasks.append({
-                    "id": sub.id,
-                    "content": sub.content,
-                    "is_completed": sub.is_completed
-                })
+        for sub_text in default_texts:
+            sub = Subtask.objects.create(task=task, content=sub_text)
+            created_subtasks.append({
+                "id": sub.id,
+                "content": sub.content,
+                "is_completed": sub.is_completed
+            })
       
         return JsonResponse({
             "id": task.id, 
@@ -108,9 +97,21 @@ def move_task(request, task_id):
         new_index = data.get('position', 0)
 
         task = Task.objects.get(id=task_id)
+
+
+
         old_col = task.column
         new_col = Column.objects.get(id=new_column_id)
         new_swim = Swimlane.objects.get(id=new_swimlane_id)
+
+        if new_col.title == "Done":
+            unfinished_children = task.child_tasks.exclude(column__title="Done")
+
+            if unfinished_children.exists():
+                return JsonResponse({
+                    "error": "Cannot move to Done: there are unfinished child tasks!"
+                }, status=400)
+
 
         if old_col.id != new_col.id:
                 now = timezone.now()
@@ -131,8 +132,6 @@ def move_task(request, task_id):
             t.swimlane = new_swim
             t.save()
 
-        if t.parent is None:
-            Task.objects.filter(parent=t).update(column=new_col, swimlane=new_swim)
 
         return JsonResponse({"status": "ok"})
     return HttpResponseNotAllowed(['PATCH'])
@@ -151,6 +150,9 @@ def update_task(request, task_id):
                 task.content = data['content']
             if 'is_completed' in data:
                 task.is_completed = data['is_completed']
+
+            if 'parent_id' in data: 
+                task.parent_id = data['parent_id']
 
             if 'assignee_ids' in data:
                 new_assignee_ids = data['assignee_ids']
@@ -184,6 +186,7 @@ def delete_task(request, task_id):
     if request.method == 'DELETE':
         try:
             task = Task.objects.get(id=task_id)
+            task.child_tasks.update(parent=None)
             task.delete()
             return JsonResponse({"message": "Task deleted"}, status=200)
         except Task.DoesNotExist:

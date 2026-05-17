@@ -60,7 +60,7 @@ export class App implements OnInit {
 
   getTasksForCell(colId: number, swimId: number) {
     return this.allTasks
-      .filter(t => t.column_id === colId && t.swimlane_id === swimId && !t.parent_id)
+      .filter(t => t.column_id === colId && t.swimlane_id === swimId)
       .sort((a, b) => a.order - b.order);
   }
 
@@ -102,6 +102,16 @@ export class App implements OnInit {
     forkJoin(requests).pipe(take(1)).subscribe({
       next: () => {
         console.log('Wszystko zapisane, odświeżam...');
+        this.loadBoard();
+      },
+      error: (err) => {
+        console.error("Błąd podczas przesuwania zadania:", err);
+        
+        if (err.status === 400 && err.error && err.error.error) {
+          alert(err.error.error);
+        } else {
+          alert("Wystąpił nieoczekiwany błąd podczas przenoszenia zadania.");
+        }
         this.loadBoard();
       }
     });
@@ -639,6 +649,53 @@ export class App implements OnInit {
   
     const completed = children.filter(c => c.is_completed).length;
     return Math.round((completed / children.length) * 100);
+  }
+
+  // --- PARENT TASKI ---
+  getParentName(parentId: number | null): string {
+    if (!parentId) return '';
+    const parent = this.allTasks.find(t => t.id === parentId);
+    return parent ? parent.content : '';
+  }
+
+  isDescendant(currentTask: any, possibleParent: any): boolean {
+    if (!possibleParent.parent_id) {
+      return false;
+    }
+    // Jeśli bezpośrednim rodzicem sprawdzanego zadania jest nasze bieżące zadanie, to jest to potomek
+    if (possibleParent.parent_id === currentTask.id) {
+      return true;
+    }
+    // Szukamy głębiej w drzewie relacji
+    const nextParent = this.allTasks.find(t => t.id === possibleParent.parent_id);
+    return nextParent ? this.isDescendant(currentTask, nextParent) : false;
+  }
+
+  getPotentialParents(currentTask: any): any[] {
+    return this.allTasks.filter(t => 
+      t.id !== currentTask.id && // Zadanie nie może być własnym rodzicem
+      !this.isDescendant(currentTask, t) // Zadanie nie może być rodzicem, jeśli jest już dzieckiem/potomkiem tego zadania
+    );
+  }
+
+  updateTaskParent(task: any, newParentId: string) {
+    const parentId = newParentId === 'null' ? null : parseInt(newParentId, 10);
+    
+    if (parentId !== null) {
+      const chosenParent = this.allTasks.find(t => t.id === parentId);
+      if (chosenParent && this.isDescendant(task, chosenParent)) {
+        alert("Nie można przypisać tego zadania jako rodzica, ponieważ jest ono zadaniem podrzędnym (Child Task) dla bieżącego zadania!");
+        return;
+      }
+    }
+
+    this.api.updateTask(task.id, { parent_id: parentId }).subscribe({
+      next: () => {
+        task.parent_id = parentId;
+        this.loadBoard(); // Odświeżamy, by zaktualizować walidację Done
+      },
+      error: (err) => console.error("Błąd podczas przypisywania rodzica:", err)
+    });
   }
 
   formatTime(seconds: number): string {

@@ -24,14 +24,13 @@ class Swimlane(models.Model):
 class Task(models.Model):
     content = models.TextField()
     column = models.ForeignKey(Column, on_delete=models.CASCADE, related_name='tasks')
-    swimlane = models.ForeignKey(Swimlane, on_delete=models.CASCADE, related_name='tasks', null=True, blank=True)
+    swimlane = models.ForeignKey(Swimlane, on_delete=models.CASCADE, related_name='tasks')
     order = models.IntegerField(default=0)
     assignees = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name='assigned_tasks')
     is_completed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     current_column_entered_at = models.DateTimeField(default=timezone.now)
-    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children')
-    
+    parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='child_tasks')
 
     def __str__(self):
         return self.content
