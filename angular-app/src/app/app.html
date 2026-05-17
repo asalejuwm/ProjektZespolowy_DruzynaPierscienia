@@ -1,33 +1,36 @@
 <div class="page-background">
   <header class="main-header">
 
-    <div class="project-info">
-      <div class="title-row">
+    <div class="project-info-container">
+  
+      <div class="logo-side-wrapper">
+        <img src="logokanban.png" alt="Logo Projektu" class="project-logo">
+      </div>
+    
+      <div class="content-side-wrapper">
         <h1 class="project-title">Kanban Board</h1>
-        <div class="board-actions-group">
-        </div>
-      </div>
-
-      <div class="team-section">
-        <div class="user-pill-container facepile-layout" id="userList" cdkDropList cdkDropListOrientation="horizontal"
-          [cdkDropListConnectedTo]="allTaskDropIds">
-
-          <div *ngFor="let user of allUsers" class="user-avatar-draggable"
-            [style.background-color]="user.color || '#64748b'"
-            [class.at-limit]="getUserTaskCount(user.id) >= (user.task_limit || 3)" cdkDrag [cdkDragData]="user">
-
-            {{ getUserInitials(user.id) }}
-            <span class="task-badge">{{ getUserTaskCount(user.id) }}/{{ user.task_limit || 3 }}</span>
-
-            <div class="user-tooltip">{{ user.username }}</div>
-            <div *cdkDragPlaceholder></div>
+        
+        <div class="team-section">
+          <div class="user-pill-container facepile-layout" id="userList" cdkDropList cdkDropListOrientation="horizontal" [cdkDropListConnectedTo]="allTaskDropIds">
+    
+            <div *ngFor="let user of allUsers" class="user-avatar-draggable"
+              [style.background-color]="user.color || '#64748b'"
+              [class.at-limit]="getUserTaskCount(user.id) >= (user.task_limit || 3)" cdkDrag [cdkDragData]="user">
+    
+              {{ getUserInitials(user.id) }}
+              <span class="task-badge">{{ getUserTaskCount(user.id) }}/{{ user.task_limit || 3 }}</span>
+    
+              <div class="user-tooltip">{{ user.username }}</div>
+              <div *cdkDragPlaceholder></div>
+            </div>
+    
+            <button class="add-user-btn-circle" (click)="toggleUserPanel()" title="Manage Team">
+              <span style="margin-top: -2px;">+</span>
+            </button>
           </div>
-
-          <button class="add-user-btn-circle" (click)="toggleUserPanel()" title="Manage Team">
-            <span style="margin-top: -2px;">+</span>
-          </button>
         </div>
       </div>
+    
     </div>
 
     <div class="current-user-profile">

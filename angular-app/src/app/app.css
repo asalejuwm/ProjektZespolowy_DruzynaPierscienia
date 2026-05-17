@@ -22,6 +22,41 @@ body {
   overflow: hidden;
 }
 
+.project-info-container {
+  display: flex;
+  align-items: center; 
+  gap: 24px;          
+  padding: 20px;
+}
+
+.logo-side-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.project-logo {
+  height: 75px;       
+  width: auto;
+  object-fit: contain;
+}
+
+.content-side-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;           
+}
+
+.project-title {
+  margin: 0;          
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.team-section {
+  margin: 0;          
+}
+
 /* --- UKŁAD SIATKI (GRID) --- */
 .board-wrapper {
   position: relative;
@@ -950,27 +985,6 @@ input::-webkit-inner-spin-button {
   flex-shrink: 0;
   padding-bottom: 20px;
   margin: 0 auto 30px auto;
-}
-
-/* Lewa strona */
-.project-info {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.title-row {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.project-title {
-  color: white;
-  margin: 0;
-  font-size: 28px;
-  font-weight: 800;
-  letter-spacing: -1px;
 }
 
 /* Przyciski akcji obok tytułu */
