@@ -612,10 +612,9 @@ export class App implements OnInit {
 
   // --- CHILD TASKI ---
 
-  getChildTasks(parentId: number) {
-    return this.allTasks
-      .filter(t => t.parent_id === parentId)
-      .sort((a, b) => a.order - b.order);
+  getChildTasks(parentTask: any): any[] {
+    if (!parentTask || !parentTask.id) return [];
+    return this.allTasks.filter(t => t.parent_id === parentTask.id);
   }
 
   addChildTask(parentTask: any, inputElement: HTMLInputElement) {
@@ -631,25 +630,52 @@ export class App implements OnInit {
     });
   }
 
-  isEveryChildCompleted(parentId: number): boolean {
-    const children = this.getChildTasks(parentId);
+  getColumnName(columnId: number): string {
+    const col = this.columns.find(c => c.id === columnId);
+    return col ? col.title : 'Unknown';
+  }
   
-    // Jeśli rodzic nie ma jeszcze żadnych child tasków, nie przekreślamy go
-    if (children.length === 0) {
-      return false;
-    }
+  getPotentialChildren(currentTask: any): any[] {
+    if (!currentTask || !currentTask.id) return [];
   
-    // Zwraca true tylko wtedy, gdy KAŻDE dziecko ma status is_completed na true
-    return children.every(child => child.is_completed);
+    return this.allTasks.filter(t =>
+      t.id !== currentTask.id &&                  // Zadanie nie może być swoim własnym dzieckiem
+      t.parent_id !== currentTask.id &&           // Zadanie nie jest jeszcze bezpośrednim dzieckiem
+      !this.isDescendant(t, currentTask)          // Zapobieganie cyklom: currentTask nie może być potomkiem zadania t
+    );
   }
 
-  getChildTaskProgress(task: any): number {
-    const children = this.getChildTasks(task.id);
-    if (!children || children.length === 0) return 0;
+  assignChildTask(currentTask: any, childIdStr: string) {
+    if (!childIdStr || childIdStr === '') return;
   
-    const completed = children.filter(c => c.is_completed).length;
-    return Math.round((completed / children.length) * 100);
+    const childId = parseInt(childIdStr, 10);
+    const childTask = this.allTasks.find(t => t.id === childId);
+  
+    if (!childTask) return;
+
+    // Aktualizujemy zadanie-dziecko, ustawiając jego parent_id na ID bieżącego zadania
+    this.api.updateTask(childId, { parent_id: currentTask.id }).subscribe({
+      next: () => {
+        childTask.parent_id = currentTask.id;
+        this.cdr.detectChanges(); // Odświeżenie widoku w Angularze
+      },
+      error: (err) => console.error("Błąd podczas przypisywania zadania podrzędnego:", err)
+    });
   }
+
+  unassignChildTask(childTask: any) {
+    if (!childTask) return;
+
+    // Wywołujemy aktualizację dla zadania-dziecka, czyszcząc pole parent_id
+    this.api.updateTask(childTask.id, { parent_id: null }).subscribe({
+      next: () => {
+        childTask.parent_id = null;
+        this.cdr.detectChanges(); // Wymuszenie odświeżenia widoku w Angularze
+      },
+      error: (err) => console.error("Błąd podczas odłączania zadania podrzędnego:", err)
+    });
+  }
+
 
   // --- PARENT TASKI ---
   getParentName(parentId: number | null): string {

@@ -106,10 +106,10 @@ def move_task(request, task_id):
 
         if new_col.title == "Done":
             unfinished_children = task.child_tasks.exclude(column__title="Done")
-
             if unfinished_children.exists():
+                tasks_names = ", ".join([f'{child.content}' for child in unfinished_children])
                 return JsonResponse({
-                    "error": "Cannot move to Done: there are unfinished child tasks!"
+                    "error": f"Unfinished child tasks: {tasks_names}\n\nPlease complete them before moving {task.content} to Done!"
                 }, status=400)
 
 
