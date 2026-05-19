@@ -640,7 +640,7 @@ export class App implements OnInit {
   
     return this.allTasks.filter(t =>
       t.id !== currentTask.id &&                  // Zadanie nie może być swoim własnym dzieckiem
-      t.parent_id !== currentTask.id &&           // Zadanie nie jest jeszcze bezpośrednim dzieckiem
+      t.parent_id == null &&                      // Zadanie nie jest jeszcze niczyim dzieckiem
       !this.isDescendant(t, currentTask)          // Zapobieganie cyklom: currentTask nie może być potomkiem zadania t
     );
   }
