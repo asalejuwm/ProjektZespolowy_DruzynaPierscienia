@@ -192,6 +192,9 @@ export class App implements OnInit {
           col.header_color = payload.header_color;
           col.bg_color = payload.bg_color;
 
+          // --- TUTAJ: Poprawne zamknięcie okienka dedykowane dla Twojego modelu ---
+          this.editingColumn = null;
+
           this.cdr.detectChanges();
           this.loadBoard();
         });
@@ -909,6 +912,6 @@ export class App implements OnInit {
         x: x,
         label: `${day}.${month} ${hours}:${minutes}`
       };
-    }); //sasadsa
+    }); 
   }
 }

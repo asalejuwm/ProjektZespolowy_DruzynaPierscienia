@@ -2,34 +2,35 @@
   <header class="main-header">
 
     <div class="project-info-container">
-  
+
       <div class="logo-side-wrapper">
         <img src="logokanban.png" alt="Logo Projektu" class="project-logo">
       </div>
 
       <div class="content-side-wrapper">
         <h1 class="project-title">Kanban Board</h1>
-        
+
         <div class="team-section">
-          <div class="user-pill-container facepile-layout" id="userList" cdkDropList cdkDropListOrientation="horizontal" [cdkDropListConnectedTo]="allTaskDropIds">
-    
+          <div class="user-pill-container facepile-layout" id="userList" cdkDropList cdkDropListOrientation="horizontal"
+            [cdkDropListConnectedTo]="allTaskDropIds">
+
             <div *ngFor="let user of allUsers" class="user-avatar-draggable"
               [style.background-color]="user.color || '#64748b'"
               [class.at-limit]="getUserTaskCount(user.id) >= (user.task_limit || 3)" cdkDrag [cdkDragData]="user">
-    
+
               {{ getUserInitials(user.id) }}
               <span class="task-badge">{{ getUserTaskCount(user.id) }}/{{ user.task_limit || 3 }}</span>
-    
+
               <div class="user-tooltip">{{ user.username }}</div>
               <div *cdkDragPlaceholder></div>
             </div>
-    
+
             <button class="add-user-btn-circle" (click)="toggleUserPanel()" title="Manage Team">
               <span style="margin-top: -2px;">+</span>
             </button>
-            <button class="chart-toggle-btn" (click)="toggleChart()">📊 Chart of lifetime of tasks</button>
+            <button class="chart-toggle-btn" (click)="toggleChart()">📊 Tasks' lifetime chart</button>
           </div>
-          
+
         </div>
       </div>
     </div>
@@ -135,13 +136,13 @@
 
             <div class="task-header">
               <div class="task-content-wrapper">
-                
+
                 <input type="checkbox" [checked]="task.is_completed" (change)="toggleTaskCompletion(task)">
                 <span [class.completed-text]="task.is_completed" class="task-title">{{ task.content }}</span>
               </div>
               <div class="header-actions">
-                <button class="icon-btn-tiny" (click)="toggleEditMenu('task', task.id, $event)">⚙️</button>
-                <button class="delete-btn-tiny" (click)="removeItem(task.id)">✕</button>
+                <button class="icon-btn" (click)="toggleEditMenu('task', task.id, $event)">⚙️</button>
+                <button class="delete-btn" (click)="removeItem(task.id)">✕</button>
               </div>
             </div>
 
@@ -151,18 +152,19 @@
               </div>
               <span class="progress-text">{{ getSubtaskProgress(task) }}%</span>
             </div>
-            <div *ngIf="task.parent_id" class="parent-label" 
-                  style="font-size: 10px; color: #6366f1; font-weight: bold; margin-bottom: 4px; text-transform: uppercase; display: block; width: 100%;">
-                <span style="opacity: 0.7;">Parent:</span> {{ getParentName(task.parent_id) }}
-              </div>
+            <div *ngIf="task.parent_id" class="parent-label"
+              style="font-size: 10px; color: #6366f1; font-weight: bold; margin-bottom: 4px; text-transform: uppercase; display: block; width: 100%;">
+              <span style="opacity: 0.7;">Parent:</span> {{ getParentName(task.parent_id) }}
+            </div>
             <div class="task-time-info" style="font-size: 10px; color: #64748b; margin-top: 5px;">
               <div>🕒 Total: {{ getTotalLifetime(task) }}</div>
               <div>📍 In column: {{ getTimeInCurrentColumn(task) }}</div>
             </div>
-            
+
             <div class="task-footer">
               <div class="assignee-badges">
-                 <div *ngFor="let userId of task.assignee_ids" class="user-avatar-mini-styled" [title]="getUserName(userId)" [style.background-color]="getUserColor(userId)">
+                <div *ngFor="let userId of task.assignee_ids" class="user-avatar-mini-styled"
+                  [title]="getUserName(userId)" [style.background-color]="getUserColor(userId)">
                   {{ getUserInitials(userId) }}
                 </div>
                 <button class="add-assignee-btn-circle"
@@ -224,7 +226,7 @@
     <input type="number" min="0" #editColLimit [value]="col.limit" [disabled]="isImmutable(col)"
       [class.disabled-input]="isImmutable(col)">
 
-
+    <label>Colors:</label>
     <div class="preset-container">
       <div *ngFor="let preset of COLOR_PRESETS" class="preset-item" [class.active]="col.header_color === preset.header"
         [style.background-color]="preset.header" (click)="applyPreset(col, preset)" [title]="preset.label">
@@ -232,7 +234,15 @@
       </div>
     </div>
 
-
+    <div class="popover-actions" style="display: flex; gap: 12px; margin-top: 24px; width: 100%;">
+      <button class="save-btn" style="flex: 1;"
+        (click)="saveColumn(col, { title: editColName.value, limit: editColLimit.value, header_color: col.header_color, bg_color: col.bg_color }); closeEditMenu()">
+        Save
+      </button>
+      <button class="close-popover" style="flex: 1;" (click)="closeEditMenu()">
+        Cancel
+      </button>
+    </div>
 
   </div>
 
@@ -251,119 +261,105 @@
   </div>
 
   <div class="edit-popover task-edit-popover" *ngIf="activeEditMenu.type === 'task' && getActiveTask() as task">
-    <h4>Edit task</h4>
+    <h4 style="margin: 0; padding-bottom: 5px;">Edit task</h4>
 
-    <div class="input-group">
-      <label>Task content:</label>
-      <input #editTaskContent [value]="task.content" (keydown.enter)="saveTaskContent(task, editTaskContent.value)"
-        class="main-input">
-    </div>
+    <div class="popover-body-scroll">
 
-    <div class="child-tasks-section" style="margin-top: 15px; border-top: 1px solid #e2e8f0; padding-top: 15px;">
-      <label style="font-size: 12px; font-weight: 600; color: #475569; display: block; margin-bottom: 8px;">
-        Child Task(s):
-      </label>
-      
-      <div *ngIf="getChildTasks(task).length === 0" 
-           style="font-size: 13px; color: #94a3b8; font-style: italic; padding: 5px 0; display: flex; align-items: center; gap: 6px;">
-           No child tasks connected to this task.
+      <div class="input-group">
+        <label>Task content:</label>
+        <input #editTaskContent [value]="task.content" (keydown.enter)="saveTaskContent(task, editTaskContent.value)"
+          class="main-input">
       </div>
-      
-      <div *ngIf="getChildTasks(task).length > 0" class="child-tasks-list" 
-           style="max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 4px;">
-        <div *ngFor="let child of getChildTasks(task)" 
-             style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 8px 12px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 13px;">
-          
-          <span [class.completed-text]="child.is_completed" style="color: #334155; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60%;">
-            {{ child.content }}
-          </span>
-          
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <span [style.background-color]="child.is_completed ? '#dcfce7' : '#f1f5f9'"
-                  [style.color]="child.is_completed ? '#166534' : '#475569'"
-                  style="font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
-              {{ getColumnName(child.column_id) }}
+
+      <div class="child-tasks-section" style="border-top: 1px solid #e2e8f0; padding-top: 15px;">
+        <label style="font-size: 12px; font-weight: 600; color: #475569; display: block; margin-bottom: 8px;">
+          Child Task(s):
+        </label>
+
+        <div *ngIf="getChildTasks(task).length === 0"
+          style="font-size: 13px; color: #94a3b8; font-style: italic; padding: 5px 0; display: flex; align-items: center; gap: 6px;">
+          No child tasks connected to this task.
+        </div>
+
+        <div *ngIf="getChildTasks(task).length > 0" class="child-tasks-list"
+          style="max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 4px;">
+          <div *ngFor="let child of getChildTasks(task)"
+            style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 8px 12px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 13px;">
+            <span [class.completed-text]="child.is_completed"
+              style="color: #334155; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60%;">
+              {{ child.content }}
             </span>
-            
-            <button (click)="unassignChildTask(child)"
-                    title="Unassign task"
-                    style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 14px; padding: 0 2px; line-height: 1; display: flex; align-items: center; transition: color 0.2s;"
-                    onmouseover="this.style.color='#dc2626'" 
-                    onmouseout="this.style.color='#ef4444'">
-              ✕
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span [style.background-color]="child.is_completed ? '#dcfce7' : '#f1f5f9'"
+                [style.color]="child.is_completed ? '#166534' : '#475569'"
+                style="font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                {{ getColumnName(child.column_id) }}
+              </span>
+              <button (click)="unassignChildTask(child)" title="Unassign task"
+                style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 14px; padding: 0 2px; line-height: 1; display: flex; align-items: center; transition: color 0.2s;"
+                onmouseover="this.style.color='#dc2626'" onmouseout="this.style.color='#ef4444'">✕</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="input-group" style="margin-top: 15px;">
+          <div style="display: flex; gap: 8px; margin-top: 5px;">
+            <select #childSelect class="main-input" style="flex-grow: 1; cursor: pointer; width: auto;">
+              <option value="" disabled selected>-- Select child task to link --</option>
+              <option *ngFor="let t of getPotentialChildren(task)" [value]="t.id">
+                {{ t.content | slice:0:40 }}{{ t.content.length > 40 ? '...' : '' }}
+              </option>
+            </select>
+            <button class="save-btn" style="padding: 0 15px; margin: 0; white-space: nowrap; background-color: #6366f1;"
+              (click)="assignChildTask(task, childSelect.value); childSelect.value=''">
+              Link
             </button>
           </div>
-          
         </div>
       </div>
 
-      <div class="input-group" style="margin-top: 15px;">
-        
-      
-        <div style="display: flex; gap: 8px; margin-top: 5px;">
-          <select #childSelect class="main-input" style="flex-grow: 1; cursor: pointer; width: auto;">
-            <option value="" disabled selected>-- Select child task to link --</option>
-            <option *ngFor="let t of getPotentialChildren(task)" [value]="t.id">
-              {{ t.content | slice:0:40 }}{{ t.content.length > 40 ? '...' : '' }}
-            </option>
-          </select>
-        
-          <button class="save-btn" 
-            style="padding: 0 15px; margin: 0; white-space: nowrap; background-color: #6366f1;" 
-            (click)="assignChildTask(task, childSelect.value); childSelect.value=''">
-            Link
-          </button>
+      <div class="input-group" style="border-top: 1px solid #e2e8f0; padding-top: 15px;">
+        <label style="font-size: 12px; font-weight: 600; color: #475569;">Parent Task:</label>
+        <select (change)="updateTaskParent(task, $any($event.target).value)" class="main-input"
+          style="width: 100%; margin-top: 5px; background: #f8fafc; padding: 8px 12px; border-radius: 6px; border: 1px solid #e2e8f0; cursor: pointer;">
+          <option [value]="null" [selected]="task.parent_id === null">-- No Parent (Independent) --</option>
+          <option *ngFor="let p of getPotentialParents(task)" [value]="p.id" [selected]="task.parent_id === p.id">
+            {{ p.content | slice:0:40 }}{{ p.content.length > 40 ? '...' : '' }}
+          </option>
+        </select>
+        <small style="font-size: 10px; color: #94a3b8; display: block; margin-top: 4px;">
+          Child tasks must be completed before the parent can move to "Done".
+        </small>
+      </div>
+
+      <div class="subtasks-edit-section" style="border-top: 1px solid #e2e8f0; padding-top: 15px;">
+        <label class="section-label">Subtasks:</label>
+        <div class="subtask-list">
+          <div *ngFor="let subtask of task.subtasks" class="subtask-edit-row">
+            <input type="checkbox" class="subtask-checkbox" [checked]="subtask.is_completed"
+              (change)="toggleSubtaskCompletion(task, subtask)">
+            <span *ngIf="editingSubtaskId !== subtask.id" [class.completed-text]="subtask.is_completed"
+              (dblclick)="editingSubtaskId = subtask.id" class="subtask-text">
+              {{ subtask.content }}
+            </span>
+            <input *ngIf="editingSubtaskId === subtask.id" #subEditInput [value]="subtask.content"
+              (keydown.enter)="saveSubtaskContent(subtask, subEditInput.value)"
+              (blur)="saveSubtaskContent(subtask, subEditInput.value)" (keydown.escape)="editingSubtaskId = null"
+              class="subtask-edit-input" autoFocus>
+            <button class="delete-subtask-btn" (click)="deleteSubtask(task, subtask.id)">✕</button>
+          </div>
+        </div>
+
+        <div class="add-subtask-row">
+          <input #newSubtaskInput placeholder="New subtask..."
+            (keydown.enter)="addSubtask(task, newSubtaskInput.value); newSubtaskInput.value=''">
+          <button class="add-sub-btn"
+            (click)="addSubtask(task, newSubtaskInput.value); newSubtaskInput.value=''">Add</button>
         </div>
       </div>
 
     </div>
-
-    <div class="input-group" style="margin-top: 15px;">
-      <label style="font-size: 12px; font-weight: 600; color: #475569;">Parent Task:</label>
-      <select (change)="updateTaskParent(task, $any($event.target).value)" 
-          class="main-input" 
-          style="width: 100%; margin-top: 5px; background: #f8fafc;padding: 8px 12px; border-radius: 6px; border: 1px solid #e2e8f0; cursor: pointer;">
-        <option [value]="null" [selected]="task.parent_id === null">-- No Parent (Independent) --</option>
-        <option *ngFor="let p of getPotentialParents(task)" 
-            [value]="p.id" 
-            [selected]="task.parent_id === p.id">
-          {{ p.content | slice:0:40 }}{{ p.content.length > 40 ? '...' : '' }}
-        </option>
-      </select>
-      <small style="font-size: 10px; color: #94a3b8; display: block; margin-top: 4px;">
-        Child tasks must be completed before the parent can move to "Done".
-      </small>
-    </div>
-    <div class="subtasks-edit-section">
-      <label class="section-label">Subtasks:</label>
-
-      <div class="subtask-list">
-        <div *ngFor="let subtask of task.subtasks" class="subtask-edit-row">
-          <input type="checkbox" class="subtask-checkbox" [checked]="subtask.is_completed"
-            (change)="toggleSubtaskCompletion(task, subtask)">
-
-          <span *ngIf="editingSubtaskId !== subtask.id" [class.completed-text]="subtask.is_completed"
-            (dblclick)="editingSubtaskId = subtask.id" class="subtask-text">
-            {{ subtask.content }}
-          </span>
-
-          <input *ngIf="editingSubtaskId === subtask.id" #subEditInput [value]="subtask.content"
-            (keydown.enter)="saveSubtaskContent(subtask, subEditInput.value)"
-            (blur)="saveSubtaskContent(subtask, subEditInput.value)" (keydown.escape)="editingSubtaskId = null"
-            class="subtask-edit-input" autoFocus>
-
-        <button class="delete-subtask-btn" (click)="deleteSubtask(task, subtask.id)">✕</button>
-        </div>
-      </div>
-
-      <div class="add-subtask-row">
-        <input #newSubtaskInput placeholder="New subtask..."
-          (keydown.enter)="addSubtask(task, newSubtaskInput.value); newSubtaskInput.value=''">
-        <button class="add-sub-btn"
-          (click)="addSubtask(task, newSubtaskInput.value); newSubtaskInput.value=''">Add</button>
-      </div>
-    </div>
-    <div class="popover-footer">
+    <div class="popover-footer" style="margin-top: 0;">
       <button class="save-btn" (click)="saveTaskContent(task, editTaskContent.value)">Save</button>
       <button class="close-popover" (click)="closeEditMenu()">Cancel</button>
     </div>
@@ -386,62 +382,54 @@
 </ng-container>
 
 <div class="edit-backdrop" *ngIf="showChart" (click)="toggleChart()"></div>
-  
-  <div class="edit-popover chart-popover" *ngIf="showChart">
-    <h4>Chart of tasks lifetime</h4>
-    <p class="chart-desc">The graph below shows the overall lifetime (age) of each task (Y-axis) relative to its creation time (X-axis).</p>
-    
-    <div class="svg-chart-container" *ngIf="allTasks.length > 0; else noTasksTemplate">
-      <svg width="100%" height="350" viewBox="0 0 600 350" preserveAspectRatio="xMidYMid meet">
-        <g class="chart-grid-lines">
-          <line *ngFor="let tick of getChartYAxisTicks()" 
-                x1="70" [attr.y1]="tick.y" 
-                x2="560" [attr.y2]="tick.y" 
-                stroke="#cbd5e1" stroke-dasharray="4 4" stroke-width="1" />
-        </g>
 
-        <g class="chart-grid-lines">
-          <line *ngFor="let tick of getChartXAxisTicks()" 
-                [attr.x1]="tick.x" y1="40" 
-                [attr.x2]="tick.x" y2="300" 
-                stroke="#cbd5e1" stroke-dasharray="4 4" stroke-width="1" />
-        </g>
+<div class="edit-popover chart-popover" *ngIf="showChart">
+  <h4>Chart of tasks lifetime</h4>
+  <p class="chart-desc">The graph below shows the overall lifetime (age) of each task (Y-axis) relative to its creation
+    time (X-axis).</p>
 
-        <line x1="70" y1="40" x2="70" y2="300" stroke="#475569" stroke-width="2" /> 
-        <line x1="70" y1="300" x2="560" y2="300" stroke="#475569" stroke-width="2" /> 
+  <div class="svg-chart-container" *ngIf="allTasks.length > 0; else noTasksTemplate">
+    <svg width="100%" height="350" viewBox="0 0 600 350" preserveAspectRatio="xMidYMid meet">
+      <g class="chart-grid-lines">
+        <line *ngFor="let tick of getChartYAxisTicks()" x1="70" [attr.y1]="tick.y" x2="560" [attr.y2]="tick.y"
+          stroke="#cbd5e1" stroke-dasharray="4 4" stroke-width="1" />
+      </g>
 
-        <text *ngFor="let tick of getChartYAxisTicks()" 
-              x="62" [attr.y]="tick.y + 4" 
-              text-anchor="end" class="chart-axis-text">
-          {{ tick.label }}
-        </text>
+      <g class="chart-grid-lines">
+        <line *ngFor="let tick of getChartXAxisTicks()" [attr.x1]="tick.x" y1="40" [attr.x2]="tick.x" y2="300"
+          stroke="#cbd5e1" stroke-dasharray="4 4" stroke-width="1" />
+      </g>
 
-        <text *ngFor="let tick of getChartXAxisTicks()" 
-              [attr.x]="tick.x" y="316" 
-              text-anchor="middle" class="chart-axis-text" style="font-size: 10px;">
-          {{ tick.label }}
-        </text>
+      <line x1="70" y1="40" x2="70" y2="300" stroke="#475569" stroke-width="2" />
+      <line x1="70" y1="300" x2="560" y2="300" stroke="#475569" stroke-width="2" />
 
-        <text x="315" y="342" text-anchor="middle" class="chart-label-text font-bold">Date of creation →</text>
-        <text x="18" y="170" text-anchor="middle" class="chart-label-text font-bold" transform="rotate(-90, 18, 170)">Lifetime →</text>
+      <text *ngFor="let tick of getChartYAxisTicks()" x="62" [attr.y]="tick.y + 4" text-anchor="end"
+        class="chart-axis-text">
+        {{ tick.label }}
+      </text>
 
-        <g class="chart-dots">
-          <circle *ngFor="let pt of getChartPoints()" 
-                  [attr.cx]="pt.x" 
-                  [attr.cy]="pt.y" 
-                  r="7" 
-                  class="chart-dot">
-            <title>Task: {{ pt.content }}&#10;Created: {{ pt.dateStr }}&#10;Lifetime: {{ pt.lifetimeStr }}</title>
-          </circle>
-        </g>
-      </svg>
-    </div>
+      <text *ngFor="let tick of getChartXAxisTicks()" [attr.x]="tick.x" y="316" text-anchor="middle"
+        class="chart-axis-text" style="font-size: 10px;">
+        {{ tick.label }}
+      </text>
 
-    <ng-template #noTasksTemplate>
-      <div class="no-data-msg">No tasks for board to create chart.</div>
-    </ng-template>
+      <text x="315" y="342" text-anchor="middle" class="chart-label-text font-bold">Date of creation →</text>
+      <text x="18" y="170" text-anchor="middle" class="chart-label-text font-bold"
+        transform="rotate(-90, 18, 170)">Lifetime →</text>
 
-    <div class="popover-footer">
-      <button class="close-popover" (click)="toggleChart()">Close</button>
-    </div>
+      <g class="chart-dots">
+        <circle *ngFor="let pt of getChartPoints()" [attr.cx]="pt.x" [attr.cy]="pt.y" r="7" class="chart-dot">
+          <title>Task: {{ pt.content }}&#10;Created: {{ pt.dateStr }}&#10;Lifetime: {{ pt.lifetimeStr }}</title>
+        </circle>
+      </g>
+    </svg>
   </div>
+
+  <ng-template #noTasksTemplate>
+    <div class="no-data-msg">No tasks for board to create chart.</div>
+  </ng-template>
+
+  <div class="popover-footer">
+    <button class="close-popover" (click)="toggleChart()">Close</button>
+  </div>
+</div>

@@ -97,6 +97,10 @@ body {
   background: rgba(59, 130, 246, 0.6); 
 }
 
+::-webkit-scrollbar-corner {
+  background: transparent; 
+}
+
 .columns-header-row, .swimlane-row {
   display: flex;
   width: max-content;
@@ -296,6 +300,37 @@ body {
   flex-direction: column;
   gap: 15px;
   box-sizing: border-box;
+}
+
+.edit-popover.task-edit-popover {
+  width: 350px; 
+  max-height: 90vh; 
+  display: flex;
+  flex-direction: column;
+  gap: 0; 
+  padding: 20px;
+}
+
+.popover-body-scroll {
+  flex: 1;               
+  overflow-y: auto;      
+  padding-right: 8px;    
+  display: flex;
+  flex-direction: column;
+  gap: 16px;             
+  margin-top: 15px;
+  margin-bottom: 20px;
+}
+
+.popover-body-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.popover-body-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+.popover-body-scroll::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 .edit-popover h4 {
