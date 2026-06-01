@@ -34,6 +34,7 @@ def tasks(request):
             'content': t.content,
             'column_id': t.column_id,
             'created_at': t.created_at.isoformat(),
+            'updated_at': t.updated_at.isoformat(),
             'time_in_columns': history,
             'swimlane_id': t.swimlane_id,
             'order': t.order,
@@ -83,7 +84,8 @@ def add_task(request):
             "swimlane_id": task.swimlane_id,
             "parent_id": task.parent_id,
             "subtasks": created_subtasks,
-            "is_completed": task.is_completed
+            "is_completed": task.is_completed,
+            "updated_at": task.updated_at.isoformat()
         }, status=201)
         
     return HttpResponseNotAllowed(['POST'])

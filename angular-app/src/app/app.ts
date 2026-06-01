@@ -800,17 +800,30 @@ export class App implements OnInit {
     
     const parsedTasks = activeTasks.map(t => {
       const createdTime = new Date(t.created_at).getTime();
+      const updatedTime = new Date(t.updated_at || t.created_at).getTime();
       const lifetimeSec = (now - createdTime) / 1000;
+
+      // NOWE: Budowanie czytelnej listy czasu spędzonego w każdej z istniejących kolumn
+      const colsHistory = this.columns.map(c => {
+        const seconds = t.time_in_columns ? (t.time_in_columns[c.id] || 0) : 0;
+        return `  • ${c.title}: ${this.formatTime(seconds)}`;
+      }).join('\n'); // Znaki nowej linii '\n' zostaną poprawnie zinterpretowane przez przeglądarkę w tooltipie
+
       return {
         content: t.content,
         created: createdTime,
+        updated: updatedTime,
         lifetime: lifetimeSec,
-        formattedLifetime: this.formatTime(lifetimeSec)
+        formattedLifetime: this.formatTime(lifetimeSec),
+        // Rozdzielamy daty na dwa osobne ciągi tekstowe
+        createdStr: new Date(t.created_at).toLocaleString(),
+        updatedStr: new Date(t.updated_at || t.created_at).toLocaleString(),
+        columnsHistoryStr: colsHistory
       };
     });
 
-    const minX = Math.min(...parsedTasks.map(t => t.created));
-    const maxX = Math.max(...parsedTasks.map(t => t.created));
+    const minX = Math.min(...parsedTasks.map(t => t.updated));
+    const maxX = Math.max(...parsedTasks.map(t => t.updated));
     const maxY = Math.max(...parsedTasks.map(t => t.lifetime)) || 1;
 
     const width = 600;
@@ -824,7 +837,7 @@ export class App implements OnInit {
     const yRange = maxY || 1;
 
     return parsedTasks.map(t => {
-      const pctX = xRange === 1 ? 0.5 : (t.created - minX) / xRange;
+      const pctX = xRange === 1 ? 0.5 : (t.updated - minX) / xRange;
       const pctY = t.lifetime / yRange;
 
       const x = paddingLeft + pctX * (width - paddingLeft - paddingRight);
@@ -835,12 +848,14 @@ export class App implements OnInit {
         x: x,
         y: y,
         lifetimeStr: t.formattedLifetime,
-        dateStr: new Date(t.created).toLocaleString()
+        createdStr: t.createdStr,
+        updatedStr: t.updatedStr,
+        columnsHistoryStr: t.columnsHistoryStr
       };
     });
   }
 
-  // Generowanie dynamicznych podziałek i etykiet dla osi Y (Czas życia)
+  // Generowanie dynamicznych podziałek i etykiet dla osi Y (Czas życia pozostaje bez zmian)
   getChartYAxisTicks(): any[] {
     if (!this.allTasks || this.allTasks.length === 0 || !this.columns || !this.swimlanes) return [];
     
@@ -872,7 +887,7 @@ export class App implements OnInit {
     });
   }
 
-  // NOWA METODA: Generowanie dynamicznych podziałek i etykiet dla osi X (Data utworzenia)
+  // ZMODYFIKOWANA METODA: Generowanie dynamicznych podziałek dla osi X na podstawie daty aktualizacji
   getChartXAxisTicks(): any[] {
     if (!this.allTasks || this.allTasks.length === 0 || !this.columns || !this.swimlanes) return [];
 
@@ -886,7 +901,8 @@ export class App implements OnInit {
 
     if (activeTasks.length === 0) return [];
 
-    const timestamps = activeTasks.map(t => new Date(t.created_at).getTime());
+    // ZMIANA: Mapujemy tablicę po 'updated_at' zamiast 'created_at'
+    const timestamps = activeTasks.map(t => new Date(t.updated_at || t.created_at).getTime());
     const minX = Math.min(...timestamps);
     const maxX = Math.max(...timestamps);
     const xRange = (maxX - minX) || 1;
@@ -896,12 +912,10 @@ export class App implements OnInit {
     const paddingRight = 40;
     const chartWidth = width - paddingLeft - paddingRight;
 
-    // Definiujemy 4 punkty na osi X: 0%, 33%, 66%, 100% wysokości szerokości wykresu
     return [0, 0.33, 0.66, 1].map(pct => {
       const currentTimestamp = minX + pct * xRange;
       const x = paddingLeft + pct * chartWidth;
 
-      // Formatowanie znacznika czasu na czytelną formę np. "15.05 14:23"
       const date = new Date(currentTimestamp);
       const day = String(date.getDate()).padStart(2, '0');
       const month = String(date.getMonth() + 1).padStart(2, '0');
