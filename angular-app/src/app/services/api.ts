@@ -97,4 +97,9 @@ export class ApiService {
   deleteSubtask(subtaskId: number): Observable<any> {
     return this.http.delete(`${this.baseUrl}/subtasks/${subtaskId}/delete/`);
   }
+
+  loginWithGoogle(token: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/auth/google/`, { token: token });
+  }
 }
+

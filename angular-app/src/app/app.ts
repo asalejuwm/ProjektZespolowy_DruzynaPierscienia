@@ -6,7 +6,8 @@ import {
   moveItemInArray,
   transferArrayItem,
 } from '@angular/cdk/drag-drop';
-import { Component, OnInit, ChangeDetectorRef, NgZone } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, NgZone, Inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ApiService } from './services/api';
@@ -19,7 +20,6 @@ import { Observable, forkJoin } from 'rxjs';
   standalone: true,
   imports: [RouterOutlet, CommonModule, CdkDrag, CdkDropList, CdkDragPlaceholder],
   templateUrl: './app.html',
-  template: '<div>Mock Template</div>',
   styleUrls: ['./app.css']
 })
 export class App implements OnInit {
@@ -29,8 +29,9 @@ export class App implements OnInit {
   allUsers: any[] = [];
   showUserPanel: boolean = false;
   isAdding: { [key: string]: boolean } = {};
+  currentUser: any = null;
 
-  constructor(private api: ApiService, private cdr: ChangeDetectorRef, private zone: NgZone) { }
+  constructor(@Inject(PLATFORM_ID) private platformId: Object, private api: ApiService, private cdr: ChangeDetectorRef, private zone: NgZone) { }
 
   editingColumn: any = null;
   editingTask: { taskId: number } | null = null;
@@ -39,6 +40,7 @@ export class App implements OnInit {
 
   ngOnInit(): void {
     this.loadBoard();
+    this.initGoogleAuth();
   }
 
   loadBoard() {
@@ -54,6 +56,82 @@ export class App implements OnInit {
       },
       error: (err) => console.error("Error loading board:", err)
     });
+  }
+
+  initGoogleAuth() {
+    console.log("!!! SYSTEM CHECK: FUNKCJA initGoogleAuth ROZPOCZĘTA !!!");
+    
+    if (isPlatformBrowser(this.platformId)) {
+      console.log("!!! SYSTEM CHECK: JESTEŚMY W PRZEGLĄDARCE (isPlatformBrowser = true) !!!");
+      
+      // 1. Definiujemy globalny callback dla Google
+      (window as any).handleCredentialResponse = (response: any) => {
+        this.zone.run(() => {
+          this.api.loginWithGoogle(response.credential).pipe(take(1)).subscribe({
+            next: (userData) => {
+              this.currentUser = userData;
+              console.log("Logged in via Google successfully:", userData);
+              this.loadBoard(); 
+            },
+            error: (err) => console.error("Google authentication failed:", err)
+          });
+        });
+      };
+
+      // 2. Dynamicznie tworzymy i wstrzykujemy skrypt Google do dokumentu
+      if (!(window as any).google) {
+        const script = document.createElement('script');
+        script.src = 'https://accounts.google.com/gsi/client';
+        script.async = true;
+        script.defer = true;
+        
+        // Gdy skrypt się załaduje, odpalamy właściwe renderowanie przycisku
+        script.onload = () => {
+          console.log("Skrypt Google został pomyślnie załadowany dynamicznie!");
+          this.renderGoogleButton();
+        };
+        
+        document.head.appendChild(script);
+      } else {
+        // Jeśli skrypt już jakimś cudem był, po prostu renderujemy
+        this.renderGoogleButton();
+      }
+    } 
+  }
+
+  // Wydzielona metoda do samego rysowania przycisku w DOM
+  renderGoogleButton() {
+    const checkDOM = setInterval(() => {
+      const btnContainer = document.getElementById('google-btn');
+      const googleScriptReady = (window as any).google && (window as any).google.accounts;
+
+      console.log(`Sprawdzam w render: DIV obecny = ${!!btnContainer}, Skrypt Google obecny = ${!!googleScriptReady}`);
+
+      if (btnContainer && googleScriptReady) {
+        clearInterval(checkDOM);
+
+        (window as any).google.accounts.id.initialize({
+          client_id: '320328893136-i6b5di98449tu35enbckuqsidfi6n3sh.apps.googleusercontent.com',
+          callback: (window as any).handleCredentialResponse,
+          context: 'signin',
+          ux_mode: 'popup'
+        });
+        
+        (window as any).google.accounts.id.renderButton(btnContainer, {
+          theme: 'outline',
+          size: 'large',
+          text: 'signin_with'
+        });
+        
+        console.log("Google button rendered successfully!");
+      }
+    }, 100);
+
+    setTimeout(() => clearInterval(checkDOM), 5000);
+  }
+
+  logout() {
+    this.currentUser = null;
   }
 
   // --- LOGIKA SIATKI (GRID) ---
@@ -928,4 +1006,17 @@ export class App implements OnInit {
       };
     }); 
   }
+
+  // USER AVATARS
+  hasAvatar(userId: number): boolean {
+    const user = this.allUsers.find(u => u.id === userId);
+    return !!(user && user.avatar_url);
+  }
+
+  getUserAvatar(userId: number): string {
+    const user = this.allUsers.find(u => u.id === userId);
+    return user ? user.avatar_url : '';
+  }
+
 }
+

@@ -2,7 +2,7 @@ from django.urls import path
 from .views import ( add_user, delete_user, update_user,
 delete_swimlane, tasks, add_task, delete_task, update_swimlane, update_task, 
 move_task, add_column, delete_column, update_column, update_column_order, 
-add_swimlane, add_subtask, update_subtask, delete_subtask )
+add_swimlane, add_subtask, update_subtask, delete_subtask, google_auth )
 
 urlpatterns = [
     path('tasks/', tasks),
@@ -23,5 +23,6 @@ urlpatterns = [
     path('tasks/<int:task_id>/subtasks/add/', add_subtask),
     path('subtasks/<int:subtask_id>/update/', update_subtask),
     path('subtasks/<int:subtask_id>/delete/', delete_subtask),
+    path('auth/google/', google_auth),
 ]
     

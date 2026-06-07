@@ -15,11 +15,18 @@
             [cdkDropListConnectedTo]="allTaskDropIds">
 
             <div *ngFor="let user of allUsers" class="user-avatar-draggable"
-              [style.background-color]="user.color || '#64748b'"
-              [class.at-limit]="getUserTaskCount(user.id) >= (user.task_limit || 3)" cdkDrag [cdkDragData]="user">
+              [style.background-color]="user.avatar_url ? 'transparent' : (user.color || '#64748b')"
+              [class.at-limit]="getUserTaskCount(user.id) >= (user.task_limit || 3)" cdkDrag [cdkDragData]="user"
+              style="display: flex; align-items: center; justify-content: center; position: relative; overflow: visible;">
 
-              {{ getUserInitials(user.id) }}
-              <span class="task-badge">{{ getUserTaskCount(user.id) }}/{{ user.task_limit || 3 }}</span>
+              <img *ngIf="user.avatar_url" [src]="user.avatar_url" alt="User Avatar"
+                style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; position: absolute; top: 0; left: 0; z-index: 1;">
+
+              <span *ngIf="!user.avatar_url" style="position: relative; z-index: 1;">{{ getUserInitials(user.id)
+                }}</span>
+
+              <span class="task-badge" style="z-index: 2;">{{ getUserTaskCount(user.id) }}/{{ user.task_limit || 3
+                }}</span>
 
               <div class="user-tooltip">{{ user.username }}</div>
               <div *cdkDragPlaceholder></div>
@@ -35,12 +42,20 @@
       </div>
     </div>
 
-    <div class="current-user-profile">
+    <div [hidden]="currentUser" id="google-btn" style="margin-left: auto; min-width: 200px; min-height: 40px; display: inline-block;"></div>
+
+    <div *ngIf="currentUser" class="current-user-profile">
       <div class="user-details">
-        <span class="user-name">Admin User</span>
-        <span class="user-role">Project Owner</span>
+        <span class="user-name">{{ currentUser.username }}</span>
+        <span class="user-role" style="cursor: pointer; color: #ef4444; font-weight: bold;"
+          (click)="logout()">Logout</span>
       </div>
-      <div class="main-avatar">A</div>
+
+      <img *ngIf="currentUser.avatar_url" [src]="currentUser.avatar_url" alt="Avatar" class="main-avatar"
+        style="object-fit: cover; border: 2px solid #22c55e;">
+
+      <div *ngIf="!currentUser.avatar_url" class="main-avatar">{{ currentUser.username.substring(0, 1).toUpperCase() }}
+      </div>
     </div>
   </header>
   <div class="edit-backdrop" *ngIf="showUserPanel" (click)="toggleUserPanel()"></div>
@@ -163,10 +178,16 @@
 
             <div class="task-footer">
               <div class="assignee-badges">
-                <div *ngFor="let userId of task.assignee_ids" class="user-avatar-mini-styled"
-                  [title]="getUserName(userId)" [style.background-color]="getUserColor(userId)">
-                  {{ getUserInitials(userId) }}
+                <div *ngFor="let userId of task.assignee_ids" class="user-avatar-mini-styled" [title]="getUserName(userId)"
+                     [style.background-color]="hasAvatar(userId) ? 'transparent' : getUserColor(userId)"
+                     style="display: inline-flex; align-items: center; justify-content: center; overflow: hidden; position: relative;">
+                  
+                  <img *ngIf="hasAvatar(userId)" [src]="getUserAvatar(userId)" 
+                       style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;">
+
+                  <span *ngIf="!hasAvatar(userId)">{{ getUserInitials(userId) }}</span>
                 </div>
+                
                 <button class="add-assignee-btn-circle"
                   (click)="toggleEditMenu('task_users', task.id, $event)">+</button>
               </div>
@@ -419,7 +440,8 @@
 
       <g class="chart-dots">
         <circle *ngFor="let pt of getChartPoints()" [attr.cx]="pt.x" [attr.cy]="pt.y" r="7" class="chart-dot">
-          <title>Task: {{ pt.content }}&#10;Created: {{ pt.createdStr }}&#10;Updated: {{ pt.updatedStr }}&#10;Lifetime: {{ pt.lifetimeStr }}&#10;&#10;Time in columns:&#10;{{ pt.columnsHistoryStr }}</title>
+          <title>Task: {{ pt.content }}&#10;Created: {{ pt.createdStr }}&#10;Updated: {{ pt.updatedStr }}&#10;Lifetime:
+            {{ pt.lifetimeStr }}&#10;&#10;Time in columns:&#10;{{ pt.columnsHistoryStr }}</title>
         </circle>
       </g>
     </svg>

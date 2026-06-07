@@ -1,8 +1,19 @@
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
+from django.contrib.auth.models import User
+
+class Board(models.Model):
+    name = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True)
+    members = models.ManyToManyField(User, related_name='boards', blank=True)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='owned_boards')
+
+    def __str__(self):
+        return self.name
 
 class Column(models.Model):
+    board = models.ForeignKey(Board, on_delete=models.CASCADE, related_name='columns', null=True)
     title = models.CharField(max_length=100, unique=True)
     limit = models.IntegerField(default=5)
     order = models.IntegerField(default=0)
@@ -13,10 +24,11 @@ class Column(models.Model):
         return self.title
 
 class Swimlane(models.Model):
+    board = models.ForeignKey(Board, on_delete=models.CASCADE, related_name='swimlanes', null=True)
     name = models.CharField(max_length=100)
     limit = models.IntegerField(default=5)
     order = models.IntegerField(default=0)
-    color = models.CharField(max_length=7, default='#f1f5f9') # Dodaj to
+    color = models.CharField(max_length=7, default='#f1f5f9') 
 
     class Meta:
         ordering = ['order']
@@ -49,10 +61,10 @@ class UserProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, db_index=True, on_delete=models.CASCADE)
     task_limit = models.IntegerField(default=3)
     color = models.CharField(max_length=7, default='#64748b') 
+    avatar_url = models.URLField(max_length=1000, blank=True, null=True)
 
     def __str__(self):
         return f"Profile of {self.user.username}"
-    
 
 class TaskColumnTime(models.Model):
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='column_times')

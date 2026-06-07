@@ -1,31 +1,45 @@
 import json
+import traceback
 from django.http import JsonResponse, HttpResponseNotAllowed
 from django.views.decorators.csrf import csrf_exempt
-from .models import Column, Task, Swimlane, UserProfile, Subtask, TaskColumnTime
+from .models import Column, Task, Swimlane, UserProfile, Subtask, TaskColumnTime, Board
 from django.db.models import Max
+from django.contrib.auth import login
 from django.contrib.auth.models import User
 from django.utils import timezone
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
+import random
+
+GOOGLE_CLIENT_ID = "320328893136-i6b5di98449tu35enbckuqsidfi6n3sh.apps.googleusercontent.com"
 
 def tasks(request):
     cols = Column.objects.all().order_by('order')
     swims = Swimlane.objects.all().order_by('order')
     all_tasks = Task.objects.all().order_by('order')
 
-    users_qs = User.objects.select_related('userprofile').all()
+    users_qs = User.objects.select_related('userprofile').filter(is_superuser=False)
     users_data = []
 
     for u in users_qs:
+        profile = getattr(u, 'userprofile', None)
+        
         limit = u.userprofile.task_limit if hasattr(u, 'userprofile') else 3
+        avatar = u.userprofile.avatar_url if hasattr(u, 'userprofile') else None
+        color = profile.color if (profile and profile.color) else '#64748b'
+
         users_data.append({
             'id': u.id, 
             'username': u.username, 
             'task_limit': limit,
-            'color': u.userprofile.color if hasattr(u, 'userprofile') else '#64748b'
+            'color': u.userprofile.color if hasattr(u, 'userprofile') else '#64748b',
+            'avatar_url': avatar  
         })
 
     now = timezone.now()
     task_data = []
     for t in all_tasks:
+        entered_at = t.current_column_entered_at if t.current_column_entered_at else now
         current_stay = (now - t.current_column_entered_at).total_seconds()
         history = {ct.column_id: ct.total_duration_seconds for ct in t.column_times.all()}
         history[t.column_id] = history.get(t.column_id, 0) + current_stay
@@ -34,7 +48,7 @@ def tasks(request):
             'content': t.content,
             'column_id': t.column_id,
             'created_at': t.created_at.isoformat(),
-            'updated_at': t.updated_at.isoformat(),
+            # 'updated_at': t.updated_at.isoformat(),
             'time_in_columns': history,
             'swimlane_id': t.swimlane_id,
             'order': t.order,
@@ -388,3 +402,74 @@ def delete_subtask(request, subtask_id):
     if request.method == 'DELETE':
         Subtask.objects.filter(id=subtask_id).delete()
         return JsonResponse({"status": "deleted"})
+
+@csrf_exempt
+def google_auth(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Only POST allowed'}, status=405)
+
+    try:
+        # Bezpieczne ładowanie body (często tutaj strzela błąd, jeśli zapytanie jest puste)
+        try:
+            data = json.loads(request.body)
+        except Exception:
+            return JsonResponse({'error': 'Invalid JSON body'}, status=400)
+
+        token = data.get('token')
+        if not token:
+            return JsonResponse({'error': 'Token missing'}, status=400)
+        
+        # 1. Weryfikacja tokenu w Google API
+        idinfo = id_token.verify_oauth2_token(token, google_requests.Request(), GOOGLE_CLIENT_ID)
+        
+        email = idinfo.get('email')
+        first_name = idinfo.get('given_name', '')
+        last_name = idinfo.get('family_name', '')
+        picture = idinfo.get('picture', '')
+
+        if not email:
+            return JsonResponse({'error': 'Token missing email'}, status=400)
+
+        # 2. Szukamy lub tworzymy użytkownika na podstawie maila jako unikalnego username
+        user, created = User.objects.get_or_create(
+            username=email,
+            defaults={
+                'email': email,
+                'first_name': first_name,
+                'last_name': last_name
+            }
+        )
+
+        # 3. Zapewniamy profil użytkownika wraz z jego awatarem
+        profile, prof_created = UserProfile.objects.get_or_create(user=user)
+        profile.avatar_url = picture
+        
+        if prof_created or not profile.color:
+            colors = ['#22c55e', '#3b82f6', '#a855f7', '#ec4899', '#f97316', '#eab308']
+            profile.color = random.choice(colors)
+        
+        profile.save()
+
+        # 4. BEZPIECZNA LOGIKA TABLICY (Zabezpieczenie przed brakiem tablic w bazie)
+        board = Board.objects.first()
+        if board:
+            board.members.add(user)
+        else:
+            # Jeśli po czyszczeniu bazy nie ma tablic, nie wywalamy błędu 500! Logujemy to w tle:
+            print("INFO: Użytkownik zalogowany, ale w bazie nie ma jeszcze żadnej tablicy, do której można go przypisać.")
+
+        # 5. Zwracamy dane do Angulara
+        return JsonResponse({
+            'id': user.id,
+            'username': f"{first_name} {last_name}".strip() or user.username,
+            'email': user.email,
+            'avatar_url': profile.avatar_url,
+            'color': profile.color
+        })
+
+    except ValueError:
+        return JsonResponse({'error': 'Invalid token signature'}, status=400)
+    except Exception as e:
+        # Rezerwowe wypisanie błędu w terminalu w razie innej usterki
+        print(f"CRITICAL ERROR IN LOGIN_WITH_GOOGLE: {str(e)}")
+        return JsonResponse({'error': f"Internal server error: {str(e)}"}, status=500)
