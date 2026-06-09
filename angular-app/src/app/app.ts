@@ -27,6 +27,7 @@ export class App implements OnInit {
   swimlanes: any[] = [];
   allTasks: any[] = [];
   allUsers: any[] = [];
+  boards: any[] = [];
   showUserPanel: boolean = false;
   isAdding: { [key: string]: boolean } = {};
   currentUser: any = null;
@@ -37,14 +38,19 @@ export class App implements OnInit {
   editingTask: { taskId: number } | null = null;
   IMMUTABLE_COLUMNS = ['To do', 'Done'];
   editingSubtaskId: number | null = null;
+  selectedBoardId: number | null = null;
 
   ngOnInit(): void {
-    this.loadBoard();
+    this.loadBoards();
     this.initGoogleAuth();
   }
 
   loadBoard() {
-    this.api.getTasks().pipe(take(1)).subscribe({
+    if (!this.selectedBoardId) {
+    return;
+    }
+
+    this.api.getTasks(this.selectedBoardId).pipe(take(1)).subscribe({
       next: (data: any) => {
         this.zone.run(() => {
           this.columns = data.columns || [];
@@ -56,6 +62,11 @@ export class App implements OnInit {
       },
       error: (err) => console.error("Error loading board:", err)
     });
+  }
+
+  onBoardChange(boardId: number) {
+    this.selectedBoardId = boardId;
+    this.loadBoard();
   }
 
   initGoogleAuth() {
@@ -286,7 +297,7 @@ export class App implements OnInit {
   addColumn() {
     const title = prompt("New column name:");
     if (!title) return;
-    this.api.addColumn({ title, limit: 5 }).pipe(take(1)).subscribe(() => this.loadBoard());
+    this.api.addColumn({board_id: this.selectedBoardId!,title,limit: 5}).pipe(take(1)).subscribe(() => this.loadBoard());
   }
 
   removeColumn(colId: number) {
@@ -341,7 +352,7 @@ export class App implements OnInit {
   addSwimlane() {
     const name = prompt("New row name:");
     if (!name) return;
-    this.api.addSwimlane({ name }).pipe(take(1)).subscribe({
+    this.api.addSwimlane({board_id: this.selectedBoardId!,name}).pipe(take(1)).subscribe({
       next: () => {
         this.loadBoard();
       },
@@ -1016,6 +1027,73 @@ export class App implements OnInit {
   getUserAvatar(userId: number): string {
     const user = this.allUsers.find(u => u.id === userId);
     return user ? user.avatar_url : '';
+  }
+
+  createBoard() {
+    const name = prompt('Board name');
+
+    if (!name?.trim()) {
+      return;
+    }
+
+    this.api.addBoard(name).subscribe({
+      next: (board: any) => {
+        alert('Board created');
+
+        this.loadBoards();
+        this.selectedBoardId = board.id;
+        this.loadBoard();
+      },
+      error: err => {
+        console.error(err);
+        alert('Error creating board');
+      }
+    });
+
+  }
+
+  loadBoards() {
+    this.api.getBoards().subscribe((boards: any) => {
+
+      console.log("BOARDS:", boards);
+
+      this.boards = boards;
+
+      if (!this.selectedBoardId && boards.length > 0) {
+        this.selectedBoardId = boards[0].id;
+        this.loadBoard();
+      }
+    });
+  }
+
+  removeBoard() {
+
+    if (!this.selectedBoardId) {
+      return;
+    }
+
+    if (!confirm('Delete this board?')) {
+      return;
+    }
+
+    this.api.deleteBoard(this.selectedBoardId).subscribe({
+      next: () => {
+
+        this.loadBoards();
+
+        this.selectedBoardId = null;
+
+        this.columns = [];
+        this.swimlanes = [];
+        this.allTasks = [];
+
+        alert('Board deleted');
+      },
+      error: err => {
+        console.error(err);
+        alert('Error deleting board');
+      }
+    });
   }
 
 }

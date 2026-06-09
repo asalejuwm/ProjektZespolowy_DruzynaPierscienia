@@ -14,8 +14,8 @@ export class ApiService {
   // --- TASKS ---
   
   // Zmieniamy typ na Observable<any>, bo teraz wraca obiekt z 3 listami, a nie tylko tablica zadań
-  getTasks(): Observable<any> {
-    return this.http.get<any>(`${this.baseUrl}/tasks/`);
+  getTasks(boardId: number): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/tasks/?board_id=${boardId}`);
   }
 
   // Dodajemy swimlane_id do parametrów
@@ -42,7 +42,7 @@ export class ApiService {
 
   // --- COLUMNS ---
 
-  addColumn(data: { title: string, limit: number,header_color?: string, bg_color?: string }): Observable<any> {
+  addColumn(data: {board_id: number,title: string,limit: number,header_color?: string,bg_color?: string}): Observable<any> {
     return this.http.post(`${this.baseUrl}/columns/add/`, data);
   }
 
@@ -59,7 +59,7 @@ export class ApiService {
   }
 
   // opcjonalnie: jeśli będziesz chciał dodawać osoby z poziomu frontendu
-  addSwimlane(data: { name: string }): Observable<any> {
+  addSwimlane(data: {board_id: number,name: string}): Observable<any> {
     return this.http.post(`${this.baseUrl}/swimlanes/add/`, data);
   }
 
@@ -100,6 +100,18 @@ export class ApiService {
 
   loginWithGoogle(token: string): Observable<any> {
     return this.http.post(`${this.baseUrl}/auth/google/`, { token: token });
+  }
+
+  addBoard(name: string) {
+  return this.http.post(`${this.baseUrl}/boards/add/`,{ name });
+  }
+
+  getBoards() {
+    return this.http.get<any[]>(`${this.baseUrl}/boards/`);
+  }
+
+  deleteBoard(boardId: number) {
+    return this.http.delete(`${this.baseUrl}/boards/${boardId}/delete/`);
   }
 }
 

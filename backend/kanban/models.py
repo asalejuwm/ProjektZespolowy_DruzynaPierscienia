@@ -4,27 +4,33 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 
 class Board(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    members = models.ManyToManyField(User, related_name='boards', blank=True)
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='owned_boards')
 
     def __str__(self):
         return self.name
 
 class Column(models.Model):
-    board = models.ForeignKey(Board, on_delete=models.CASCADE, related_name='columns', null=True)
-    title = models.CharField(max_length=100, unique=True)
+    board = models.ForeignKey(Board, on_delete=models.CASCADE, related_name='columns')
+    title = models.CharField(max_length=100)
     limit = models.IntegerField(default=5)
     order = models.IntegerField(default=0)
     header_color = models.CharField(max_length=7, default='#c7ddff')
     bg_color = models.CharField(max_length=7, default='#ffffff')
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['board', 'title'],
+                name='unique_column_per_board'
+            )
+        ]
+
     def __str__(self):
         return self.title
 
 class Swimlane(models.Model):
-    board = models.ForeignKey(Board, on_delete=models.CASCADE, related_name='swimlanes', null=True)
+    board = models.ForeignKey(Board, on_delete=models.CASCADE, related_name='swimlanes')
     name = models.CharField(max_length=100)
     limit = models.IntegerField(default=5)
     order = models.IntegerField(default=0)
@@ -32,6 +38,12 @@ class Swimlane(models.Model):
 
     class Meta:
         ordering = ['order']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['board', 'name'],
+                name='unique_swimlane_per_board'
+            )
+        ]
 
 class Task(models.Model):
     content = models.TextField()

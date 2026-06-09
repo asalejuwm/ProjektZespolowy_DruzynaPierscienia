@@ -10,6 +10,29 @@
       <div class="content-side-wrapper">
         <h1 class="project-title">Kanban Board</h1>
 
+        <div class="board-actions">
+          <button class="btn btn-add" (click)="createBoard()">
+            ➕ Add Board
+          </button>
+
+          <button
+            class="btn btn-delete"
+            (click)="removeBoard()"
+            [disabled]="boards.length <= 1">
+            🗑 Delete Board
+          </button>
+        </div>
+
+        <select
+          [value]="selectedBoardId"
+          (change)="onBoardChange(+$any($event.target).value)">
+
+          <option *ngFor="let board of boards" [value]="board.id">
+            {{ board.name }}
+          </option>
+
+        </select>
+
         <div class="team-section">
           <div class="user-pill-container facepile-layout" id="userList" cdkDropList cdkDropListOrientation="horizontal"
             [cdkDropListConnectedTo]="allTaskDropIds">

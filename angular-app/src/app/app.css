@@ -1257,5 +1257,67 @@ input::-webkit-inner-spin-button {
   font-size: 14px;
 }
 
+.board-toolbar {
+  margin-top: 8px;
+}
+
+.new-board-btn {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.board-actions {
+  display: flex;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.btn {
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-add {
+  background: #22c55e;
+  color: white;
+}
+
+.btn-add:hover {
+  background: #16a34a;
+  transform: translateY(-2px);
+}
+
+.btn-delete {
+  background: #ef4444;
+  color: white;
+}
+
+.btn-delete:hover:not(:disabled) {
+  background: #dc2626;
+  transform: translateY(-2px);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.dropdown {
+  position: absolute;
+  max-height: 250px;
+  overflow-y: auto;
+  width: 200px;
+  border: 1px solid #ccc;
+  background: white;
+}
 
 }

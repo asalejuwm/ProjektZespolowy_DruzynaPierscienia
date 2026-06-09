@@ -14,9 +14,21 @@ import random
 GOOGLE_CLIENT_ID = "320328893136-i6b5di98449tu35enbckuqsidfi6n3sh.apps.googleusercontent.com"
 
 def tasks(request):
-    cols = Column.objects.all().order_by('order')
-    swims = Swimlane.objects.all().order_by('order')
-    all_tasks = Task.objects.all().order_by('order')
+    board_id = request.GET.get('board_id')
+
+    try:
+        board_id = int(board_id)
+    except (TypeError, ValueError):
+        board = Board.objects.first()
+        if not board:
+            return JsonResponse({
+                "error": "No boards exist"
+            }, status=400)
+        board_id = board.id
+    
+    cols = Column.objects.filter(board_id=board_id).order_by('order')
+    swims = Swimlane.objects.filter(board_id=board_id).order_by('order')
+    all_tasks = Task.objects.filter(column__board_id=board_id).order_by('order')
 
     users_qs = User.objects.select_related('userprofile').filter(is_superuser=False)
     users_data = []
@@ -216,13 +228,15 @@ def add_column(request):
     if request.method == 'POST':
         data = json.loads(request.body)
         title = data['title'].strip()
+        board_id = data.get('board_id')
 
-        if Column.objects.filter(title__iexact=title).exists():
+        if Column.objects.filter(board_id=board_id,title__iexact=title).exists():
             return JsonResponse({"error": f'Column "{title}" already exists'}, status=400)
 
         max_order = Column.objects.aggregate(Max('order'))['order__max'] or 0
         
         new_col = Column.objects.create(
+            board_id=board_id,
             title=data['title'], 
             limit=data.get('limit', 5), 
             order=max_order + 1,
@@ -293,7 +307,9 @@ def add_swimlane(request):
     if request.method == 'POST':
         data = json.loads(request.body)
         max_order = Swimlane.objects.aggregate(Max('order'))['order__max'] or 0
+        board_id = data.get('board_id')
         new_swim = Swimlane.objects.create(
+            board_id=board_id,
             name=data['name'],
             order=max_order + 1
         )
@@ -473,3 +489,99 @@ def google_auth(request):
         # Rezerwowe wypisanie błędu w terminalu w razie innej usterki
         print(f"CRITICAL ERROR IN LOGIN_WITH_GOOGLE: {str(e)}")
         return JsonResponse({'error': f"Internal server error: {str(e)}"}, status=500)
+    
+@csrf_exempt
+def add_board(request):
+    print("ADD BOARD CALLED")
+
+
+    if request.method == 'POST':
+
+        data = json.loads(request.body)
+        print("DATA:", data)
+
+        board_name = data.get('name', '').strip()
+
+        if not board_name:
+            return JsonResponse(
+                {"error": "Board name is required"},
+                status=400
+            )
+
+        if Board.objects.filter(name=board_name).exists():
+            return JsonResponse(
+                {"error": "Board already exists"},
+                status=400
+            )
+
+        board = Board.objects.create(
+            name=board_name,
+        )
+
+        Column.objects.create(
+            board=board,
+            title='To do',
+            limit=0,
+            order=0
+        )
+
+        Column.objects.create(
+            board=board,
+            title='Done',
+            limit=0,
+            order=1
+        )
+
+        Swimlane.objects.create(
+            board=board,
+            name='General',
+            limit=0,
+            order=0
+        )
+
+        return JsonResponse({
+            "id": board.id,
+            "name": board.name
+        }, status=201)
+
+    return HttpResponseNotAllowed(['POST'])
+
+def boards(request):
+
+    boards = Board.objects.all().order_by('name')
+
+    return JsonResponse(
+        list(
+            boards.values(
+                'id',
+                'name'
+            )
+        ),
+        safe=False
+    )
+
+@csrf_exempt
+def delete_board(request, board_id):
+    if request.method == 'DELETE':
+        
+        if Board.objects.count() <= 1:
+            return JsonResponse(
+                {"error": "Cannot delete the last board"},
+                status=400
+            )
+
+        try:
+            board = Board.objects.get(id=board_id)
+        except Board.DoesNotExist:
+            return JsonResponse(
+                {"error": "Board not found"},
+                status=404
+            )
+
+        board.delete()
+
+        return JsonResponse({
+            "success": True
+        })
+
+    return HttpResponseNotAllowed(['DELETE'])
