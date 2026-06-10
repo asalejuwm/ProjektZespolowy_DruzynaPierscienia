@@ -39,6 +39,7 @@ export class App implements OnInit {
   IMMUTABLE_COLUMNS = ['To do', 'Done'];
   editingSubtaskId: number | null = null;
   selectedBoardId: number | null = null;
+  isBoardMenuOpen = false; // Steruje otwieraniem i zamykaniem dropdowna
 
   ngOnInit(): void {
     this.loadBoards();
@@ -1094,6 +1095,16 @@ export class App implements OnInit {
         alert('Error deleting board');
       }
     });
+  }
+
+  removeBoardFromTile(boardId: number) {
+    this.selectedBoardId = boardId;
+    this.removeBoard();
+  }
+
+  getActiveBoardName(): string {
+    const activeBoard = this.boards?.find(b => b.id === this.selectedBoardId);
+    return activeBoard ? activeBoard.name : 'Select Board';
   }
 
 }
