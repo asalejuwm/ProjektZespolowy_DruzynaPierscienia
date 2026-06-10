@@ -60,7 +60,7 @@ def tasks(request):
             'content': t.content,
             'column_id': t.column_id,
             'created_at': t.created_at.isoformat(),
-            # 'updated_at': t.updated_at.isoformat(),
+            'updated_at': t.updated_at.isoformat(),
             'time_in_columns': history,
             'swimlane_id': t.swimlane_id,
             'order': t.order,
@@ -425,7 +425,6 @@ def google_auth(request):
         return JsonResponse({'error': 'Only POST allowed'}, status=405)
 
     try:
-        # Bezpieczne ładowanie body (często tutaj strzela błąd, jeśli zapytanie jest puste)
         try:
             data = json.loads(request.body)
         except Exception:
@@ -466,13 +465,14 @@ def google_auth(request):
         
         profile.save()
 
-        # 4. BEZPIECZNA LOGIKA TABLICY (Zabezpieczenie przed brakiem tablic w bazie)
-        board = Board.objects.first()
-        if board:
-            board.members.add(user)
-        else:
-            # Jeśli po czyszczeniu bazy nie ma tablic, nie wywalamy błędu 500! Logujemy to w tle:
-            print("INFO: Użytkownik zalogowany, ale w bazie nie ma jeszcze żadnej tablicy, do której można go przypisać.")
+        # 4. NOWA LOGIKA TABLIC (Dostosowana do kodu kolegi - brak members i owner)
+        if not Board.objects.exists():
+            # Jeśli baza jest całkiem czysta, tworzymy startową tablicę i jej domyślną strukturę
+            board = Board.objects.create(name="Główna Tablica")
+            Column.objects.create(board=board, title='To do', limit=0, order=0)
+            Column.objects.create(board=board, title='Done', limit=0, order=1)
+            Swimlane.objects.create(board=board, name='General', limit=0, order=0)
+            print("INFO: Wykryto czystą bazę danych. Utworzono domyślną tablicę.")
 
         # 5. Zwracamy dane do Angulara
         return JsonResponse({
@@ -486,8 +486,9 @@ def google_auth(request):
     except ValueError:
         return JsonResponse({'error': 'Invalid token signature'}, status=400)
     except Exception as e:
-        # Rezerwowe wypisanie błędu w terminalu w razie innej usterki
-        print(f"CRITICAL ERROR IN LOGIN_WITH_GOOGLE: {str(e)}")
+        print(f"CRITICAL ERROR IN GOOGLE_AUTH: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return JsonResponse({'error': f"Internal server error: {str(e)}"}, status=500)
     
 @csrf_exempt
