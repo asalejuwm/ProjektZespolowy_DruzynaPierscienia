@@ -39,7 +39,7 @@ export class App implements OnInit {
   IMMUTABLE_COLUMNS = ['To do', 'Done'];
   editingSubtaskId: number | null = null;
   selectedBoardId: number | null = null;
-  isBoardMenuOpen = false; // Steruje otwieraniem i zamykaniem dropdowna
+  isBoardMenuOpen = false; 
 
   ngOnInit(): void {
     this.loadBoards();
@@ -71,12 +71,7 @@ export class App implements OnInit {
   }
 
   initGoogleAuth() {
-    console.log("!!! SYSTEM CHECK: FUNKCJA initGoogleAuth ROZPOCZĘTA !!!");
-    
     if (isPlatformBrowser(this.platformId)) {
-      console.log("!!! SYSTEM CHECK: JESTEŚMY W PRZEGLĄDARCE (isPlatformBrowser = true) !!!");
-      
-      // 1. Definiujemy globalny callback dla Google
       (window as any).handleCredentialResponse = (response: any) => {
         this.zone.run(() => {
           this.api.loginWithGoogle(response.credential).pipe(take(1)).subscribe({
@@ -90,34 +85,27 @@ export class App implements OnInit {
         });
       };
 
-      // 2. Dynamicznie tworzymy i wstrzykujemy skrypt Google do dokumentu
       if (!(window as any).google) {
         const script = document.createElement('script');
         script.src = 'https://accounts.google.com/gsi/client';
         script.async = true;
         script.defer = true;
         
-        // Gdy skrypt się załaduje, odpalamy właściwe renderowanie przycisku
         script.onload = () => {
-          console.log("Skrypt Google został pomyślnie załadowany dynamicznie!");
           this.renderGoogleButton();
         };
         
         document.head.appendChild(script);
       } else {
-        // Jeśli skrypt już jakimś cudem był, po prostu renderujemy
         this.renderGoogleButton();
       }
     } 
   }
 
-  // Wydzielona metoda do samego rysowania przycisku w DOM
   renderGoogleButton() {
     const checkDOM = setInterval(() => {
       const btnContainer = document.getElementById('google-btn');
       const googleScriptReady = (window as any).google && (window as any).google.accounts;
-
-      console.log(`Sprawdzam w render: DIV obecny = ${!!btnContainer}, Skrypt Google obecny = ${!!googleScriptReady}`);
 
       if (btnContainer && googleScriptReady) {
         clearInterval(checkDOM);
@@ -134,8 +122,7 @@ export class App implements OnInit {
           size: 'large',
           text: 'signin_with'
         });
-        
-        console.log("Google button rendered successfully!");
+      
       }
     }, 100);
 
@@ -146,7 +133,7 @@ export class App implements OnInit {
     this.currentUser = null;
   }
 
-  // --- LOGIKA SIATKI (GRID) ---
+  // --- GRID LOGIC ---
 
   getTasksForCell(colId: number, swimId: number) {
     return this.allTasks
@@ -166,7 +153,7 @@ export class App implements OnInit {
     return ids;
   }
 
-  // --- AKCJE ZADAŃ ---
+  // --- TASK ACTIONS ---
 
   drop(event: CdkDragDrop<any[]>, targetColId: number, targetSwimId: number) {
     const task = event.item.data;
@@ -212,7 +199,7 @@ export class App implements OnInit {
     const cellId = this.getCellId(colId, swimId);
 
     if (!value) {
-      this.isAdding[cellId] = false; // Zamknij jeśli puste
+      this.isAdding[cellId] = false; 
       return;
     }
 
@@ -221,7 +208,7 @@ export class App implements OnInit {
       column_id: colId,
       swimlane_id: swimId
     }).subscribe(() => {
-      this.isAdding[cellId] = false; // Zamknij po sukcesie
+      this.isAdding[cellId] = false; 
       this.loadBoard();
     });
   }
@@ -231,7 +218,7 @@ export class App implements OnInit {
     this.api.deleteTask(taskId).pipe(take(1)).subscribe(() => this.loadBoard());
   }
 
-  // --- LOGIKA EDYCJI I LIMITÓW (Zaktualizowana) ---
+  // --- EDITING & LIMIT LOGIC ---
 
   isImmutable(col: any): boolean {
     return this.IMMUTABLE_COLUMNS.includes(col.title?.trim());
@@ -282,7 +269,6 @@ export class App implements OnInit {
           col.header_color = payload.header_color;
           col.bg_color = payload.bg_color;
 
-          // --- TUTAJ: Poprawne zamknięcie okienka dedykowane dla Twojego modelu ---
           this.editingColumn = null;
 
           this.cdr.detectChanges();
@@ -348,7 +334,7 @@ export class App implements OnInit {
     return (yiq >= 128) ? '#1e293b' : '#ffffff';
   }
 
-  // ROWS
+  // SWIMLANES
 
   addSwimlane() {
     const name = prompt("New row name:");
@@ -456,7 +442,7 @@ export class App implements OnInit {
       });
   }
 
-  // Users
+  // USERS
 
   getUserName(userId: number): string {
     const user = this.allUsers.find(u => u.id === userId);
@@ -605,7 +591,7 @@ export class App implements OnInit {
     });
   }
 
-  // --- ZADANIA (Checkboxy) ---
+  // --- TASKS (checkboxes) ---
   toggleTaskCompletion(task: any, forceState?: boolean) {
     const newState = forceState !== undefined ? forceState : !task.is_completed;
 
@@ -619,7 +605,7 @@ export class App implements OnInit {
     });
   }
 
-  // --- SUBTASKI ---
+  // --- SUBTASKS ---
   addSubtask(task: any, content: string) {
     if (!content.trim()) return;
     this.api.addSubtask(task.id, content).pipe(take(1)).subscribe((newSubtask) => {
@@ -703,7 +689,7 @@ export class App implements OnInit {
     return null;
   }
 
-  // --- CHILD TASKI ---
+  // --- CHILD TASKS ---
 
   getChildTasks(parentTask: any): any[] {
     if (!parentTask || !parentTask.id) return [];
@@ -732,9 +718,9 @@ export class App implements OnInit {
     if (!currentTask || !currentTask.id) return [];
   
     return this.allTasks.filter(t =>
-      t.id !== currentTask.id &&                  // Zadanie nie może być swoim własnym dzieckiem
-      t.parent_id == null &&                      // Zadanie nie jest jeszcze niczyim dzieckiem
-      !this.isDescendant(t, currentTask)          // Zapobieganie cyklom: currentTask nie może być potomkiem zadania t
+      t.id !== currentTask.id &&                  
+      t.parent_id == null &&                      
+      !this.isDescendant(t, currentTask)          
     );
   }
 
@@ -746,11 +732,10 @@ export class App implements OnInit {
   
     if (!childTask) return;
 
-    // Aktualizujemy zadanie-dziecko, ustawiając jego parent_id na ID bieżącego zadania
     this.api.updateTask(childId, { parent_id: currentTask.id }).subscribe({
       next: () => {
         childTask.parent_id = currentTask.id;
-        this.cdr.detectChanges(); // Odświeżenie widoku w Angularze
+        this.cdr.detectChanges(); 
       },
       error: (err) => console.error("Błąd podczas przypisywania zadania podrzędnego:", err)
     });
@@ -759,18 +744,17 @@ export class App implements OnInit {
   unassignChildTask(childTask: any) {
     if (!childTask) return;
 
-    // Wywołujemy aktualizację dla zadania-dziecka, czyszcząc pole parent_id
     this.api.updateTask(childTask.id, { parent_id: null }).subscribe({
       next: () => {
         childTask.parent_id = null;
-        this.cdr.detectChanges(); // Wymuszenie odświeżenia widoku w Angularze
+        this.cdr.detectChanges(); 
       },
       error: (err) => console.error("Błąd podczas odłączania zadania podrzędnego:", err)
     });
   }
 
 
-  // --- PARENT TASKI ---
+  // --- PARENT TASKS ---
   getParentName(parentId: number | null): string {
     if (!parentId) return '';
     const parent = this.allTasks.find(t => t.id === parentId);
@@ -781,19 +765,17 @@ export class App implements OnInit {
     if (!possibleParent.parent_id) {
       return false;
     }
-    // Jeśli bezpośrednim rodzicem sprawdzanego zadania jest nasze bieżące zadanie, to jest to potomek
     if (possibleParent.parent_id === currentTask.id) {
       return true;
     }
-    // Szukamy głębiej w drzewie relacji
     const nextParent = this.allTasks.find(t => t.id === possibleParent.parent_id);
     return nextParent ? this.isDescendant(currentTask, nextParent) : false;
   }
 
   getPotentialParents(currentTask: any): any[] {
     return this.allTasks.filter(t => 
-      t.id !== currentTask.id && // Zadanie nie może być własnym rodzicem
-      !this.isDescendant(currentTask, t) // Zadanie nie może być rodzicem, jeśli jest już dzieckiem/potomkiem tego zadania
+      t.id !== currentTask.id && 
+      !this.isDescendant(currentTask, t) 
     );
   }
 
@@ -803,7 +785,7 @@ export class App implements OnInit {
     if (parentId !== null) {
       const chosenParent = this.allTasks.find(t => t.id === parentId);
       if (chosenParent && this.isDescendant(task, chosenParent)) {
-        alert("Nie można przypisać tego zadania jako rodzica, ponieważ jest ono zadaniem podrzędnym (Child Task) dla bieżącego zadania!");
+        alert("Nie można przypisać tego zadania jako rodzica, ponieważ jest ono zadaniem podrzędnym dla bieżącego zadania!");
         return;
       }
     }
@@ -811,7 +793,7 @@ export class App implements OnInit {
     this.api.updateTask(task.id, { parent_id: parentId }).subscribe({
       next: () => {
         task.parent_id = parentId;
-        this.loadBoard(); // Odświeżamy, by zaktualizować walidację Done
+        this.loadBoard();
       },
       error: (err) => console.error("Błąd podczas przypisywania rodzica:", err)
     });
@@ -864,15 +846,12 @@ export class App implements OnInit {
     col.bg_color = preset.bg;
   }
 
-  // Zmienna sterująca wyświetlaniem wykresu punktowego
   showChart: boolean = false;
 
-  // Przełącznik widoczności okna wykresu
   toggleChart(): void {
     this.showChart = !this.showChart;
   }
 
-  // Metoda wyliczająca współrzędne punktów dla wykresu
   getChartPoints(): any[] {
     if (!this.allTasks || this.allTasks.length === 0 || !this.columns || !this.swimlanes) return [];
 
@@ -893,11 +872,10 @@ export class App implements OnInit {
       const updatedTime = new Date(t.updated_at || t.created_at).getTime();
       const lifetimeSec = (now - createdTime) / 1000;
 
-      // NOWE: Budowanie czytelnej listy czasu spędzonego w każdej z istniejących kolumn
       const colsHistory = this.columns.map(c => {
         const seconds = t.time_in_columns ? (t.time_in_columns[c.id] || 0) : 0;
         return `  • ${c.title}: ${this.formatTime(seconds)}`;
-      }).join('\n'); // Znaki nowej linii '\n' zostaną poprawnie zinterpretowane przez przeglądarkę w tooltipie
+      }).join('\n'); 
 
       return {
         content: t.content,
@@ -905,7 +883,6 @@ export class App implements OnInit {
         updated: updatedTime,
         lifetime: lifetimeSec,
         formattedLifetime: this.formatTime(lifetimeSec),
-        // Rozdzielamy daty na dwa osobne ciągi tekstowe
         createdStr: new Date(t.created_at).toLocaleString(),
         updatedStr: new Date(t.updated_at || t.created_at).toLocaleString(),
         columnsHistoryStr: colsHistory
@@ -945,7 +922,6 @@ export class App implements OnInit {
     });
   }
 
-  // Generowanie dynamicznych podziałek i etykiet dla osi Y (Czas życia pozostaje bez zmian)
   getChartYAxisTicks(): any[] {
     if (!this.allTasks || this.allTasks.length === 0 || !this.columns || !this.swimlanes) return [];
     
@@ -977,7 +953,6 @@ export class App implements OnInit {
     });
   }
 
-  // ZMODYFIKOWANA METODA: Generowanie dynamicznych podziałek dla osi X na podstawie daty aktualizacji
   getChartXAxisTicks(): any[] {
     if (!this.allTasks || this.allTasks.length === 0 || !this.columns || !this.swimlanes) return [];
 
@@ -991,7 +966,6 @@ export class App implements OnInit {
 
     if (activeTasks.length === 0) return [];
 
-    // ZMIANA: Mapujemy tablicę po 'updated_at' zamiast 'created_at'
     const timestamps = activeTasks.map(t => new Date(t.updated_at || t.created_at).getTime());
     const minX = Math.min(...timestamps);
     const maxX = Math.max(...timestamps);
@@ -1103,9 +1077,9 @@ export class App implements OnInit {
   }
 
   getActiveBoardName(): string {
-    const activeBoard = this.boards?.find(b => b.id === this.selectedBoardId);
-    return activeBoard ? activeBoard.name : 'Select Board';
-  }
+  const activeBoard = this.boards?.find(b => b.id === this.selectedBoardId);
+  return activeBoard ? activeBoard.name : 'Select Board';
+ }
 
 }
 

@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-/* --- OGÓLNE --- */
+/* --- GENERAL --- */
 body {
   font-family: 'Inter', sans-serif !important;
   background: #0f172a; 
@@ -57,7 +57,7 @@ body {
 .team-section {
   margin: 0;          
 }
-/* --- UKŁAD SIATKI (GRID) --- */
+/* --- GRID --- */
 .board-wrapper {
   position: relative;
   margin: 0 auto; 
@@ -109,7 +109,7 @@ body {
   overflow: visible !important;
 }
 
-/* NAGŁÓWEK TABELI */
+/* BOARD HEADER */
 .columns-header-row {
   display: flex;
   width: max-content;
@@ -122,7 +122,7 @@ body {
   box-shadow: 0 0 0 2px #111827; 
 }
 
-/* ETYKIETY BOCZNE (Spacer i Row Labels) */
+/* ROW LABELS & SPACER */
 .swimlane-label-spacer, 
 .swimlane-side-label {
   width: 160px; 
@@ -159,7 +159,7 @@ body {
   background-color: #0f172a;
 }
 
-/* KOLUMNY I KOMÓRKI */
+/* COLUMNS & CELLS */
 .column-header-container, 
 .grid-cell {
   width: 280px;
@@ -186,7 +186,7 @@ body {
   font-weight: 700; 
 }
 
-/* --- LISTA ZADAŃ I KOMÓRKI --- */
+/* --- TASK LIST & CELLS --- */
 .example-list {
   min-height: 150px;
   padding: 10px;
@@ -194,7 +194,7 @@ body {
   transition: background 0.2s;
 }
 
-/* --- KARTY ZADAŃ (BOXES) --- */
+/* --- TASK BOXES --- */
 .example-box {
   background: white;
   color: #1e293b !important;
@@ -228,7 +228,7 @@ body {
   letter-spacing: -0.01em;
 }
 
-/* --- AKCJE I PRZYCISKI --- */
+/* --- ACTIONS & BUTTONS --- */
 .header-actions {
   display: flex;
   flex-shrink: 0;
@@ -286,7 +286,7 @@ body {
   z-index: 999;
 }
 
-/* --- MENU EDYCJI (POPOVER) --- */
+/* --- EDITING MENU (POPOVER) --- */
 .edit-popover {
   position: fixed; 
   top: 50%;
@@ -404,13 +404,11 @@ body {
   flex: 1;
 }
 
-/* --- DODAWANIE --- */
 .add-task-wrapper {
   margin-top: 10px;
   padding: 0 4px 8px 4px;
 }
 
-/* Przycisk duch - domyślny wygląd */
 .add-task-ghost-btn {
   width: 100%;
   padding: 10px;
@@ -481,8 +479,7 @@ body {
 
 .cancel-task-btn:hover { color: #ef4444; }
 
-/* PRZYCISKI GŁÓWNE (List / Row) */
-
+/* BUTTONS (Column / Row) */
 
 .add-action-cell {
   background: #f1f5f9;
@@ -520,13 +517,13 @@ body {
   color: rgba(255, 255, 255, 0.6) !important;
 }
 
-/* --- NAZWY WIERSZY --- */
+/* --- SWIMLANE NAMES --- */
 .swimlane-name {
   font-size: 14px;
   font-weight: 700; 
 }
 
-/* --- LIMIT WIP DISPLAY --- */
+/* --- WIP LIMIT DISPLAY--- */
 .wip-limit-display {
   font-size: 12px;
   color: #64748b;
@@ -538,7 +535,7 @@ body {
   font-weight: 700;
 }
 
-/* --- STANY (OVER LIMIT) --- */
+/* --- OVER LIMIT --- */
 .over-limit {
   background-color: #fee2e2 !important;
   color: #b91c1c !important;
@@ -577,8 +574,6 @@ input::-webkit-inner-spin-button {
   background-color: #e3f2fd;
   font-weight: bold;
 }
-
-
 
 .user-pill-container {
   display: flex;
@@ -817,7 +812,7 @@ input::-webkit-inner-spin-button {
   gap: 4px;
 }
 
-/* --- SUBTASKI I CHECKBOXY --- */
+/* --- SUBTASKS & CHECKBOXES --- */
 .task-content-wrapper {
   display: flex;
   align-items: flex-start;
@@ -1009,7 +1004,7 @@ input::-webkit-inner-spin-button {
 
 
 
-/* --- NOWY UKŁAD HEADER --- */
+/* --- NEW HEADER --- */
 .main-header {
   width: 95%;
   max-width: 1400px;
@@ -1029,7 +1024,7 @@ input::-webkit-inner-spin-button {
 }
 
 
-/* Przyciski akcji obok tytułu */
+
 .board-actions-group {
   display: flex;
   gap: 8px;
@@ -1050,7 +1045,7 @@ input::-webkit-inner-spin-button {
   background: rgba(255, 255, 255, 0.2);
 }
 
-/* Facepile (Nakładające się awatary) */
+/* Facepile */
 .facepile-layout {
   display: flex;
   align-items: center;
@@ -1070,7 +1065,7 @@ input::-webkit-inner-spin-button {
   z-index: 10;
 }
 
-/* Przycisk dodawania w kółku */
+/* Add button */
 .add-user-btn-circle {
   width: 34px;
   height: 34px;
@@ -1092,7 +1087,7 @@ input::-webkit-inner-spin-button {
   border-color: white;
 }
 
-/* Prawa strona: Profil użytkownika */
+/* User profile panel */
 .current-user-profile {
   display: flex;
   align-items: center;
@@ -1182,7 +1177,7 @@ input::-webkit-inner-spin-button {
   border: 1px solid rgba(0,0,0,0.05);
 
 }
-/* --- STYLIZACJA WYKRESU PUNKTOWEGO --- */
+/* --- CHART STYLING --- */
 
 .chart-toggle-btn {
   background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
@@ -1241,7 +1236,6 @@ input::-webkit-inner-spin-button {
   font-family: 'Inter', sans-serif;
 }
 
-/* Wygląd punktu reprezentującego zadanie */
 .chart-dot {
   fill: #3b82f6;
   stroke: #ffffff;
@@ -1250,7 +1244,6 @@ input::-webkit-inner-spin-button {
   transition: all 0.2s ease-in-out;
 }
 
-/* Efekt po najechaniu na dany punkt wykresu */
 .chart-dot:hover {
   fill: #ef4444;
   r: 9;

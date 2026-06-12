@@ -11,19 +11,14 @@ export class ApiService {
 
   constructor(private http: HttpClient) {}
 
-  // --- TASKS ---
-  
-  // Zmieniamy typ na Observable<any>, bo teraz wraca obiekt z 3 listami, a nie tylko tablica zadań
   getTasks(boardId: number): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/tasks/?board_id=${boardId}`);
   }
 
-  // Dodajemy swimlane_id do parametrów
   addTask(data: { content: string, column_id?: number, swimlane_id?: number, parent_id?: number }): Observable<any> {
     return this.http.post(`${this.baseUrl}/tasks/add/`, data);
   }
 
-  // Teraz przesyłamy komplet informacji: gdzie (kolumna), u kogo (swimlane) i na której pozycji
   updateTaskPosition(taskId: number, columnId: number, swimlaneId: number, position: number): Observable<any> {
     return this.http.patch(`${this.baseUrl}/tasks/${taskId}/move/`, {
       column_id: columnId,
@@ -39,8 +34,6 @@ export class ApiService {
   updateTask(taskId: number, data: any): Observable<any> {
     return this.http.patch(`${this.baseUrl}/tasks/${taskId}/update/`, data);
   }
-
-  // --- COLUMNS ---
 
   addColumn(data: {board_id: number,title: string,limit: number,header_color?: string,bg_color?: string}): Observable<any> {
     return this.http.post(`${this.baseUrl}/columns/add/`, data);
@@ -58,7 +51,6 @@ export class ApiService {
     return this.http.post(`${this.baseUrl}/columns/reorder/`, orderData);
   }
 
-  // opcjonalnie: jeśli będziesz chciał dodawać osoby z poziomu frontendu
   addSwimlane(data: {board_id: number,name: string}): Observable<any> {
     return this.http.post(`${this.baseUrl}/swimlanes/add/`, data);
   }

@@ -221,7 +221,7 @@ def delete_task(request, task_id):
             return JsonResponse({"error": "Task does not exist"}, status=404)
     return HttpResponseNotAllowed(['DELETE'])
 
-# --- OPERACJE NA KOLUMNACH ---
+# --- COLUMNS ---
 
 @csrf_exempt
 def add_column(request):
@@ -300,7 +300,7 @@ def update_column_order(request):
         return JsonResponse({"status": "order updated"})
     return HttpResponseNotAllowed(['POST'])
 
-# --- DODATKOWE: OSOBY (SWIMLANES) ---
+# --- SWIMLANES ---
 
 @csrf_exempt
 def add_swimlane(request):
@@ -434,7 +434,6 @@ def google_auth(request):
         if not token:
             return JsonResponse({'error': 'Token missing'}, status=400)
         
-        # 1. Weryfikacja tokenu w Google API
         idinfo = id_token.verify_oauth2_token(token, google_requests.Request(), GOOGLE_CLIENT_ID)
         
         email = idinfo.get('email')
@@ -445,7 +444,6 @@ def google_auth(request):
         if not email:
             return JsonResponse({'error': 'Token missing email'}, status=400)
 
-        # 2. Szukamy lub tworzymy użytkownika na podstawie maila jako unikalnego username
         user, created = User.objects.get_or_create(
             username=email,
             defaults={
@@ -455,7 +453,6 @@ def google_auth(request):
             }
         )
 
-        # 3. Zapewniamy profil użytkownika wraz z jego awatarem
         profile, prof_created = UserProfile.objects.get_or_create(user=user)
         profile.avatar_url = picture
         
@@ -465,16 +462,13 @@ def google_auth(request):
         
         profile.save()
 
-        # 4. NOWA LOGIKA TABLIC (Dostosowana do kodu kolegi - brak members i owner)
         if not Board.objects.exists():
-            # Jeśli baza jest całkiem czysta, tworzymy startową tablicę i jej domyślną strukturę
             board = Board.objects.create(name="Główna Tablica")
             Column.objects.create(board=board, title='To do', limit=0, order=0)
             Column.objects.create(board=board, title='Done', limit=0, order=1)
             Swimlane.objects.create(board=board, name='General', limit=0, order=0)
             print("INFO: Wykryto czystą bazę danych. Utworzono domyślną tablicę.")
 
-        # 5. Zwracamy dane do Angulara
         return JsonResponse({
             'id': user.id,
             'username': f"{first_name} {last_name}".strip() or user.username,
